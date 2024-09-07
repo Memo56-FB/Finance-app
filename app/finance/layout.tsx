@@ -7,8 +7,8 @@ const layout = ({children}: Readonly<{
 }>) => {
 
   return (
-    <div className='flex'>
-      <div className='flex-none'>
+    <div className='grid grid-rows-[1fr_auto] lg:flex h-full'>
+      <div className='lg:flex-none row-start-2'>
         <Sidebar />
       </div>
       <main className='flex-grow'>

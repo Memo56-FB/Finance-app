@@ -21,6 +21,9 @@ const SidebarItem = ({ href, icon: Icon, active, title }: SidebarItemProps) => {
         },
         {
           'lg:gap-200': isOpen
+        },
+        {
+          'lg:gap-0': !isOpen
         }
       )}
     >
