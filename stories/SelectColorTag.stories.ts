@@ -2,7 +2,7 @@ import { SelectColorTag } from "@/components/ui/SelectColorTag";
 import { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta = {
-  title: "Finance/Select",
+  title: "Finance/Fields",
   parameters: {
     layout: 'centered',
   },
