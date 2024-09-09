@@ -3,7 +3,8 @@ import { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof MinimizeMenu> = {
   component: MinimizeMenu,
-  title: "Finance/SidebarItem",
+  tags: ['autodocs'],
+  title: "Finance/Sidebar/MinimizeMenu",
   parameters: {
     layout: "centered"
   },

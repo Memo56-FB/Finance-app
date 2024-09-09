@@ -4,10 +4,11 @@ import { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof SidebarItem> = {
   component: SidebarItem,
-  title: "Finance/SidebarItem",
+  title: "Finance/Sidebar/NavLink",
   parameters: {
     layout: "centered"
   },
+  tags: ['autodocs'],
   argTypes: {
     icon: {
       control: false,

@@ -2,15 +2,12 @@ import { SelectColorTag } from "@/components/ui/SelectColorTag";
 import { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta = {
-  title: "Finance/Fields",
+  component: SelectColorTag,
+  title: "Finance/Fields/SelectColorTag",
   parameters: {
     layout: 'centered',
   },
-  component: SelectColorTag,
-  argTypes: {
-    children: { control: false },
-    className: { control: false },
-  },
+  tags: ['autodocs']
 };
 
 export default meta
