@@ -97,8 +97,25 @@ const config: Config = {
 				100: '8px',
 				50: '4px'
 			},
-  	}
+  	},
   },
+	safelist: [
+		'bg-green',
+		'bg-yellow',
+		'bg-cyan',
+		'bg-navy',
+		'bg-red',
+		'bg-purple',
+		'bg-other-purple',
+		'bg-turquoise',
+		'bg-brown',
+		'bg-magenta',
+		'bg-blue',
+		'bg-navy-gray',
+		'bg-army-green',
+		'bg-gold',
+		'bg-orange',
+	],
   plugins: [require("tailwindcss-animate")],
 };
 export default config;
