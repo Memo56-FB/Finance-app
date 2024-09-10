@@ -33,9 +33,9 @@ const SidebarItem = ({ href, icon: Icon, active, title }: SidebarItemProps) => {
         }
       )}/>
       <p className={clsx(
-        "hidden md:flex text-nowrap transition-all",
+        "hidden md:flex text-nowrap",
         {
-          'lg:w-0 lg:overflow-hidden': !isOpen
+          'lg:w-0 lg:overflow-hidden transition-all': !isOpen
         },
         {
           'lg:w-20': isOpen
