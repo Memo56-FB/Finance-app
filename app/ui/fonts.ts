@@ -1,3 +1,3 @@
-import { Inter, Public_Sans } from "next/font/google";
+import { Public_Sans } from "next/font/google";
 
-export const publicSans = Inter({ subsets: ["latin"] });
+export const publicSans = Public_Sans({ subsets: ["latin"] });

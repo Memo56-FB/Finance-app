@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${publicSans.className} h-screen w-screen bg-beige-100`}>
+      <body className={`${publicSans.className} h-dvh w-dvw bg-beige-100`}>
         {children}
       </body>
     </html>
