@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import React from 'react'
-import { LoginForm } from '../ui/LoginForm'
+import { SingupForm } from '../ui/SingupForm'
 
 const page = () => {
 
@@ -23,7 +23,7 @@ const page = () => {
         </div>
       </aside>
       <section className='px-200 md:px-500 py-300 md:py-400 grid place-items-center lg:flex-grow'>
-        <LoginForm />
+        <SingupForm />
       </section>
     </main>
   )
