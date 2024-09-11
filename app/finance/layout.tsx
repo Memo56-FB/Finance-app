@@ -10,7 +10,7 @@ const layout = ({children}: Readonly<{
       <div className='lg:flex-none row-start-2'>
         <Sidebar />
       </div>
-      <main className='flex-grow overflow-y-scroll'>
+      <main className='flex flex-col gap-400 flex-grow overflow-auto py-300 md:py-400 px-200 md:px-500'>
         {children}
       </main>
     </div>
