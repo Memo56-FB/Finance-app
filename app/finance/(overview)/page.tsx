@@ -1,6 +1,7 @@
 import { Budgets } from '@/app/ui/overview/Budgets'
 import { Pots } from '@/app/ui/overview/Pots'
 import { Summary } from '@/app/ui/overview/Summary'
+import { Transactions } from '@/app/ui/overview/Transactions'
 import React from 'react'
 
 const page = () => {
@@ -10,6 +11,7 @@ const page = () => {
       <Summary />
       <section className='grid gap-200'>
         <Pots />
+        <Transactions />
         <Budgets />
       </section>
     </>
