@@ -100,6 +100,7 @@ const config: Config = {
   	},
   },
 	safelist: [
+		// ? Background colors
 		'bg-green',
 		'bg-yellow',
 		'bg-cyan',
@@ -115,6 +116,22 @@ const config: Config = {
 		'bg-army-green',
 		'bg-gold',
 		'bg-orange',
+		// ? Border colors
+		'border-green',
+		'border-yellow',
+		'border-cyan',
+		'border-navy',
+		'border-red',
+		'border-purple',
+		'border-other-purple',
+		'border-turquoise',
+		'border-brown',
+		'border-magenta',
+		'border-blue',
+		'border-navy-gray',
+		'border-army-green',
+		'border-gold',
+		'border-orange',
 	],
   plugins: [require("tailwindcss-animate")],
 };
