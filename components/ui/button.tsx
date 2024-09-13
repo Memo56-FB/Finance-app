@@ -12,7 +12,7 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-grey-900 text-white hover:bg-grey-500",
         secondary: 'bg-beige-100 text-grey-900 hover:bg-white hover:border-beige-500 hover:border-2',
-        tertiary: 'bg-white h-max rounded-none p-0 font-normal',
+        tertiary: 'h-max rounded-none p-0 font-normal',
         destroy: 'bg-red hover:bg-red/80 text-white'
       },
     },
