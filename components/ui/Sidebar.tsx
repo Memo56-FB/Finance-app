@@ -7,10 +7,12 @@ import Image from 'next/image'
 import { ArrowsDownUp, ChartDonut, House, Receipt, TipJar } from '@phosphor-icons/react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import clsx from 'clsx'
+import { usePathname } from 'next/navigation'
 
 export const Sidebar = () => {
   const isOpen = useSidebarStore( state => state.isOpen)
   const toggle = useSidebarStore( state => state.toggle)
+  const pathname = usePathname()
   return (
     <nav
       className={clsx('bg-grey-900 rounded-t-xl px-200 pt-100 flex justify-center md:px-500 lg:grid lg:grid-rows-[auto_1fr_auto] lg:items-start lg:rounded-r-xl lg:rounded-l-none transition-all lg:pl-0 lg:min-h-screen lg:pb-300 lg:gap-300',
@@ -46,11 +48,11 @@ export const Sidebar = () => {
           />
       </div>
       <div className='flex w-full justify-between lg:flex-col lg:gap-50 lg:items-start '>
-        <SidebarItem active={true} href='/' icon={House} title='Overview' />
-        <SidebarItem active={false} href='/transactions' icon={ArrowsDownUp} title='Transactions' />
-        <SidebarItem active={false} href='/budgets' icon={ChartDonut} title='Budgets' />
-        <SidebarItem active={false} href='/pots' icon={TipJar} title='Pots' />
-        <SidebarItem active={false} href='/recurring-bills' icon={Receipt} title='Recurring bills' />
+        <SidebarItem active={pathname === '/finance'} href='/finance' icon={House} title='Overview' />
+        <SidebarItem active={pathname === '/finance/transactions'} href='/finance/transactions' icon={ArrowsDownUp} title='Transactions' />
+        <SidebarItem active={pathname === '/finance/budgets'} href='/finance/budgets' icon={ChartDonut} title='Budgets' />
+        <SidebarItem active={pathname === '/finance/pots'} href='/finance/pots' icon={TipJar} title='Pots' />
+        <SidebarItem active={pathname === '/finance/recurring-bills'} href='/finance/recurring-bills' icon={Receipt} title='Recurring bills' />
       </div>
       <MinimizeMenu onClick={toggle} />
     </nav>
