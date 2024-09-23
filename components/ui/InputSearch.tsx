@@ -1,3 +1,5 @@
+'use client'
+
 import React, { FC } from 'react'
 import { Input } from './input'
 import { cn } from '@/lib/utils'
@@ -10,7 +12,7 @@ export const InputSearch:FC<InputPasswordProps> = ({className, type, ...props}) 
   return (
     <div className='relative w-full'>
       <Input
-        className={cn(className, 'w-full pl-250 py-150')}
+        className={cn(className, 'w-full pl-250 py-150 pr-[52px]')}
         type={type ?? 'text'}
         {...props}
       />
