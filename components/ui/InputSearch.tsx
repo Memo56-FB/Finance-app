@@ -10,9 +10,9 @@ interface InputPasswordProps extends React.InputHTMLAttributes<HTMLInputElement>
 export const InputSearch:FC<InputPasswordProps> = ({className, type, ...props}) => {
 
   return (
-    <div className='relative w-full'>
+    <div className='relative w-full max-w-80'>
       <Input
-        className={cn(className, 'w-full pl-250 py-150 pr-[52px]')}
+        className={cn(className, 'w-full pl-250 py-150 pr-[52px] text-ellipsis')}
         type={type ?? 'text'}
         {...props}
       />

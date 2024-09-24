@@ -6,14 +6,14 @@ export const TransactionTableDesktop = () => {
   return (
     <table className='hidden md:grid gap-300'>
       <thead className='text-grey-500 py-150 border-b border-b-grey-100'>
-        <tr className='grid grid-cols-6 gap-400 text-left'>
+        <tr className='grid grid-cols-6 gap-400 text-left *:font-normal *:text-preset-5'>
           <th className='col-span-3'>Recipient / Sender</th>
           <th>Category</th>
           <th>Transaction Date</th>
           <th>Amount</th>
         </tr>
       </thead>
-      <tbody className='[&>:not(:last-child)]:border-b [&>:not(:last-child)]:pb-200 [&>:not(:first-child)]:pt-200'>
+      <tbody className='[&>:not(:last-child)]:border-b [&>:not(:last-child)]:pb-200 [&>:not(:first-child)]:pt-200 text-preset-5'>
         <tr className='grid grid-cols-6 gap-400 text-grey-500 border-b-grey-100'>
           <td className='flex items-center gap-200 col-span-3'>
             <Image
