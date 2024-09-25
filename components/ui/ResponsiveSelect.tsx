@@ -2,6 +2,7 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { HeartBreak } from '@phosphor-icons/react'
 import React, { useState } from 'react'
 
 export const ResponsiveSelect = ({ options, label, children }: {
@@ -17,6 +18,8 @@ export const ResponsiveSelect = ({ options, label, children }: {
         <DropdownMenuTrigger className='flex md:hidden'>
           {/* ? An icon to show the dropdown menu */}
           {children}
+          {/* ? An default icon for documenting stories */}
+          {!children && <HeartBreak size={20} weight="fill" />}
         </DropdownMenuTrigger>
         <DropdownMenuContent className='px-250 py-150 rounded-lg *:p-0 text-preset-4 text-grey-900 grid gap-150'>
           {options.map((option, index) => {
