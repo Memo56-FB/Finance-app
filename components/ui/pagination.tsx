@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from "react"
 import { MoreHorizontal } from "lucide-react"
 
@@ -51,7 +53,7 @@ const PaginationLink = ({
     href={href}
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      'px-200 flex items-center h-10 py-100 bg-white text-grey-900 rounded-lg transition-colors',
+      'px-200 flex items-center h-10 py-100 bg-white text-grey-900 rounded-lg transition-colors border border-beige-500',
       isActive ? 'text-white bg-grey-900' : 'hover:text-white hover:bg-beige-500',
       className
     )}
@@ -70,7 +72,7 @@ const PaginationPrevious = ({
     {...props}
   >
     <CaretLeft className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
-    <span className="text-grey-900 group-hover:text-white transition-colors">Prev</span>
+    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block">Prev</span>
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
@@ -84,7 +86,7 @@ const PaginationNext = ({
     className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
-    <span className="text-grey-900 group-hover:text-white transition-colors">Next</span>
+    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block">Next</span>
     <CaretRight className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
   </PaginationLink>
 )
@@ -96,10 +98,10 @@ const PaginationEllipsis = ({
 }: React.ComponentProps<"span">) => (
   <span
     aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    className={cn("px-150 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
-    <MoreHorizontal className="h-4 w-4" />
+    <MoreHorizontal className="h-4 w-4 group-hover:text-white" />
     <span className="sr-only">More pages</span>
   </span>
 )

@@ -59,16 +59,17 @@ export const ResponsiveSelect = ({ options, label, children }: {
           </SelectTrigger>
           <SelectContent className='px-250 py-150 rounded-lg text-preset-4 text-grey-900 [&>div]:grid [&>div]:p-0 [&>*]:gap-150'>
             {options.map((option, index) => {
+              const activeStyle = option === selectedValue ? 'text-preset-4-bold' : ''
               if (options.length === index + 1) {
                 return (
-                  <SelectItem key={option} value={option} className='p-0 focus:text-preset-4-bold' hideCheck={true}>
+                  <SelectItem key={option} value={option} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
                     {option}
                   </SelectItem>
                 )
               }
               return (
                 <React.Fragment key={option}>
-                  <SelectItem value={option} className='p-0 focus:text-preset-4-bold' hideCheck={true}>
+                  <SelectItem value={option} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
                     {option}
                   </SelectItem>
                   <DropdownMenuSeparator />
