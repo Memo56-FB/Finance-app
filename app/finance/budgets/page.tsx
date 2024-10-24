@@ -1,27 +1,8 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
-import { BudgetChart } from '../../ui/BudgetChart'
-import { Separator } from '@/components/ui/separator'
+import { SpendingSummary } from '@/app/ui/budgets/SpendingSummary'
+import { BudgetsCard } from '@/app/ui/budgets/BudgetsCard'
 
-const SpendingSummaryCard = ({title, value, ofValue, color}: {
-  title: string
-  value: number | string
-  ofValue: number | string
-  color: string
-}) => {
-  return (
-    <article className='flex justify-between'>
-      <div className='flex gap-200'>
-        <div className={`h-full rounded-lg bg-${color} w-1`}></div>
-        <h3 className='text-preset-4 text-grey-500'>{title}</h3>
-      </div>
-      <div className='flex gap-100 items-center'>
-        <p className='text-preset-3 text-grey-900'>{value}</p>
-        <p className='text-preset-5 text-grey-500'>of {ofValue}</p>
-      </div>
-    </article>
-  )
-}
 
 const page = () => {
   return (
@@ -32,20 +13,40 @@ const page = () => {
           + Add New Budget
         </Button>
       </header>
-      <section>
-        <article className="flex-1 px-250 pt-300 pb-200 bg-white rounded-xl">
-          <BudgetChart />
-          <h2 className='text-preset-2 text-grey-900 mt-400 mb-300'>Sepending Summary</h2>
-          <div className='grid gap-200'>
-            <SpendingSummaryCard color='cyan' title='Bills' value={'$250.00'} ofValue={'$750.00'} />
-            <Separator className='bg-grey-100' />
-            <SpendingSummaryCard color='yellow' title='Dining Out' value={'$250.00'} ofValue={'$750.00'} />
-            <Separator className='bg-grey-100' />
-            <SpendingSummaryCard color='navy' title='Personal Care' value={'$250.00'} ofValue={'$750.00'} />
-            <Separator className='bg-grey-100' />
-            <SpendingSummaryCard color='green' title='Entertainment' value={'$250.00'} ofValue={'$750.00'} />
-          </div>
-        </article>
+      <section className='grid gap-300'>
+        <SpendingSummary />
+        <BudgetsCard
+          color='green'
+          free={'$500.00'}
+          latest={{name: 'Papa Software', date: '20 Aug 2024', value: '$250.00'}}
+          ofValue={750.00}
+          spent={250.00}
+          title='Entertainment'
+        />
+        <BudgetsCard
+          color='cyan'
+          free={'$8'}
+          latest={{name: 'Papa Software', date: '20 Aug 2024', value: '$250.00'}}
+          ofValue={75}
+          spent={67}
+          title='Entertainment'
+        />
+        <BudgetsCard
+          color='yellow'
+          free={'$50.00'}
+          latest={{name: 'Papa Software', date: '20 Aug 2024', value: '$250.00'}}
+          ofValue={50.00}
+          spent={25.00}
+          title='Entertainment'
+        />
+        <BudgetsCard
+          color='navy'
+          free={'$35.00'}
+          latest={{name: 'Papa Software', date: '20 Aug 2024', value: '$250.00'}}
+          ofValue={100.00}
+          spent={65.00}
+          title='Entertainment'
+        />
       </section>
     </>
   )
