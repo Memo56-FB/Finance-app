@@ -3,11 +3,21 @@ import { Progress } from "@/components/ui/Progress"
 import { Separator } from "@/components/ui/separator"
 import { latestSpending } from "@/types/budgets"
 import { DotsThreeOutline } from "@phosphor-icons/react/dist/ssr"
+import Image from "next/image"
 
 const LatestCard = (latest: latestSpending) => {
   return (
     <div className="flex items-center justify-between">
-      <p className="text-preset-5-bold text-grey-900">{latest.name}</p>
+      <div className="flex gap-200">
+        <Image
+          src={latest.image}
+          alt="profile picture"
+          width={32}
+          height={32}
+          className="rounded-full hidden md:block"
+        />
+        <p className="text-preset-5-bold text-grey-900">{latest.name}</p>
+      </div>
       <div className="flex flex-col gap-50">
         <p className="text-preset-5-bold text-grey-900">{latest.value}</p>
         <p className="text-preset-5 text-grey-500">{latest.date}</p>
@@ -25,7 +35,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, free, latest }: {
   latest: latestSpending
 }) => {
   return (
-    <article className="bg-white rounded-xl grid gap-250 px-250 py-300">
+    <article className="bg-white rounded-xl grid gap-250 px-250 py-300 md:p-400">
       <header className="flex justify-between items-center">
         <div className="flex gap-200 items-center">
           <span className={`bg-${color} rounded-full h-4 w-4`} />
@@ -40,7 +50,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, free, latest }: {
           {/* Spent */}
           <div className="flex gap-200">
             <span className={`h-full bg-${color} rounded-lg w-1`} />
-            <div className="flex flex-col gap-200">
+            <div className="flex flex-col gap-50">
               <p className="text-preset-5 text-grey-500">Spent</p>
               <p className="text-preset-4-bold text-grey-900">${spent.toFixed(2)}</p>
             </div>
@@ -48,7 +58,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, free, latest }: {
           {/* Free */}
           <div className="flex gap-200">
             <span className={`h-full bg-beige-100 rounded-lg w-1`} />
-            <div className="flex flex-col gap-200">
+            <div className="flex flex-col gap-50">
               <p className="text-preset-5 text-grey-500">Free</p>
               <p className="text-preset-4-bold text-grey-900">{free}</p>
             </div>

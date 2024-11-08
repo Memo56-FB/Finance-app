@@ -23,7 +23,7 @@ export const BudgetChart = () => {
           data={mobileData}
           dataKey="mobile"
           innerRadius={70}
-          outerRadius={100}
+          outerRadius={105}
         >
           <Label
             content={({ viewBox }) => {
