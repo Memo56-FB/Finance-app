@@ -35,7 +35,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, free, latest }: {
   latest: latestSpending
 }) => {
   return (
-    <article className="bg-white rounded-xl grid gap-250 px-250 py-300 md:p-400">
+    <article className="bg-white rounded-xl grid gap-250 px-250 py-300 md:p-400 lg:col-start-2">
       <header className="flex justify-between items-center">
         <div className="flex gap-200 items-center">
           <span className={`bg-${color} rounded-full h-4 w-4`} />

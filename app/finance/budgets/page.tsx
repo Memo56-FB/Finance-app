@@ -17,7 +17,7 @@ const page = () => {
           + Add New Budget
         </Button>
       </header>
-      <section className='grid gap-300'>
+      <section className='grid gap-300 lg:grid-cols-2'>
         <SpendingSummary />
         <BudgetsCard
           color='green'

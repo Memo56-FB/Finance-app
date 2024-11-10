@@ -25,7 +25,7 @@ const SpendingSummaryCard = ({ title, value, ofValue, color }: {
 
 export const SpendingSummary = () => {
   return (
-    <article className="flex-1 px-250 pt-300 pb-200 md:pb-400 md:pr-400 bg-white rounded-xl md:grid md:grid-cols-[1fr_300px] md:items-center">
+    <article className="flex-1 px-250 pt-300 pb-200 md:pb-400 md:pr-400 bg-white rounded-xl md:grid md:grid-cols-[1fr_300px] md:items-center lg:grid-cols-1 col-span-1">
       <BudgetChart />
       <div className='grid gap-200'>
         <h2 className='text-preset-2 text-grey-900 mt-400 md:mt-300 mb-100'>Sepending Summary</h2>

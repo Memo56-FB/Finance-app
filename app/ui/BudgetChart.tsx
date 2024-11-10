@@ -16,7 +16,7 @@ export const BudgetChart = () => {
   return (
     <ChartContainer
       config={{}}
-      className="mx-auto aspect-square max-h-[240px]"
+      className="mx-auto aspect-square max-h-[240px] md:h-[300px]"
     >
       <PieChart>
         <Pie
