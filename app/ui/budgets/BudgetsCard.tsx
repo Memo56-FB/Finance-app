@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import { latestSpending } from "@/types/budgets"
 import { DotsThreeOutline } from "@phosphor-icons/react/dist/ssr"
 import Image from "next/image"
+import { EditDeleteDropdown } from "./EditDeleteDropdown"
 
 const LatestCard = (latest: latestSpending) => {
   return (
@@ -41,7 +42,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, free, latest }: {
           <span className={`bg-${color} rounded-full h-4 w-4`} />
           <h2 className="text-preset-2 text-grey-900">{title}</h2>
         </div>
-        <DotsThreeOutline className="text-grey-300" size={16} weight="fill" />
+        <EditDeleteDropdown />
       </header>
       <div className="grid gap-200">
         <p className="text-preset-4 text-grey-500">Maximum of ${ofValue}</p>
