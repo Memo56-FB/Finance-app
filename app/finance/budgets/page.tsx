@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button'
 import React from 'react'
 import { SpendingSummary } from '@/app/ui/budgets/SpendingSummary'
 import { BudgetsCard } from '@/app/ui/budgets/BudgetsCard'
@@ -6,6 +5,7 @@ import profile1 from '@/public/profilePictures/Logo-1.jpg'
 import profile2 from '@/public/profilePictures/Logo-6.png'
 import profile3 from '@/public/profilePictures/Person-10.jpg'
 import profile4 from '@/public/profilePictures/Person-1.jpg'
+import { CreateBudget } from '@/app/ui/budgets/CreateBudget'
 
 
 const page = () => {
@@ -13,9 +13,7 @@ const page = () => {
     <>
       <header className='flex justify-between'>
         <h1 className='text-preset-1 text-grey-900'>Budgets</h1>
-        <Button className='flex text-preset-4 text-white'>
-          + Add New Budget
-        </Button>
+        <CreateBudget />
       </header>
       <section className='grid gap-300 lg:grid-cols-2'>
         <SpendingSummary />
