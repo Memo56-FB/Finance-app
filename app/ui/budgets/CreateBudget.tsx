@@ -16,13 +16,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SelectColorTag } from "@/components/ui/SelectColorTag"
-import { CurrencyDollarSimple } from "@phosphor-icons/react/dist/ssr"
 
 
 export const CreateBudget = () => {
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className='flex text-preset-4 text-white'>
           + Add New Budget
         </Button>

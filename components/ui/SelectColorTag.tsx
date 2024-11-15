@@ -1,5 +1,5 @@
-import React from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select'
+import React, { Fragment } from 'react'
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './select'
 
 export const SelectColorTag = ({
   options
@@ -20,15 +20,18 @@ export const SelectColorTag = ({
       {/* </FormControl> */}
       <SelectContent >
         {options.map( option => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-          >
-            <div className='grid gap-150 grid-cols-[auto_auto] items-center'>
-              <span className={`h-3 w-3 rounded-full bg-${option.value}`} />
-              {option.label}
-            </div>
-          </SelectItem>
+          <Fragment key={option.value}>
+            <SelectItem
+              key={option.value}
+              value={option.value}
+            >
+              <div className='grid gap-150 grid-cols-[auto_auto] items-center w-full'>
+                <span className={`h-3 w-3 rounded-full bg-${option.value}`} />
+                {option.label}
+              </div>
+            </SelectItem>
+            <SelectSeparator className='bg-beige-100 w-[87%] mx-auto' />
+          </Fragment>
         ))}
       </SelectContent>
     </Select>
