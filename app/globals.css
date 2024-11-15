@@ -90,24 +90,24 @@
 /* My components */
 @layer components {
   .text-preset-1 {
-    @apply text-[32px] leading-[120%] tracking-normal font-bold;
+    @apply !text-[32px] !leading-[120%] !tracking-normal !font-bold;
   }
   .text-preset-2 {
-    @apply text-[20px] leading-[150%] tracking-normal font-bold;
+    @apply !text-[20px] !leading-[150%] !tracking-normal !font-bold;
   }
   .text-preset-3 {
-    @apply text-[16px] leading-[150%] tracking-normal font-bold;
+    @apply !text-[16px] !leading-[150%] !tracking-normal !font-bold;
   }
   .text-preset-4 {
-    @apply text-[14px] leading-[150%] tracking-normal;
+    @apply !text-[14px] !leading-[150%] !tracking-normal;
   }
   .text-preset-4-bold {
-    @apply text-[14px] leading-[150%] tracking-normal font-bold;
+    @apply !text-[14px] !leading-[150%] !tracking-normal !font-bold;
   }
   .text-preset-5 {
-    @apply text-[12px] leading-[150%] tracking-normal;
+    @apply !text-[12px] !leading-[150%] !tracking-normal;
   }
   .text-preset-5-bold {
-    @apply text-[12px] leading-[150%] tracking-normal font-bold;
+    @apply !text-[12px] !leading-[150%] !tracking-normal !font-bold;
   }
 }
