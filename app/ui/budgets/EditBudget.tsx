@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SelectColorTag } from "@/components/ui/SelectColorTag"
+import { colorTags } from "@/lib/utils"
 
 
 export const EditBudget = () => {
@@ -31,7 +32,7 @@ export const EditBudget = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start">Add New Budget</DialogTitle>
           <DialogDescription className="text-start">
-            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Phasellus  hendrerit. Pellentesque aliquet nibh nec urna. In nisi neque, aliquet.
+            As your budgets change, feel free to update your spending limits.
           </DialogDescription>
         </DialogHeader>
         <form action="" className="grid gap-200">
@@ -60,48 +61,7 @@ export const EditBudget = () => {
           <div className="grid gap-50">
             <label htmlFor="name" className="text-preset-5-bold text-grey-500">Color Tag</label>
             <SelectColorTag
-              options={[
-                {
-                  value: 'green',
-                  label: 'Green',
-                },
-                {
-                  value: 'cyan',
-                  label: 'Cyan',
-                },
-                {
-                  value: 'navy',
-                  label: 'Navy',
-                },
-                {
-                  value: 'yellow',
-                  label: 'Yellow',
-                },
-                {
-                  value: 'magenta',
-                  label: 'Magenta',
-                },
-                {
-                  value: 'blue',
-                  label: 'Blue',
-                },
-                {
-                  value: 'navy-gray',
-                  label: 'Navy Gray',
-                },
-                {
-                  value: 'army-green',
-                  label: 'Army Green',
-                },
-                {
-                  value: 'gold',
-                  label: 'Gold',
-                },
-                {
-                  value: 'orange',
-                  label: 'Orange',
-                },
-              ]}
+              options={colorTags}
             />
           </div>
           <Button className="text-preset-4-bold text-white">
