@@ -1,5 +1,5 @@
 import { PaginationStory } from "@/components/ui/PaginationStory";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta = {
   title: 'Finance/Pagination',

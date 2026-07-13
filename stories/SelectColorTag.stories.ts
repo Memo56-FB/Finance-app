@@ -1,5 +1,5 @@
 import { SelectColorTag } from "@/components/ui/SelectColorTag";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta = {
   component: SelectColorTag,

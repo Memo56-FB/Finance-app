@@ -1,6 +1,6 @@
 import SidebarItem from "@/components/ui/SidebarItem";
 import { House } from "@phosphor-icons/react";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta<typeof SidebarItem> = {
   component: SidebarItem,

@@ -1,5 +1,5 @@
 import { InputPassword } from "@/components/ui/InputPassword";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta = {
   component: InputPassword,

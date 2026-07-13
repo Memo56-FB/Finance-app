@@ -1,5 +1,5 @@
 import { InputSearch } from "@/components/ui/InputSearch";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta = {
   component: InputSearch,

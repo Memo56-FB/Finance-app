@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 import { ResponsiveSelect } from "@/components/ui/ResponsiveSelect";
 
 const meta: Meta = {

@@ -1,5 +1,5 @@
 import MinimizeMenu from "@/components/ui/MinimizeMenu";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta<typeof MinimizeMenu> = {
   component: MinimizeMenu,

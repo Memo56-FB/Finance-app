@@ -1,5 +1,5 @@
 import { ProgressDiff } from "@/components/ui/ProgressDiff";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta = {
   component: ProgressDiff,

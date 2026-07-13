@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/ui/Sidebar";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta: Meta<typeof Sidebar> = {
   component: Sidebar,
