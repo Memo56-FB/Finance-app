@@ -10,7 +10,7 @@ import {
 } from '@phosphor-icons/react'
 import type { RecurringBill } from './types'
 
-export const sortOptions = ['Latest', 'A to Z', 'Amount: High', 'Amount: Low']
+export const sortOptions = ['Latest', 'Oldest', 'A to Z', 'Z to A', 'Highest', 'Lowest']
 
 export const recurringBills: RecurringBill[] = [
   {

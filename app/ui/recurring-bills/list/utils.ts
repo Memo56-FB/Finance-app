@@ -11,12 +11,20 @@ export const sortBills = (bills: RecurringBill[], sortBy: string) => {
       return firstBill.title.localeCompare(secondBill.title)
     }
 
-    if (sortBy === 'Amount: High') {
+    if (sortBy === 'Z to A') {
+      return secondBill.title.localeCompare(firstBill.title)
+    }
+
+    if (sortBy === 'Highest') {
       return secondBill.amount - firstBill.amount
     }
 
-    if (sortBy === 'Amount: Low') {
+    if (sortBy === 'Lowest') {
       return firstBill.amount - secondBill.amount
+    }
+
+    if (sortBy === 'Oldest') {
+      return secondBill.dueDay - firstBill.dueDay
     }
 
     return firstBill.dueDay - secondBill.dueDay

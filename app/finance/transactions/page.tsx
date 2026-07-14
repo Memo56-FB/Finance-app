@@ -22,7 +22,7 @@ const page = () => {
         <div className='flex gap-300 items-center justify-between mb-300'>
           <InputSearch type='text' placeholder='Search transaction' />
           <div className='flex gap-300'>
-            <ResponsiveSelect label='Sort By' options={['Latest', 'Profile', 'Billing', 'Team', 'Subscription']}>
+            <ResponsiveSelect label='Sort By' options={['Latest', 'Oldest', 'A to Z', 'Z to A', 'Highest', 'Lowest']}>
               <SortAscending weight='fill' size={20} className='text-grey-900' />
             </ResponsiveSelect>
             <ResponsiveSelect label='Category' options={['All Transactions', 'Entertainment', 'Bills', 'Groceries', 'Dining Out', 'Transportation', 'Personal Care']}>
