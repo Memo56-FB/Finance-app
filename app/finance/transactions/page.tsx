@@ -77,17 +77,16 @@ const Page = () => {
         <TransactionsTableMobile transactions={visibleTransactions} />
         <Pagination className='pt-300'>
           <PaginationContent className='w-full justify-center'>
-            {page > 1 && (
-              <PaginationItem className='justify-self-start mr-auto'>
-                <PaginationPrevious
-                  href={`/finance/transactions?page=${page - 1}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    goToPage(page - 1)
-                  }}
-                />
-              </PaginationItem>
-            )}
+            <PaginationItem className='justify-self-start mr-auto'>
+              <PaginationPrevious
+                href={`/finance/transactions?page=${page - 1}`}
+                disabled={page <= 1}
+                onClick={(event) => {
+                  event.preventDefault()
+                  goToPage(page - 1)
+                }}
+              />
+            </PaginationItem>
             {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
               <PaginationItem key={pageNumber}>
                 <PaginationLink
@@ -102,17 +101,16 @@ const Page = () => {
                 </PaginationLink>
               </PaginationItem>
             ))}
-            {page < pageCount && (
-              <PaginationItem className='ml-auto'>
-                <PaginationNext
-                  href={`/finance/transactions?page=${page + 1}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    goToPage(page + 1)
-                  }}
-                />
-              </PaginationItem>
-            )}
+            <PaginationItem className='ml-auto'>
+              <PaginationNext
+                href={`/finance/transactions?page=${page + 1}`}
+                disabled={page >= pageCount}
+                onClick={(event) => {
+                  event.preventDefault()
+                  goToPage(page + 1)
+                }}
+              />
+            </PaginationItem>
           </PaginationContent>
         </Pagination>
       </section>

@@ -40,21 +40,26 @@ PaginationItem.displayName = "PaginationItem"
 interface PaginationLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>{
   className?: string
   isActive?: boolean
+  disabled?: boolean
   href: string
 }
 
 const PaginationLink = ({
   className,
   isActive,
+  disabled,
   href,
   ...props
 }: PaginationLinkProps) => (
   <Link
     href={href}
     aria-current={isActive ? "page" : undefined}
+    aria-disabled={disabled || undefined}
+    tabIndex={disabled ? -1 : props.tabIndex}
     className={cn(
       'px-200 flex items-center h-10 py-100 bg-white text-grey-900 rounded-lg transition-colors border border-beige-500',
       isActive ? 'text-white bg-grey-900' : 'hover:text-white hover:bg-beige-500',
+      disabled && 'pointer-events-none cursor-not-allowed opacity-50',
       className
     )}
     {...props}
@@ -64,10 +69,12 @@ PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = ({
   className,
+  disabled,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to previous page"
+    disabled={disabled}
     className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
@@ -79,10 +86,12 @@ PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
+  disabled,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to next page"
+    disabled={disabled}
     className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
