@@ -47,7 +47,7 @@ export const WithDrawalMoneyPot = ({
       <DialogContent className="w-[calc(100%-40px)] max-w-[560px] px-250 py-250 rounded-xl md:px-400 md:py-400 grid gap-250">
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start text-preset-2 text-grey-900">
-            Withdraw from '{title}'
+            Withdraw from &apos;{title}&apos;
           </DialogTitle>
           <DialogDescription className="text-start text-preset-4 text-grey-500">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus hendrerit. Pellentesque aliquet nibh nec urna. In nisi neque, aliquet.
