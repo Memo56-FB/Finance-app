@@ -5,12 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { HeartBreak } from '@phosphor-icons/react'
 import React, { useState } from 'react'
 
-export const ResponsiveSelect = ({ options, label, children }: {
+export const ResponsiveSelect = ({ options, label, children, value, onValueChange }: {
   options: string[]
   label: string
   children: React.ReactNode
+  value?: string
+  onValueChange?: (value: string) => void
 }) => {
   const [selectedValue, setSelectedValue] = useState(options[0])
+  const currentValue = value ?? selectedValue
+  const handleValueChange = (nextValue: string) => {
+    setSelectedValue(nextValue)
+    onValueChange?.(nextValue)
+  }
 
   return (
     <>
@@ -23,13 +30,13 @@ export const ResponsiveSelect = ({ options, label, children }: {
         </DropdownMenuTrigger>
         <DropdownMenuContent className='px-250 py-150 rounded-lg *:p-0 text-preset-4 text-grey-900 grid gap-150'>
           {options.map((option, index) => {
-            const activeStyle = option === selectedValue ? 'text-preset-4-bold' : ''
+            const activeStyle = option === currentValue ? 'text-preset-4-bold' : ''
             if (options.length === index + 1) {
               return (
                 <DropdownMenuItem
                   className={activeStyle}
                   key={option}
-                  onClick={() => setSelectedValue(option)}
+                  onClick={() => handleValueChange(option)}
                 >
                   {option}
                 </DropdownMenuItem>
@@ -38,7 +45,7 @@ export const ResponsiveSelect = ({ options, label, children }: {
             return (
               <React.Fragment key={option}>
                 <DropdownMenuItem
-                  onClick={() => setSelectedValue(option)}
+                  onClick={() => handleValueChange(option)}
                   className={activeStyle}
                 >
                   {option}
@@ -51,15 +58,15 @@ export const ResponsiveSelect = ({ options, label, children }: {
       </DropdownMenu>
       <div className='items-center gap-100 hidden md:flex'>
         <label className='text-preset-4 text-grey-500 text-nowrap' htmlFor="">{label}</label>
-        <Select value={selectedValue} onValueChange={(value) => setSelectedValue(value)}>
+        <Select value={currentValue} onValueChange={handleValueChange}>
           <SelectTrigger>
             <SelectValue>
-              {selectedValue}
+              {currentValue}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className='px-250 py-150 rounded-lg text-preset-4 text-grey-900 [&>div]:grid [&>div]:p-0 [&>*]:gap-150'>
             {options.map((option, index) => {
-              const activeStyle = option === selectedValue ? 'text-preset-4-bold' : ''
+              const activeStyle = option === currentValue ? 'text-preset-4-bold' : ''
               if (options.length === index + 1) {
                 return (
                   <SelectItem key={option} value={option} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
