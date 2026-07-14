@@ -2,7 +2,8 @@ import { Circle } from '@phosphor-icons/react/dist/ssr'
 import React from 'react'
 import { EditDeleteDropdown } from './EditDeleteDropdown'
 import { Progress } from '@/components/ui/Progress'
-import { Button } from '@/components/ui/button'
+import { AddMoneyPot } from './AddMoneyPot'
+import { WithDrawalMoneyPot } from './WithDrawalMoneyPot'
 
 export const  PotCard = ({title, totalSaved, targetOf, color}: {
   title: string
@@ -31,12 +32,8 @@ export const  PotCard = ({title, totalSaved, targetOf, color}: {
         </div>
       </section>
       <div className='grid grid-cols-2 gap-200'>
-        <Button variant={'secondary'}>
-          +Add Money
-        </Button>
-        <Button variant={'secondary'}>
-          Withdraw
-        </Button>
+        <AddMoneyPot title={title} totalSaved={totalSaved} targetOf={targetOf} color={color} />
+        <WithDrawalMoneyPot title={title} totalSaved={totalSaved} targetOf={targetOf} />
       </div>
     </article>
   )
