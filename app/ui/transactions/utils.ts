@@ -1,4 +1,4 @@
-import type { Transaction, TransactionSort } from './types'
+import type { Transaction, TransactionFilters, TransactionSort } from './types'
 
 export const filterTransactions = (
   source: readonly Transaction[],
@@ -58,6 +58,18 @@ export const paginateTransactions = (
   const safePage = Math.min(Math.max(page, 1), pageCount)
 
   return source.slice((safePage - 1) * pageSize, safePage * pageSize)
+}
+
+export const getPageAfterFilterChange = (
+  currentFilters: TransactionFilters,
+  nextFilters: TransactionFilters,
+  currentPage: number,
+) => {
+  const filtersChanged = currentFilters.query !== nextFilters.query
+    || currentFilters.category !== nextFilters.category
+    || currentFilters.sortBy !== nextFilters.sortBy
+
+  return filtersChanged ? 1 : currentPage
 }
 
 export const formatTransactionAmount = (amount: number) => {

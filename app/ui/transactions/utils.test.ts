@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { filterTransactions, getPageCount, paginateTransactions, sortTransactions } from './utils'
-import type { Transaction } from './types'
+import { filterTransactions, getPageAfterFilterChange, getPageCount, paginateTransactions, sortTransactions } from './utils'
+import type { Transaction, TransactionFilters } from './types'
 
 const sampleTransactions: Transaction[] = [
   { id: 'z', recipient: 'Zed', category: 'Bills', date: new Date('2024-08-20'), amount: -120, avatarPath: '/z.jpg' },
@@ -48,5 +48,23 @@ describe('paginateTransactions', () => {
     expect(paginateTransactions(sampleTransactions, 2, 2).map(({ id }) => id)).toEqual(['m', 'b'])
     expect(paginateTransactions(sampleTransactions, 0, 2).map(({ id }) => id)).toEqual(['z', 'a'])
     expect(paginateTransactions(sampleTransactions, 3, 2).map(({ id }) => id)).toEqual(['m', 'b'])
+  })
+})
+
+describe('getPageAfterFilterChange', () => {
+  const currentFilters: TransactionFilters = {
+    query: '',
+    category: 'All Transactions',
+    sortBy: 'Latest',
+  }
+
+  it('resets to page 1 when query, category, or sort changes', () => {
+    expect(getPageAfterFilterChange(currentFilters, { ...currentFilters, query: 'alice' }, 3)).toBe(1)
+    expect(getPageAfterFilterChange(currentFilters, { ...currentFilters, category: 'Bills' }, 3)).toBe(1)
+    expect(getPageAfterFilterChange(currentFilters, { ...currentFilters, sortBy: 'Lowest' }, 3)).toBe(1)
+  })
+
+  it('preserves the current page when filters are unchanged', () => {
+    expect(getPageAfterFilterChange(currentFilters, currentFilters, 3)).toBe(3)
   })
 })

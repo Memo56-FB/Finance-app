@@ -14,3 +14,9 @@ export type TransactionSort =
   | 'Z to A'
   | 'Highest'
   | 'Lowest'
+
+export type TransactionFilters = {
+  query: string
+  category: string
+  sortBy: TransactionSort
+}

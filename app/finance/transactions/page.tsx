@@ -3,8 +3,8 @@
 import { TransactionsTableMobile } from '@/app/ui/transactions/TransactionsTableMobile'
 import { TransactionTableDesktop } from '@/app/ui/transactions/TransactionTableDesktop'
 import { transactions } from '@/app/ui/transactions/data'
-import { filterTransactions, getPageCount, paginateTransactions, sortTransactions } from '@/app/ui/transactions/utils'
-import type { TransactionSort } from '@/app/ui/transactions/types'
+import { filterTransactions, getPageAfterFilterChange, getPageCount, paginateTransactions, sortTransactions } from '@/app/ui/transactions/utils'
+import type { TransactionFilters, TransactionSort } from '@/app/ui/transactions/types'
 import { InputSearch } from '@/components/ui/InputSearch'
 import { ResponsiveSelect } from '@/components/ui/ResponsiveSelect'
 import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
@@ -23,10 +23,13 @@ const categoryOptions = ['All Transactions', 'Entertainment', 'Bills', 'Grocerie
 const pageSize = 4
 
 const Page = () => {
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('All Transactions')
-  const [sortBy, setSortBy] = useState<TransactionSort>('Latest')
+  const [filters, setFilters] = useState<TransactionFilters>({
+    query: '',
+    category: 'All Transactions',
+    sortBy: 'Latest',
+  })
   const [page, setPage] = useState(1)
+  const { query, category, sortBy } = filters
 
   const filteredAndSortedTransactions = useMemo(() => (
     sortTransactions(filterTransactions(transactions, query, category), sortBy)
@@ -34,19 +37,21 @@ const Page = () => {
   const pageCount = getPageCount(filteredAndSortedTransactions, pageSize)
   const visibleTransactions = paginateTransactions(filteredAndSortedTransactions, page, pageSize)
 
+  const updateFilters = (nextFilters: TransactionFilters) => {
+    setFilters(nextFilters)
+    setPage(getPageAfterFilterChange(filters, nextFilters, page))
+  }
+
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.currentTarget.value)
-    setPage(1)
+    updateFilters({ ...filters, query: event.currentTarget.value })
   }
 
   const handleCategoryChange = (nextCategory: string) => {
-    setCategory(nextCategory)
-    setPage(1)
+    updateFilters({ ...filters, category: nextCategory })
   }
 
   const handleSortChange = (nextSort: string) => {
-    setSortBy(nextSort as TransactionSort)
-    setPage(1)
+    updateFilters({ ...filters, sortBy: nextSort as TransactionSort })
   }
 
   const goToPage = (nextPage: number) => {
