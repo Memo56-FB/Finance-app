@@ -1,18 +1,20 @@
 import React from 'react'
 import { TransactionsCardTable } from './TransactionsCardTable'
 import { Separator } from '@/components/ui/separator'
+import type { Transaction } from './types'
 
-export const TransactionsTableMobile = () => {
+export const TransactionsTableMobile = ({ transactions }: { transactions: readonly Transaction[] }) => {
   return (
     <div className='grid gap-200 md:hidden'>
-      <TransactionsCardTable
-        src='/profilePictures/Logo-1.jpg'
-        recipient='Bravo Zen Spa'
-        category='Personal Care'
-        date='29 Aug 2024'
-        amount='-$25.00'
-      />
-      <Separator className='bg-grey-100' />
+      {transactions.map((transaction, index) => (
+        <React.Fragment key={transaction.id}>
+          <TransactionsCardTable transaction={transaction} />
+          {index < transactions.length - 1 && <Separator className='bg-grey-100' />}
+        </React.Fragment>
+      ))}
+      {transactions.length === 0 && (
+        <p className='py-300 text-center text-grey-500'>No transactions found.</p>
+      )}
     </div>
   )
 }
