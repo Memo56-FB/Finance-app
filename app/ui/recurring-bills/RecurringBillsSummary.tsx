@@ -1,22 +1,28 @@
-const summaryItems = [
-  {
-    label: 'Paid Bills',
-    value: '4 ($190.00)',
-    isDanger: false,
-  },
-  {
-    label: 'Total Upcoming',
-    value: '4 ($194.98)',
-    isDanger: false,
-  },
-  {
-    label: 'Due Soon',
-    value: '2 ($59.98)',
-    isDanger: true,
-  },
-]
+import { currencyFormatter, type RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
 
-export const RecurringBillsSummary = () => {
+type RecurringBillsSummaryProps = {
+  summary: RecurringBillsSummaryData
+}
+
+export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) => {
+  const summaryItems = [
+    {
+      label: 'Paid Bills',
+      value: `${summary.paid.count} (${currencyFormatter.format(summary.paid.amount)})`,
+      isDanger: false,
+    },
+    {
+      label: 'Total Upcoming',
+      value: `${summary.upcoming.count} (${currencyFormatter.format(summary.upcoming.amount)})`,
+      isDanger: false,
+    },
+    {
+      label: 'Due Soon',
+      value: `${summary.dueSoon.count} (${currencyFormatter.format(summary.dueSoon.amount)})`,
+      isDanger: true,
+    },
+  ]
+
   return (
     <article className='bg-white rounded-xl px-250 py-250 grid gap-250'>
       <h2 className='text-preset-3 text-grey-900'>Summary</h2>

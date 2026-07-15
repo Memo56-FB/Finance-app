@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { recurringBills } from './data'
 import type { RecurringBill } from './types'
-import { filterBillsByTitle, sortBills } from './utils'
+import { calculateRecurringBillsSummary, filterBillsByTitle, sortBills } from './utils'
 
 const bills: RecurringBill[] = [
   {
@@ -79,5 +80,55 @@ describe('filterBillsByTitle', () => {
   it('returns all bills for an empty or whitespace-only query', () => {
     expect(filterBillsByTitle(bills, '')).toBe(bills)
     expect(filterBillsByTitle(bills, '   ')).toBe(bills)
+  })
+})
+
+describe('calculateRecurringBillsSummary', () => {
+  it('calculates the current recurring-bill fixture', () => {
+    expect(calculateRecurringBillsSummary(recurringBills)).toEqual({
+      total: { amount: 1550, count: 8 },
+      paid: { amount: 1510, count: 6 },
+      upcoming: { amount: 40, count: 2 },
+      dueSoon: { amount: 40, count: 2 },
+    })
+  })
+
+  it('handles empty input', () => {
+    expect(calculateRecurringBillsSummary([])).toEqual({
+      total: { amount: 0, count: 0 },
+      paid: { amount: 0, count: 0 },
+      upcoming: { amount: 0, count: 0 },
+      dueSoon: { amount: 0, count: 0 },
+    })
+  })
+
+  it('handles all-paid and all-due input', () => {
+    expect(calculateRecurringBillsSummary(bills.filter((bill) => bill.status === 'paid'))).toMatchObject({
+      total: { amount: 135, count: 2 },
+      paid: { amount: 135, count: 2 },
+      upcoming: { amount: 0, count: 0 },
+      dueSoon: { amount: 0, count: 0 },
+    })
+    expect(calculateRecurringBillsSummary(bills.filter((bill) => bill.status === 'due'))).toMatchObject({
+      total: { amount: 80, count: 1 },
+      paid: { amount: 0, count: 0 },
+      upcoming: { amount: 80, count: 1 },
+      dueSoon: { amount: 80, count: 1 },
+    })
+  })
+
+  it('handles mixed statuses and zero amounts', () => {
+    const mixedBills = [
+      { ...bills[0], amount: 0 },
+      { ...bills[1], amount: 25 },
+      { ...bills[0], amount: 10 },
+    ]
+
+    expect(calculateRecurringBillsSummary(mixedBills)).toEqual({
+      total: { amount: 35, count: 3 },
+      paid: { amount: 25, count: 1 },
+      upcoming: { amount: 10, count: 2 },
+      dueSoon: { amount: 10, count: 2 },
+    })
   })
 })

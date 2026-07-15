@@ -1,11 +1,16 @@
 import { RecurringBillsSummary } from './RecurringBillsSummary'
 import { RecurringBillsTotal } from './RecurringBillsTotal'
+import type { RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
 
-export const RecurringBillsOverview = () => {
+type RecurringBillsOverviewProps = {
+  summary: RecurringBillsSummaryData
+}
+
+export const RecurringBillsOverview = ({ summary }: RecurringBillsOverviewProps) => {
   return (
     <aside className='grid gap-150 md:grid-cols-2 xl:grid-cols-1 xl:self-start'>
-      <RecurringBillsTotal />
-      <RecurringBillsSummary />
+      <RecurringBillsTotal total={summary.total} />
+      <RecurringBillsSummary summary={summary} />
     </aside>
   )
 }
