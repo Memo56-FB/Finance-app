@@ -12,7 +12,7 @@ const SpendingSummaryCard = ({ title, value, ofValue, color }: {
   color: string
 }) => {
   return (
-    <article className='flex justify-between'>
+    <article className='flex flex-wrap justify-between gap-100'>
       <div className='flex gap-200'>
         <div className={`h-full rounded-lg bg-${color} w-1`}></div>
         <h3 className='text-preset-4 text-grey-500'><ControlledLabel value={title} /></h3>

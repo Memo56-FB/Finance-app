@@ -23,7 +23,7 @@ export const RecurringBills = () => {
   const summary = calculateRecurringBillsSummary(recurringBills)
   return (
     <article className='grid gap-400 bg-white rounded-xl px-250 py-300 md:p-400'>
-      <div className='flex justify-between'>
+      <div className='flex flex-wrap justify-between gap-100'>
         <h2 className='text-preset-2 text-grey-900'><Text id="Recurring Bills" /></h2>
         <Button variant={'tertiary'} asChild><Link href="/finance/recurring-bills"><Text id="See Details" /></Link></Button>
       </div>

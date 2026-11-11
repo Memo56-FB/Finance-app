@@ -27,7 +27,7 @@ const BudgetChartCard = ({ color, title, value }: {
 export function Budgets() {
   return (
     <article className="flex flex-col p-400 bg-white rounded-xl">
-      <div className="flex justify-between">
+      <div className="flex flex-wrap justify-between gap-100">
         <h2 className="text-preset-2 text-grey-900"><Text id="Budgets" /></h2>
         <Button variant={'tertiary'} asChild><Link href="/finance/budgets"><Text id="See Details" /></Link></Button>
       </div>

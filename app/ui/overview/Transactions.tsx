@@ -44,7 +44,7 @@ const TransactionCard = ({ src, name, value, date }: {
 export const Transactions = () => {
   return (
     <article className='grid gap-400 py-300 px-250 md:p-400 bg-white rounded-xl'>
-      <div className="flex justify-between">
+      <div className="flex flex-wrap justify-between gap-100">
         <h2 className="text-preset-2 text-grey-900"><Text id="Transactions" /></h2>
         <Button variant={'tertiary'} asChild><Link href="/finance/transactions"><Text id="See Details" /></Link></Button>
       </div>

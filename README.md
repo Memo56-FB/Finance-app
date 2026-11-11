@@ -37,7 +37,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ### Language preference
 
-The global language selector offers English (default) and Spanish. The browser
+The global language selector at the top right offers English (default) with the
+United States flag and Español with the Mexico flag. The flags identify the
+language options, not currencies. The browser
 remembers the selection for up to one year in the `finance-language` cookie.
 Next.js reads it per request, so the first HTML already matches the selection.
 The preference applies when navigating, reloading or opening another tab in the

@@ -24,12 +24,12 @@ const PotMiniCard = ({ color, title, value }: {
 export const Pots = () => {
   return (
     <article className='py-300 px-250 md:p-400 grid gap-250 bg-white rounded-xl'>
-      <div className='flex justify-between'>
+      <div className='flex flex-wrap justify-between gap-100'>
         <h2 className='text-preset-2 text-grey-900'><Text id="Pots" /></h2>
         <Button variant={'tertiary'} asChild><Link href="/finance/pots"><Text id="See Details" /></Link></Button>
       </div>
-      <div className='grid gap-250 md:grid-cols-2'>
-        <article className='p-200 flex gap-200 items-center bg-beige-100 rounded-xl'>
+      <div className='grid gap-250 grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]'>
+        <article className='p-200 flex flex-wrap gap-200 items-center bg-beige-100 rounded-xl'>
           <TipJar className='text-green' size={40} />
           <div className='gap-[11px] grid'>
             <h3 className='text-preset-4 text-grey-500'><Text id="Total Saved" /></h3>

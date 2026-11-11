@@ -7,7 +7,7 @@ import React from 'react'
 const page = () => {
   return (
     <>
-      <header className='flex justify-between'>
+      <header className='flex flex-wrap items-center justify-between gap-200'>
         <h1 className='text-preset-1 text-grey-900'><Text id="Pots" /></h1>
         <CreatePot />
       </header>
