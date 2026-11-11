@@ -1,4 +1,5 @@
 import { Sidebar } from '@/components/ui/Sidebar'
+import { PreferencesBar } from '@/lib/i18n/PreferencesBar'
 import React from 'react'
 
 const layout = ({children}: Readonly<{
@@ -10,9 +11,12 @@ const layout = ({children}: Readonly<{
       <div className='lg:flex-none row-start-2'>
         <Sidebar />
       </div>
-      <main className='flex flex-col gap-400 flex-grow overflow-auto py-300 md:py-400 lg:pt-24 px-200 md:px-500'>
-        {children}
-      </main>
+      <div className='min-h-0 min-w-0 overflow-auto lg:flex-1'>
+        <PreferencesBar />
+        <main className='flex flex-col gap-400 py-300 md:py-400 px-200 md:px-500'>
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

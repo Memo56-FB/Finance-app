@@ -27,6 +27,12 @@ La aplicación SHALL ofrecer un único selector de idioma por página en las cin
 - **AND** el menú lateral empieza en el borde superior y ocupa toda la altura de la ventana, sin un hueco reservado para el selector
 - **AND** los botones para crear presupuestos o apartados siguen visibles y accionables
 
+#### Scenario: Language selector scrolls away
+
+- **WHEN** se desplaza hacia abajo el contenido de una vista de finanzas
+- **THEN** el selector sale de la vista con ese contenido y vuelve a su posición inicial al subir
+- **AND** el menú lateral de escritorio conserva su posición y altura
+
 #### Scenario: Mobile and authentication placement
 
 - **WHEN** se abre cualquier vista de producto a 320 o 390 píxeles de ancho

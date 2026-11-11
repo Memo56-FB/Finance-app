@@ -151,8 +151,8 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
         await expect(selector).toBeVisible()
         const control = (await selector.boundingBox())!
         expect(control.x + control.width).toBeCloseTo(width - (width >= 768 ? 40 : 16), 0)
-        const heading = (await page.locator('h1').first().boundingBox())!
-        expect(control.y + control.height).toBeLessThanOrEqual(heading.y)
+        await expect.poll(async () => (await page.locator('h1').first().boundingBox())?.y ?? -Infinity)
+          .toBeGreaterThanOrEqual(control.y + control.height)
         if (width >= 1024 && route.startsWith('/finance')) {
           const navigation = (await page.locator('nav').first().boundingBox())!
           expect(navigation.y).toBe(0)
@@ -268,4 +268,23 @@ test('language selector prevents concurrent changes during refresh', async ({ pa
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')
   await expect(selector).toBeEnabled()
   await expect(selector).toContainText('Español')
+})
+
+test('desktop language selector scrolls away with the content', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/finance/pots')
+  const selector = page.locator('#preference-language')
+  const scrollArea = page.locator('main').locator('..')
+  const initial = (await selector.boundingBox())!
+  await scrollArea.evaluate(element => { element.scrollTop = 300 })
+  await expect.poll(() => scrollArea.evaluate(element => element.scrollTop)).toBe(300)
+  expect((await selector.boundingBox())!.y).toBeCloseTo(initial.y - 300, 0)
+  const navigation = (await page.locator('nav').first().boundingBox())!
+  expect(navigation.y).toBe(0)
+  expect(navigation.height).toBe(720)
+  await scrollArea.evaluate(element => { element.scrollTop = 0 })
+  await expect(selector).toBeInViewport()
+  await selector.click()
+  await page.getByRole('option', { name: 'Español', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es')
 })

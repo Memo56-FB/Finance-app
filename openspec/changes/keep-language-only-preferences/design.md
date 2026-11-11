@@ -2,7 +2,7 @@
 
 > Actualización solicitada tras la implementación: los importes usan solo `$` con dos decimales, sin moneda asignada. Esta decisión reemplaza las referencias siguientes a USD fijo.
 
-> Ajuste de escritorio solicitado después: el selector sale del flujo con posición absoluta arriba a la derecha; el contenido financiero reserva espacio superior y el sidebar ocupa toda la altura desde el borde superior. En móvil se conserva la fila en flujo normal. Esta decisión sustituye la restricción de posición de la sección 4.
+> Ajuste solicitado después: el selector se monta al inicio del área desplazable de finanzas, alineado a la derecha y en flujo normal. Desaparece al bajar y vuelve al subir; no usa posición fija ni sticky. La fila ocupa solo el contenido, por lo que el sidebar de escritorio conserva toda la altura desde el borde superior. Acceso, registro e inicio mantienen su selector independiente. Esta decisión sustituye el montaje global descrito en la sección 4.
 
 ## Context
 

@@ -1,5 +1,4 @@
 import { PreferencesProvider } from '@/lib/i18n/client'
-import { PreferencesBar } from '@/lib/i18n/PreferencesBar'
 import { getI18n } from '@/lib/i18n/server'
 import type { Metadata } from "next";
 import "./globals.css";
@@ -22,7 +21,6 @@ export default async function RootLayout({
       <SpeedInsights />
       <body className={`${publicSans.className} relative h-dvh w-full flex flex-col bg-beige-100`}>
         <PreferencesProvider preferences={{ language: locale.language }} messages={locale.messages}>
-          <PreferencesBar />
           <div className="flex flex-1 min-h-0 flex-col">{children}</div>
         </PreferencesProvider>
       </body>

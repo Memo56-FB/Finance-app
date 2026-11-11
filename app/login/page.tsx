@@ -1,4 +1,5 @@
 import { Text } from '@/lib/i18n/client'
+import { PreferencesBar } from '@/lib/i18n/PreferencesBar'
 
 import Image from 'next/image'
 import React from 'react'
@@ -7,6 +8,8 @@ import { LoginForm } from '../ui/LoginForm'
 const page = () => {
 
   return (
+    <>
+    <div className="lg:absolute lg:right-0 lg:top-0 lg:z-10"><PreferencesBar /></div>
     <main className='grid grid-rows-[auto_1fr] h-full lg:flex '>
       <div className='bg-grey-900 rounded-b-lg px-500 py-300 grid place-items-center lg:hidden'>
         <Image alt='logo' src='/fullLogo.svg' width={122} height={22} />
@@ -24,6 +27,7 @@ const page = () => {
         <LoginForm />
       </section>
     </main>
+    </>
   )
 }
 
