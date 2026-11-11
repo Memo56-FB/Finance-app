@@ -12,12 +12,9 @@ export const SelectColorTag = ({
 
   return (
     <Select>
-      {/* TODO: revisar como estructurar esto para ponerlo en mis forms */}
-      {/* <FormControl> */}
         <SelectTrigger>
           <SelectValue placeholder='Pick a color'/>
         </SelectTrigger>
-      {/* </FormControl> */}
       <SelectContent >
         {options.map( option => (
           <Fragment key={option.value}>
