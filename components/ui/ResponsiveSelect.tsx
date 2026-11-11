@@ -3,7 +3,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { HeartBreak } from '@phosphor-icons/react'
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 
 export const ResponsiveSelect = ({ options, label, children, value, onValueChange }: {
   options: string[]
@@ -12,6 +12,7 @@ export const ResponsiveSelect = ({ options, label, children, value, onValueChang
   value?: string
   onValueChange?: (value: string) => void
 }) => {
+  const selectId = useId()
   const [selectedValue, setSelectedValue] = useState(options[0])
   const currentValue = value ?? selectedValue
   const handleValueChange = (nextValue: string) => {
@@ -22,7 +23,7 @@ export const ResponsiveSelect = ({ options, label, children, value, onValueChang
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className='flex md:hidden'>
+        <DropdownMenuTrigger aria-label={label} className='flex md:hidden'>
           {/* ? An icon to show the dropdown menu */}
           {children}
           {/* ? An default icon for documenting stories */}
@@ -57,9 +58,9 @@ export const ResponsiveSelect = ({ options, label, children, value, onValueChang
         </DropdownMenuContent>
       </DropdownMenu>
       <div className='items-center gap-100 hidden md:flex'>
-        <label className='text-preset-4 text-grey-500 text-nowrap' htmlFor="">{label}</label>
+        <label className='text-preset-4 text-grey-500 text-nowrap' htmlFor={selectId}>{label}</label>
         <Select value={currentValue} onValueChange={handleValueChange}>
-          <SelectTrigger>
+          <SelectTrigger id={selectId}>
             <SelectValue>
               {currentValue}
             </SelectValue>

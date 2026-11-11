@@ -8,7 +8,7 @@ import { DeletePot } from './DeletePot'
 export const EditDeleteDropdown = () => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger aria-label="Pot actions">
         <DotsThreeOutline className="text-grey-300" size={16} weight="fill" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className='bg-white rounded-md px-250 py-150 grid gap-150'>

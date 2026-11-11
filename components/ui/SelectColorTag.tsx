@@ -2,8 +2,10 @@ import React, { Fragment } from 'react'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './select'
 
 export const SelectColorTag = ({
-  options
+  options,
+  id,
 }: {
+  id?: string
   options: {
     value: string
     label: string
@@ -12,7 +14,7 @@ export const SelectColorTag = ({
 
   return (
     <Select>
-        <SelectTrigger>
+        <SelectTrigger id={id} aria-label={id ? undefined : 'Color tag'}>
           <SelectValue placeholder='Pick a color'/>
         </SelectTrigger>
       <SelectContent >

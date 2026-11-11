@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { SelectColorTag } from "@/components/ui/SelectColorTag"
 import { colorTags } from "@/lib/utils"
 export const EditPot = () => {
+  const formId = useId()
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -28,22 +30,23 @@ export const EditPot = () => {
         </DialogHeader>
         <form action="" className="grid gap-200">
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Pot Name</label>
-            <Input placeholder="e.g. Rainy Days" />
+            <label htmlFor={`${formId}-name`} className="text-preset-5-bold text-grey-500">Pot Name</label>
+            <Input id={`${formId}-name`} placeholder="e.g. Rainy Days" />
             <span className="text-right text-preset-5 text-grey-500">x charactes left</span>
           </div>
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Target</label>
+            <label htmlFor={`${formId}-target`} className="text-preset-5-bold text-grey-500">Target</label>
             <div className="relative">
               <p className="text-beige-500 absolute left-250 top-[10px] text-preset-4">
                 $
               </p>
-              <Input placeholder="e.g. 2000" className="pl-500" />
+              <Input id={`${formId}-target`} type="number" min={0} step="0.01" placeholder="e.g. 2000" className="pl-500" />
             </div>
           </div>
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Theme</label>
+            <label htmlFor={`${formId}-theme`} className="text-preset-5-bold text-grey-500">Theme</label>
             <SelectColorTag
+              id={`${formId}-theme`}
               options={colorTags}
             />
           </div>

@@ -58,6 +58,7 @@ export const AddMoneyPot = ({
             </div>
             <div className="grid grid-cols-2 gap-150">
               <ProgressDiff
+                aria-label={`${title} savings preview`}
                 max={targetOf}
                 currentValue={totalSaved}
                 incomingValue={incomingValue}

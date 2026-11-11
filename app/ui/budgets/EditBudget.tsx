@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -24,6 +25,7 @@ import { budgets } from './data'
 
 
 export const EditBudget = () => {
+  const formId = useId()
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -31,16 +33,16 @@ export const EditBudget = () => {
       </DialogTrigger>
       <DialogContent className="w-[320px] px-250 py-300 rounded-xl md:w-full grid gap-250">
         <DialogHeader className="grid justify-start gap-250">
-          <DialogTitle className="text-start">Add New Budget</DialogTitle>
+          <DialogTitle className="text-start">Edit Budget</DialogTitle>
           <DialogDescription className="text-start">
             As your budgets change, feel free to update your spending limits.
           </DialogDescription>
         </DialogHeader>
         <form action="" className="grid gap-200">
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Budget Category</label>
+            <label htmlFor={`${formId}-category`} className="text-preset-5-bold text-grey-500">Budget Category</label>
             <Select>
-              <SelectTrigger>
+              <SelectTrigger id={`${formId}-category`}>
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -49,17 +51,18 @@ export const EditBudget = () => {
             </Select>
           </div>
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Maximun Spending</label>
+            <label htmlFor={`${formId}-limit`} className="text-preset-5-bold text-grey-500">Maximum Spending</label>
             <div className="relative">
               <p className="text-beige-500 absolute left-250 top-[10px] text-preset-4">
                 $
               </p>
-              <Input placeholder="e.g. 2000" className="pl-500" />
+              <Input id={`${formId}-limit`} type="number" min={0} step="0.01" placeholder="e.g. 2000" className="pl-500" />
             </div>
           </div>
           <div className="grid gap-50">
-            <label htmlFor="name" className="text-preset-5-bold text-grey-500">Color Tag</label>
+            <label htmlFor={`${formId}-theme`} className="text-preset-5-bold text-grey-500">Color Tag</label>
             <SelectColorTag
+              id={`${formId}-theme`}
               options={colorTags}
             />
           </div>

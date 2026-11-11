@@ -19,6 +19,7 @@ export const RecurringBillsToolbar = ({
   return (
     <div className='flex items-center justify-between gap-300'>
       <InputSearch
+        aria-label='Search bills'
         type='text'
         placeholder='Search bills'
         value={searchQuery}

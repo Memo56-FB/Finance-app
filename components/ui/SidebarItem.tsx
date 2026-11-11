@@ -10,6 +10,8 @@ const SidebarItem = ({ href, icon: Icon, active, title }: SidebarItemProps) => {
   return (
     <Link
       href={href}
+      aria-label={title}
+      aria-current={active ? 'page' : undefined}
       className={clsx(
         "text-preset-5-bold lg:text-preset-3 transition-colors items-center relative",
         "flex flex-col gap-50 pt-100 pb-150 px-250 md:px-200 justify-center lg:flex-row lg:py-200 lg:px-400",

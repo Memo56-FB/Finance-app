@@ -19,7 +19,7 @@ export const BudgetsCard = ({ title, color, ofValue, spent, latest }: Budget) =>
       </header>
       <div className="grid gap-200">
         <p className="text-preset-4 text-grey-500">Maximum of {currencyFormatter.format(ofValue)}</p>
-        <Progress value={spent} max={ofValue} color={color} />
+        <Progress aria-label={`${title} spending`} value={spent} max={ofValue} color={color} />
         <div className="grid grid-cols-2">
           {/* Spent */}
           <div className="flex gap-200">

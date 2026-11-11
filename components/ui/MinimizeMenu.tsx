@@ -9,6 +9,9 @@ const MinimizeMenu = ({onClick}: {onClick: () => void}) => {
   const isOpen = useSidebarStore( state => state.isOpen)
   return (
     <button
+      type="button"
+      aria-label={isOpen ? 'Minimize Menu' : 'Expand Menu'}
+      aria-expanded={isOpen}
       onClick={onClick}
       className='items-center gap-200 text-preset-3 text-grey-300 hover:text-white transition-colors px-400 py-200 self-end hidden lg:flex lg:text-nowrap ease-in-out'
     >

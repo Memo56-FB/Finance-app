@@ -63,7 +63,7 @@ const Page = () => {
       <h1 className='text-preset-1 text-grey-900'>Transactions</h1>
       <section className='bg-white mt-400 px-250 py-300 rounded-xl grid gap-300'>
         <div className='flex gap-300 items-center justify-between mb-300'>
-          <InputSearch type='text' placeholder='Search transaction' value={query} onChange={handleQueryChange} />
+          <InputSearch aria-label='Search transactions' type='text' placeholder='Search transaction' value={query} onChange={handleQueryChange} />
           <div className='flex gap-300'>
             <ResponsiveSelect label='Sort By' options={sortOptions} value={sortBy} onValueChange={handleSortChange}>
               <SortAscending weight='fill' size={20} className='text-grey-900' />
