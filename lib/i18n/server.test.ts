@@ -10,7 +10,7 @@ it('isolates request languages and never reads the legacy currency cookie', asyn
   const [first, second] = await Promise.all([getI18n(), getI18n()])
   expect(first.language).toBe('es')
   expect(second.language).toBe('en')
-  expect(first.money(1000)).toMatch(/^USD\s1,000\.00$/)
+  expect(first.money(1000)).toBe('$1,000.00')
   expect(second.money(1000)).toBe('$1,000.00')
   for (const get of [spanish, invalid]) expect(get.mock.calls).toEqual([['finance-language']])
   expect(first).not.toHaveProperty('currency')

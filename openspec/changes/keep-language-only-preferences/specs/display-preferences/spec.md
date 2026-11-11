@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Permitir elegir y recordar únicamente el idioma de la interfaz desde un control accesible, manteniendo una sola moneda fija y descartando la antigua preferencia monetaria.
+Permitir elegir y recordar únicamente el idioma de la interfaz desde un control accesible, mostrando importes con el signo `$` sin asignar una moneda y descartando la antigua preferencia monetaria.
 
 ## ADDED Requirements
 
@@ -60,13 +60,13 @@ La aplicación SHALL NOT ofrecer selector de moneda, opciones USD/MXN ni mensaje
 
 ### Requirement: Fixed monetary presentation
 
-Todos los importes y adornos monetarios SHALL representar USD con el formato regional del idioma activo. Cambiar idioma SHALL preservar cantidades, totales, metas, porcentajes, signos y dos decimales monetarios, sin convertir importes ni consultar tipos de cambio.
+Todos los importes y adornos monetarios SHALL usar únicamente el signo `$` y dos decimales, sin asignar moneda. Cambiar idioma SHALL preservar cantidades, totales, metas, porcentajes, signos y dos decimales monetarios, sin convertir importes ni consultar tipos de cambio.
 
 #### Scenario: Language never changes financial denomination
 
 - **GIVEN** importes de `1000`, `75.5`, `-25` y `0` en inglés
 - **WHEN** se cambia a español y se recorren tarjetas, gráficos, tablas, resúmenes y diálogos
-- **THEN** todos siguen representando las mismas cantidades en USD con dos decimales
+- **THEN** todos siguen mostrando las mismas cantidades con el signo `$` y dos decimales
 - **AND** las transacciones conservan sus signos de ingreso y gasto; el cero no adquiere ninguno
 - **AND** la acción no solicita servicios de tipos de cambio
 
@@ -78,14 +78,14 @@ La aplicación SHALL ignorar cualquier cookie monetaria heredada, sin usarla par
 
 - **GIVEN** cookies `finance-language=es` y `finance-currency=MXN`
 - **WHEN** se abre la aplicación, se cambia a inglés y se recarga
-- **THEN** el idioma sigue cada selección y los importes siempre representan USD
+- **THEN** el idioma sigue cada selección y los importes siempre usan `$`
 - **AND** no se crea ni se actualiza `finance-currency`
 
 #### Scenario: Invalid legacy currency cannot break rendering
 
 - **GIVEN** español guardado y una cookie monetaria con un valor no soportado
 - **WHEN** se abre una vista de producto
-- **THEN** la página funciona en español con USD, igual que si no existiera esa cookie
+- **THEN** la página funciona en español con `$`, igual que si no existiera esa cookie
 
 ### Requirement: Browser-scoped language persistence
 
@@ -105,19 +105,19 @@ La aplicación SHALL recordar el idioma mediante `finance-language` al navegar, 
 
 ### Requirement: Consistent initial language rendering
 
-El primer HTML y la hidratación SHALL usar el idioma guardado y USD fijo, sin mostrar primero otro idioma ni compartir preferencias entre sesiones. El documento SHALL declarar el idioma efectivo.
+El primer HTML y la hidratación SHALL usar el idioma guardado y el signo `$`, sin mostrar primero otro idioma ni compartir preferencias entre sesiones. El documento SHALL declarar el idioma efectivo.
 
 #### Scenario: Spanish before client scripts
 
 - **GIVEN** español guardado, con o sin cookie monetaria heredada
 - **WHEN** se solicita una de las siete vistas antes de ejecutar JavaScript
-- **THEN** sus textos y selector ya muestran español, su documento declara `lang="es"` y sus importes representan USD
+- **THEN** sus textos y selector ya muestran español, su documento declara `lang="es"` y sus importes usan `$`
 
 #### Scenario: Concurrent independent languages
 
 - **GIVEN** dos sesiones con idiomas distintos
 - **WHEN** solicitan simultáneamente la aplicación
-- **THEN** cada respuesta usa su propio idioma y ambas mantienen USD
+- **THEN** cada respuesta usa su propio idioma y ambas muestran importes con `$`
 
 ### Requirement: Invalid stored language falls back safely
 
@@ -127,7 +127,7 @@ El idioma guardado SHALL validarse antes de usarse; un valor ausente o distinto 
 
 - **GIVEN** un idioma guardado inválido y `finance-currency=MXN`
 - **WHEN** se carga la aplicación
-- **THEN** la interfaz usa inglés y USD sin errores
+- **THEN** la interfaz usa inglés y `$` sin errores
 
 ### Requirement: Failed language persistence preserves effective state
 

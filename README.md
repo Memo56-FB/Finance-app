@@ -45,7 +45,7 @@ Next.js reads it per request, so the first HTML already matches the selection.
 The preference applies when navigating, reloading or opening another tab in the
 same browser; it does not synchronize between devices or accounts.
 
-Amounts always represent USD, formatted for the selected language. Changing
+Amounts use only the `$` sign and two decimal places, with no currency assigned. Changing
 language does not change financial values or convert money. Older currency
 cookies are ignored and are no longer written or renewed. These routes require
 a Next.js server runtime because they read request cookies.

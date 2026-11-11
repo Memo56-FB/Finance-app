@@ -1,5 +1,7 @@
 # Proposal
 
+> Actualización solicitada tras la implementación: los importes usan solo `$` con dos decimales, sin moneda asignada. Esta decisión reemplaza las referencias siguientes a USD fijo.
+
 ## Why
 
 El usuario quiere conservar únicamente el cambio de idioma y retirar la elección de moneda. El código actual solo vuelve a etiquetar importes USD/MXN, sin conversión real; mantener ese selector y su explicación añade una función que ya no se desea.

@@ -59,14 +59,14 @@ for (const legacyCurrency of ['MXN', 'bad']) {
       if (language === 'en') await select(page, 'language', 'English')
       await page.reload()
       await expect(page.locator('html')).toHaveAttribute('lang', language)
-      const expected = new Intl.NumberFormat(language === 'es' ? 'es-MX' : 'en-US', { style: 'currency', currency: 'USD' }).format(5113.75)
+      const expected = '$5,113.75'
       await expect(page.getByText(expected, { exact: true })).toBeVisible()
       expect((await context.cookies()).find(cookie => cookie.name === 'finance-currency')).toEqual(previousCookie)
     }
   })
 }
 for (const language of ['en','es']) {
-  test(`all seven routes render ${language}/USD before JavaScript`, async ({ browser }) => {
+  test(`all seven routes render ${language} before JavaScript`, async ({ browser }) => {
     const context=await browser.newContext({javaScriptEnabled:false,locale:'es-MX'})
     await context.addCookies([{name:'finance-language',value:language,url:'http://localhost:3000'}])
     const page=await context.newPage()
@@ -92,7 +92,7 @@ test('request languages are isolated and legacy currency cookies have no effect'
     const page=await context.newPage();await page.goto('/finance')
     await expect(page.locator('html')).toHaveAttribute('lang',i===2?'es':'en')
     await expect(page.locator('#preference-currency')).toHaveCount(0)
-    const expected = new Intl.NumberFormat(i === 2 ? 'es-MX' : 'en-US', { style: 'currency', currency: 'USD' }).format(5113.75)
+    const expected = '$5,113.75'
     await expect(page.getByText(expected, { exact: true })).toBeVisible()
   }))
   await Promise.all(contexts.map(c=>c.close()))
@@ -141,11 +141,11 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
     const errors: string[]=[]
     page.on('pageerror',error=>errors.push(error.message))
   page.on('console',message=>{if(message.type()==='error' && /hydration|hydrated|server rendered HTML/i.test(message.text()))errors.push(message.text())})
-    const money=new Intl.NumberFormat(language==='es'?'es-MX':'en-US',{style:'currency',currency:'USD'})
       await page.setViewportSize({width,height:900})
       for (const route of routes) {
         await page.goto(route)
         await expect(page.locator('h1').first()).toBeVisible()
+        await expect(page.locator('body')).not.toContainText(/\b(?:USD|MXN)\b/)
         const selector = page.getByRole('combobox', { name: language === 'es' ? 'Idioma' : 'Language', exact: true })
         await expect(selector).toHaveCount(1)
         await expect(selector).toBeVisible()
@@ -174,9 +174,9 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${language} ${route} at ${width}px`).toBe(true)
         expect(await page.locator('main').evaluate(element => element.scrollWidth <= element.clientWidth), `${language} ${route} content at ${width}px`).toBe(true)
-        const amount=route==='/finance'?5113.75:route==='/finance/pots'?159:route==='/finance/recurring-bills'?1550:undefined
-        if (amount!==undefined) await expect(page.getByText(money.format(amount),{exact:true}).first()).toBeVisible()
-        if (route==='/finance/budgets') await expect(page.getByText(money.format(270.5),{exact:true})).toBeVisible()
+        const amount=route==='/finance'?'$5,113.75':route==='/finance/pots'?'$159.00':route==='/finance/recurring-bills'?'$1,550.00':undefined
+        if (amount!==undefined) await expect(page.getByText(amount,{exact:true}).first()).toBeVisible()
+        if (route==='/finance/budgets') await expect(page.getByText('$270.50',{exact:true})).toBeVisible()
       }
     if (language==='es') {
       await page.goto('/finance/pots')

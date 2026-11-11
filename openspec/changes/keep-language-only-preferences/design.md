@@ -1,5 +1,7 @@
 # Design
 
+> Actualización solicitada tras la implementación: los importes usan solo `$` con dos decimales, sin moneda asignada. Esta decisión reemplaza las referencias siguientes a USD fijo.
+
 ## Context
 
 Ver `proposal.md` para la motivación y `specs/` para el contrato final. Este diseño es necesario porque la preferencia monetaria cruza cookies, contexto, formato, controles y pruebas.
