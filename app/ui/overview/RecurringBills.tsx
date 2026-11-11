@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
+import { recurringBills } from '../recurring-bills/list/data'
+import { calculateRecurringBillsSummary } from '../recurring-bills/list/utils'
+import { currencyFormatter } from '@/lib/utils'
 
 const RecurringBillsCard = ({title, value, color}: {
   title: string
@@ -15,6 +18,7 @@ const RecurringBillsCard = ({title, value, color}: {
 }
 
 export const RecurringBills = () => {
+  const summary = calculateRecurringBillsSummary(recurringBills)
   return (
     <article className='grid gap-400 bg-white rounded-xl px-250 py-300 md:p-400'>
       <div className='flex justify-between'>
@@ -23,18 +27,18 @@ export const RecurringBills = () => {
       </div>
       <section className='grid gap-150'>
         <RecurringBillsCard
-          title='Paid Billd'
-          value={'$190.00'}
+          title='Paid Bills'
+          value={currencyFormatter.format(summary.paid.amount)}
           color='green'
         />
         <RecurringBillsCard
           title='Total Upcoming'
-          value={'$194.98'}
+          value={currencyFormatter.format(summary.upcoming.amount)}
           color='yellow'
         />
         <RecurringBillsCard
           title='Due Soon'
-          value={'$59.98'}
+          value={currencyFormatter.format(summary.dueSoon.amount)}
           color='cyan'
         />
       </section>

@@ -4,13 +4,8 @@ import { Label, Pie, PieChart } from "recharts"
 import {
   ChartContainer,
 } from "@/components/ui/chart"
-
-const mobileData = [
-  { budget: "Entertainment", mobile: 50, fill: "#277C78" },
-  { budget: "Bills", mobile: 750, fill: "#82C9D7" },
-  { budget: "Dining Out", mobile: 75, fill: "#F2CDAC" },
-  { budget: "Personal Care", mobile: 100, fill: "#626070" },
-]
+import { budgets, totalBudget, totalSpent } from './budgets/data'
+import { currencyFormatter } from '@/lib/utils'
 
 export const BudgetChart = () => {
   return (
@@ -20,8 +15,9 @@ export const BudgetChart = () => {
     >
       <PieChart>
         <Pie
-          data={mobileData}
-          dataKey="mobile"
+          data={budgets}
+          dataKey="spent"
+          nameKey="title"
           innerRadius={70}
           outerRadius={105}
         >
@@ -40,14 +36,14 @@ export const BudgetChart = () => {
                       y={viewBox.cy}
                       className="fill-foreground text-preset-1 text-grey-900"
                     >
-                      $338
+                      {currencyFormatter.format(totalSpent)}
                     </tspan>
                     <tspan
                       x={viewBox.cx}
                       y={(viewBox.cy || 0) + 24}
                       className="fill-muted-foreground text-preset-5 text-grey-500"
                     >
-                      of $975 limit
+                      of {currencyFormatter.format(totalBudget)} limit
                     </tspan>
                   </text>
                 )

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { SelectColorTag } from "@/components/ui/SelectColorTag"
 import { colorTags } from "@/lib/utils"
+import { budgets } from './data'
 
 
 export const CreateBudget = () => {
@@ -42,9 +43,7 @@ export const CreateBudget = () => {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                {budgets.map(({ title }) => <SelectItem key={title} value={title}>{title}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

@@ -4,6 +4,8 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { BudgetChart } from "@/app/ui/BudgetChart"
+import { budgets } from '../budgets/data'
+import { currencyFormatter } from '@/lib/utils'
 
 
 
@@ -35,10 +37,9 @@ export function Budgets() {
           <BudgetChart />
         </div>
         <section className="grid grid-cols-2 gap-200 md:grid-cols-1 md:pt-250">
-          <BudgetChartCard color="green" title="Entertainment" value="$50.00" />
-          <BudgetChartCard color="cyan" title="Bills" value="$750.00" />
-          <BudgetChartCard color="yellow" title="Dining Out" value="$75.00" />
-          <BudgetChartCard color="navy" title="Personal Care" value="$100.00" />
+          {budgets.map((budget) => (
+            <BudgetChartCard key={budget.title} color={budget.color} title={budget.title} value={currencyFormatter.format(budget.ofValue)} />
+          ))}
         </section>
       </div>
     </article>

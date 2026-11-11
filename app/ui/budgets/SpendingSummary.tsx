@@ -1,6 +1,8 @@
 import React from 'react'
 import { BudgetChart } from '../BudgetChart'
 import { Separator } from '@/components/ui/separator'
+import { budgets } from './data'
+import { currencyFormatter } from '@/lib/utils'
 
 const SpendingSummaryCard = ({ title, value, ofValue, color }: {
   title: string
@@ -28,14 +30,13 @@ export const SpendingSummary = () => {
     <article className="flex-1 px-250 pt-300 pb-200 md:pb-400 md:pr-400 bg-white rounded-xl md:grid md:grid-cols-[1fr_300px] md:items-center lg:grid-cols-1 col-span-1">
       <BudgetChart />
       <div className='grid gap-200'>
-        <h2 className='text-preset-2 text-grey-900 mt-400 md:mt-300 mb-100'>Sepending Summary</h2>
-        <SpendingSummaryCard color='cyan' title='Bills' value={'$150.00'} ofValue={'$750.00'} />
-        <Separator className='bg-grey-100' />
-        <SpendingSummaryCard color='yellow' title='Dining Out' value={'$130.00'} ofValue={'$750.00'} />
-        <Separator className='bg-grey-100' />
-        <SpendingSummaryCard color='navy' title='Personal Care' value={'$40.00'} ofValue={'$100.00'} />
-        <Separator className='bg-grey-100' />
-        <SpendingSummaryCard color='green' title='Entertainment' value={'$15.00'} ofValue={'$50.00'} />
+        <h2 className='text-preset-2 text-grey-900 mt-400 md:mt-300 mb-100'>Spending Summary</h2>
+        {budgets.map((budget, index) => (
+          <React.Fragment key={budget.title}>
+            <SpendingSummaryCard color={budget.color} title={budget.title} value={currencyFormatter.format(budget.spent)} ofValue={currencyFormatter.format(budget.ofValue)} />
+            {index < budgets.length - 1 && <Separator className='bg-grey-100' />}
+          </React.Fragment>
+        ))}
       </div>
     </article>
   )

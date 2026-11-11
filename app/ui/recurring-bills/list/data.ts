@@ -1,4 +1,3 @@
-'use client'
 import {
   ClockClockwise,
   ForkKnife,
@@ -8,7 +7,7 @@ import {
   Percent,
   Taxi,
   WaveSine,
-} from '@phosphor-icons/react'
+} from '@phosphor-icons/react/dist/ssr'
 import type { RecurringBill } from './types'
 
 export const sortOptions = ['Latest', 'Oldest', 'A to Z', 'Z to A', 'Highest', 'Lowest']
