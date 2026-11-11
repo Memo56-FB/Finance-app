@@ -84,6 +84,7 @@ export const WithDrawalMoneyPot = ({
                 $
               </p>
               <Input
+                step="0.01"
                 id={amountInputId}
                 inputMode="decimal"
                 max={totalSaved}
