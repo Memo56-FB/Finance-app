@@ -36,10 +36,10 @@ export const CreateBudget = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start">Add New Budget</DialogTitle>
           <DialogDescription className="text-start">
-            Choose a category to set a spending budget. These categories can help you monitor spending.
+            Choose a category to set a spending budget. Changes are not saved in this demo.
           </DialogDescription>
         </DialogHeader>
-        <form action="" className="grid gap-200">
+        <form method="post" onSubmit={(event) => event.preventDefault()} className="grid gap-200">
           <div className="grid gap-50">
             <label htmlFor={`${formId}-category`} className="text-preset-5-bold text-grey-500">Budget Category</label>
             <Select>
@@ -67,7 +67,7 @@ export const CreateBudget = () => {
               options={colorTags}
             />
           </div>
-          <Button className="text-preset-4-bold text-white">
+          <Button type="submit" disabled className="text-preset-4-bold text-white">
             Add Budget
           </Button>
         </form>

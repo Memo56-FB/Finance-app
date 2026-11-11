@@ -25,10 +25,10 @@ export const EditPot = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start">Edit Pot</DialogTitle>
           <DialogDescription className="text-start">
-            If your saving targets change, feel free to update your pots.
+            Preview changes to your savings target. Changes are not saved in this demo.
           </DialogDescription>
         </DialogHeader>
-        <form action="" className="grid gap-200">
+        <form method="post" onSubmit={(event) => event.preventDefault()} className="grid gap-200">
           <div className="grid gap-50">
             <label htmlFor={`${formId}-name`} className="text-preset-5-bold text-grey-500">Pot Name</label>
             <Input id={`${formId}-name`} placeholder="e.g. Rainy Days" />
@@ -50,7 +50,7 @@ export const EditPot = () => {
               options={colorTags}
             />
           </div>
-          <Button className="text-preset-4-bold text-white">
+          <Button type="submit" disabled className="text-preset-4-bold text-white">
             Save Changes
           </Button>
         </form>

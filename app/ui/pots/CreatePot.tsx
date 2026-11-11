@@ -27,10 +27,10 @@ export const CreatePot = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start">Add New Pot</DialogTitle>
           <DialogDescription className="text-start">
-            Create a pot to set savings targets. These can help keep you on track as you save for special purchases.
+            Create a pot to set savings targets. Changes are not saved in this demo.
           </DialogDescription>
         </DialogHeader>
-        <form action="" className="grid gap-200">
+        <form method="post" onSubmit={(event) => event.preventDefault()} className="grid gap-200">
           <div className="grid gap-50">
             <label htmlFor={`${formId}-name`} className="text-preset-5-bold text-grey-500">Pot Name</label>
             <Input id={`${formId}-name`} placeholder="e.g. Rainy Days" />
@@ -52,7 +52,7 @@ export const CreatePot = () => {
               options={colorTags}
             />
           </div>
-          <Button className="text-preset-4-bold text-white">
+          <Button type="submit" disabled className="text-preset-4-bold text-white">
             Add Pot
           </Button>
         </form>

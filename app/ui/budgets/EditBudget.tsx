@@ -35,10 +35,10 @@ export const EditBudget = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start">Edit Budget</DialogTitle>
           <DialogDescription className="text-start">
-            As your budgets change, feel free to update your spending limits.
+            Preview changes to your spending limits. Changes are not saved in this demo.
           </DialogDescription>
         </DialogHeader>
-        <form action="" className="grid gap-200">
+        <form method="post" onSubmit={(event) => event.preventDefault()} className="grid gap-200">
           <div className="grid gap-50">
             <label htmlFor={`${formId}-category`} className="text-preset-5-bold text-grey-500">Budget Category</label>
             <Select>
@@ -66,7 +66,7 @@ export const EditBudget = () => {
               options={colorTags}
             />
           </div>
-          <Button className="text-preset-4-bold text-white">
+          <Button type="submit" disabled className="text-preset-4-bold text-white">
             Save Changes
           </Button>
         </form>

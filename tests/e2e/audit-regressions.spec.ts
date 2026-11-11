@@ -36,11 +36,17 @@ test('budget cards and chart use the same transactions', async ({ page }) => {
   await expect(page.getByText('$270.50', { exact: true })).toBeVisible()
 })
 
-test('pot form controls have accessible labels', async ({ page }) => {
+test('pot fields are labelled and their preview cannot confirm unsaved money', async ({ page }) => {
   await page.goto('/finance/pots')
   await page.getByRole('button', { name: '+ Add New Pot', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'Pot Name', exact: true })).toBeVisible()
   await expect(page.getByRole('spinbutton', { name: 'Target', exact: true })).toBeVisible()
   await expect(page.getByRole('combobox', { name: 'Theme', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add Pot', exact: true })).toBeDisabled()
   await page.getByRole('button', { name: 'Close', exact: true }).click()
+
+  await page.getByRole('button', { name: '+Add Money', exact: true }).first().click()
+  await page.getByRole('spinbutton', { name: 'Amount to Add', exact: true }).fill('10.50')
+  await expect(page.getByRole('dialog').getByText('$169.50', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm Addition', exact: true })).toBeDisabled()
 })

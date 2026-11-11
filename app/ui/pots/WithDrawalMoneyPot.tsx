@@ -46,7 +46,7 @@ export const WithDrawalMoneyPot = ({
             Withdraw from &apos;{title}&apos;
           </DialogTitle>
           <DialogDescription className="text-start text-preset-4 text-grey-500">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus hendrerit. Pellentesque aliquet nibh nec urna. In nisi neque, aliquet.
+            Preview your savings after withdrawing money. Changes are not saved in this demo.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,7 +94,7 @@ export const WithDrawalMoneyPot = ({
             </div>
           </div>
 
-          <Button className="text-preset-4-bold text-white">
+          <Button type="submit" disabled className="text-preset-4-bold text-white">
             Confirm Withdrawal
           </Button>
         </form>

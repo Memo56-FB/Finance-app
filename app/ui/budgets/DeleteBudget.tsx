@@ -15,10 +15,10 @@ export const DeleteBudget = () => {
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start text-preset-2">Delete (This is category)</DialogTitle>
           <DialogDescription className="text-start">
-            Are you sure you want to delete this budget? This action cannot be reversed, and all the data inside it will be removed forever.
+            Deletion is unavailable in this demo. Your budget will stay unchanged.
           </DialogDescription>
         </DialogHeader>
-        <Button variant={'destroy'}>Yes, Confirm Deletion</Button>
+        <Button type="button" disabled variant={'destroy'}>Yes, Confirm Deletion</Button>
         <DialogClose className='text-preset-4 text-grey-500'>
           No, I want to go back
         </DialogClose>
