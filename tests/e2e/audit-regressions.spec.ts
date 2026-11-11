@@ -27,6 +27,15 @@ test('mobile navigation and filters have accessible names', async ({ page }) => 
   await expect(page.getByRole('article').filter({ hasText: 'Connect Care' })).toBeVisible()
 })
 
+test('overview links include their arrow in the clickable area', async ({ page }) => {
+  await page.goto('/finance')
+  for (const route of ['pots', 'transactions', 'budgets', 'recurring-bills']) {
+    await expect(page.locator(`a[href="/finance/${route}"]`).filter({ hasText: 'See Details' })).toHaveCount(1)
+  }
+  await page.locator('a[href="/finance/pots"]').filter({ hasText: 'See Details' }).locator('svg').click()
+  await expect(page.getByRole('heading', { name: 'Pots', exact: true })).toBeVisible()
+})
+
 test('budget cards and chart use the same transactions', async ({ page }) => {
   await page.goto('/finance/budgets')
   const entertainment = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Entertainment', level: 2, exact: true }) })
@@ -34,6 +43,9 @@ test('budget cards and chart use the same transactions', async ({ page }) => {
   await expect(entertainment.getByText('$15.00', { exact: true })).toBeVisible()
   await expect(entertainment.getByText('$35.00', { exact: true })).toBeVisible()
   await expect(page.getByText('$270.50', { exact: true })).toBeVisible()
+  await entertainment.getByRole('link', { name: 'See All', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toContainText('Entertainment')
+  await expect(page.locator('table').getByText('Oak and Ivy', { exact: true })).toBeVisible()
 })
 
 test('transaction URLs validate page bounds and preserve search text', async ({ page }) => {

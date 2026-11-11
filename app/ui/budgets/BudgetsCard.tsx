@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/Progress"
 import { Separator } from "@/components/ui/separator"
 import { EditDeleteDropdown } from "./EditDeleteDropdown"
 import { Fragment } from 'react'
+import Link from 'next/link'
 import { TransactionsCardTable } from '../transactions/TransactionsCardTable'
 import { currencyFormatter } from '@/lib/utils'
 import type { Budget } from './data'
@@ -43,8 +44,8 @@ export const BudgetsCard = ({ title, color, ofValue, spent, latest }: Budget) =>
       <section className="bg-beige-100 rounded-xl p-200 grid gap-250">
         <header className="flex justify-between">
           <h3 className="text-preset-3 text-grey-900">Latest Spending</h3>
-          <Button variant={'tertiary'}>
-            See All
+          <Button variant={'tertiary'} asChild>
+            <Link href={`/finance/transactions?${new URLSearchParams({ category: title })}`}>See All</Link>
           </Button>
         </header>
         <div className="grid gap-150">

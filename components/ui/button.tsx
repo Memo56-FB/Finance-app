@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot, Slottable } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -12,7 +12,7 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-grey-900 text-white hover:bg-grey-500",
         secondary: 'bg-beige-100 text-grey-900 hover:bg-white hover:border-beige-500 hover:border-2',
-        tertiary: 'h-max rounded-none p-0 font-normal',
+        tertiary: 'h-max rounded-none p-0 font-normal gap-3 text-grey-500 hover:text-grey-900',
         destroy: 'bg-red hover:bg-red/80 text-white'
       },
     },
@@ -29,26 +29,17 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, asChild = false, ...props }, ref) => {
+  ({ className, variant, asChild = false, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
-    if(variant === 'tertiary'){
-      return (
-        <div className="flex items-center gap-3 cursor-pointer text-grey-500 hover:text-grey-900">
-          <Comp
-            className={cn(buttonVariants({ variant, className }))}
-            ref={ref}
-            {...props}
-          />
-          <CaretRight weight="fill" className="transition-colors"/>
-        </div>
-      )
-    }
     return (
       <Comp
         className={cn(buttonVariants({ variant, className }))}
         ref={ref}
         {...props}
-      />
+      >
+        <Slottable>{children}</Slottable>
+        {variant === 'tertiary' && <CaretRight aria-hidden="true" weight="fill" className="transition-colors" />}
+      </Comp>
     )
   }
 )

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { TipJar } from '@phosphor-icons/react/dist/ssr'
 import React from 'react'
+import Link from 'next/link'
 
 
 const PotMiniCard = ({ color, title, value }: {
@@ -25,7 +26,7 @@ export const Pots = () => {
     <article className='py-300 px-250 md:p-400 grid gap-250 bg-white rounded-xl'>
       <div className='flex justify-between'>
         <h2 className='text-preset-2 text-grey-900'>Pots</h2>
-        <Button variant={'tertiary'}>See Details</Button>
+        <Button variant={'tertiary'} asChild><Link href="/finance/pots">See Details</Link></Button>
       </div>
       <div className='grid gap-250 md:grid-cols-2'>
         <article className='p-200 flex gap-200 items-center bg-beige-100 rounded-xl'>

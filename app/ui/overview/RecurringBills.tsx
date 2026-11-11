@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
+import Link from 'next/link'
 import { recurringBills } from '../recurring-bills/list/data'
 import { calculateRecurringBillsSummary } from '../recurring-bills/list/utils'
 import { currencyFormatter } from '@/lib/utils'
@@ -23,7 +24,7 @@ export const RecurringBills = () => {
     <article className='grid gap-400 bg-white rounded-xl px-250 py-300 md:p-400'>
       <div className='flex justify-between'>
         <h2 className='text-preset-2 text-grey-900'>Recurring Bills</h2>
-        <Button variant={'tertiary'}>See Details</Button>
+        <Button variant={'tertiary'} asChild><Link href="/finance/recurring-bills">See Details</Link></Button>
       </div>
       <section className='grid gap-150'>
         <RecurringBillsCard

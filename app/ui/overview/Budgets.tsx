@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { BudgetChart } from "@/app/ui/BudgetChart"
+import Link from 'next/link'
 import { budgets } from '../budgets/data'
 import { currencyFormatter } from '@/lib/utils'
 
@@ -30,7 +31,7 @@ export function Budgets() {
     <article className="flex flex-col p-400 bg-white rounded-xl">
       <div className="flex justify-between">
         <h2 className="text-preset-2 text-grey-900">Budgets</h2>
-        <Button variant={'tertiary'}>See Details</Button>
+        <Button variant={'tertiary'} asChild><Link href="/finance/budgets">See Details</Link></Button>
       </div>
       <div className="flex flex-col md:flex-row">
         <div className="flex-1 pb-0">

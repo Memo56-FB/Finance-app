@@ -3,6 +3,7 @@ import { Separator } from '@/components/ui/separator'
 import clsx from 'clsx'
 import Image from 'next/image'
 import React from 'react'
+import Link from 'next/link'
 
 const TransactionCard = ({ src, name, value, date }: {
   src: string
@@ -43,7 +44,7 @@ export const Transactions = () => {
     <article className='grid gap-400 py-300 px-250 md:p-400 bg-white rounded-xl'>
       <div className="flex justify-between">
         <h2 className="text-preset-2 text-grey-900">Transactions</h2>
-        <Button variant={'tertiary'}>See Details</Button>
+        <Button variant={'tertiary'} asChild><Link href="/finance/transactions">See Details</Link></Button>
       </div>
       <section className='grid gap-250'>
         <TransactionCard
