@@ -34,3 +34,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+### Language preference
+
+The global language selector offers English (default) and Spanish. The browser
+remembers the selection for up to one year in the `finance-language` cookie.
+Next.js reads it per request, so the first HTML already matches the selection.
+The preference applies when navigating, reloading or opening another tab in the
+same browser; it does not synchronize between devices or accounts.
+
+Amounts always represent USD, formatted for the selected language. Changing
+language does not change financial values or convert money. Older currency
+cookies are ignored and are no longer written or renewed. These routes require
+a Next.js server runtime because they read request cookies.

@@ -1,5 +1,6 @@
 'use client'
 
+import { CurrencySymbol, Money, Percentage, Text, useI18n } from '@/lib/i18n/client'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { ProgressDiff } from '@/components/ui/ProgressDiff'
-import { currencyFormatter } from '@/lib/utils'
 
 type WithDrawalMoneyPotProps = {
   title: string
@@ -25,6 +25,7 @@ export const WithDrawalMoneyPot = ({
   totalSaved,
   targetOf,
 }: WithDrawalMoneyPotProps) => {
+  const { t } = useI18n()
   const amountInputId = useId()
   const [amountToWithdraw, setAmountToWithdraw] = useState('0')
   const parsedAmount = Number(amountToWithdraw)
@@ -36,49 +37,41 @@ export const WithDrawalMoneyPot = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="secondary">
-          Withdraw
-        </Button>
+        <Button variant="secondary"><Text id="Withdraw" /></Button>
       </DialogTrigger>
       <DialogContent className="w-[calc(100%-40px)] max-w-[560px] px-250 py-250 rounded-xl md:px-400 md:py-400 grid gap-250">
         <DialogHeader className="grid justify-start gap-250">
-          <DialogTitle className="text-start text-preset-2 text-grey-900">
-            Withdraw from &apos;{title}&apos;
+          <DialogTitle className="text-start text-preset-2 text-grey-900">{' '}<Text id="Withdraw from" /> &apos;{title}&apos;
           </DialogTitle>
-          <DialogDescription className="text-start text-preset-4 text-grey-500">
-            Preview your savings after withdrawing money. Changes are not saved in this demo.
-          </DialogDescription>
+          <DialogDescription className="text-start text-preset-4 text-grey-500"><Text id="Preview your savings after withdrawing money. Changes are not saved in this demo." /></DialogDescription>
         </DialogHeader>
 
         <form onSubmit={(event) => event.preventDefault()} className="grid gap-250">
-          <section className="grid gap-150" aria-label={`${title} withdrawal preview`}>
+          <section className="grid gap-150" aria-label={`${title} ${t('withdrawal preview')}`}>
             <div className="flex items-center justify-between gap-200">
-              <p className="text-preset-5 text-grey-500">New Amount</p>
-              <p className="text-preset-1 text-grey-900">{currencyFormatter.format(newAmount)}</p>
+              <p className="text-preset-5 text-grey-500"><Text id="New Amount" /></p>
+              <p className="text-preset-1 text-grey-900"><Money value={newAmount} /></p>
             </div>
             <div className="grid grid-cols-2 gap-150">
               <ProgressDiff
-                aria-label={`${title} withdrawal preview`}
+                aria-label={`${title} ${t('withdrawal preview')}`}
                 max={targetOf}
                 currentValue={totalSaved}
                 incomingValue={-withdrawalValue}
                 color="red"
                 className="col-span-2"
               />
-              <p className="text-preset-5-bold text-red">{progressPercentage.toFixed(2)}%</p>
-              <p className="text-right text-preset-5 text-grey-500">
-                Target of {currencyFormatter.format(targetOf)}
+              <p className="text-preset-5-bold text-red"><Percentage value={progressPercentage / 100} /></p>
+              <p className="text-right text-preset-5 text-grey-500">{' '}<Text id="Target of" />{' '}<Money value={targetOf} />
               </p>
             </div>
           </section>
 
           <div className="grid gap-50">
-            <label htmlFor={amountInputId} className="text-preset-5-bold text-grey-500">
-              Amount to Withdraw
-            </label>
+            <label htmlFor={amountInputId} className="text-preset-5-bold text-grey-500"><Text id="Amount to Withdraw" /></label>
             <div className="relative">
               <p className="absolute left-250 top-[10px] text-preset-4 text-beige-500">
-                $
+                <CurrencySymbol />
               </p>
               <Input
                 step="0.01"
@@ -89,14 +82,12 @@ export const WithDrawalMoneyPot = ({
                 type="number"
                 value={amountToWithdraw}
                 onChange={(event) => setAmountToWithdraw(event.target.value)}
-                className="pl-500"
+                className="pl-[5rem]"
               />
             </div>
           </div>
 
-          <Button type="submit" disabled className="text-preset-4-bold text-white">
-            Confirm Withdrawal
-          </Button>
+          <Button type="submit" disabled className="text-preset-4-bold text-white"><Text id="Confirm Withdrawal" /></Button>
         </form>
       </DialogContent>
     </Dialog>

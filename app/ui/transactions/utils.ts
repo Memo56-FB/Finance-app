@@ -1,5 +1,6 @@
 import type { Transaction, TransactionFilters, TransactionSort } from './types'
-import { currencyFormatter } from '@/lib/utils'
+import { createFormatters } from '@/lib/i18n/format'
+import { defaults, type Preferences } from '@/lib/i18n/preferences'
 
 export const filterTransactions = (
   source: readonly Transaction[],
@@ -73,15 +74,5 @@ export const getPageAfterFilterChange = (
   return filtersChanged ? 1 : currentPage
 }
 
-export const formatTransactionAmount = (amount: number) => {
-  const formattedAmount = currencyFormatter.format(Math.abs(amount))
-
-  return `${amount < 0 ? '-' : amount > 0 ? '+' : ''}${formattedAmount}`
-}
-
-export const formatTransactionDate = (date: Date) => date.toLocaleDateString('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+export const formatTransactionAmount = (amount: number, preferences: Preferences = defaults) => createFormatters(preferences).signed(amount)
+export const formatTransactionDate = (date: Date, preferences: Preferences = defaults) => createFormatters(preferences).date(date)

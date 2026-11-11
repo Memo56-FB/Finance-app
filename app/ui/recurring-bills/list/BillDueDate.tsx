@@ -1,3 +1,5 @@
+'use client'
+import { useI18n } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { Check } from '@phosphor-icons/react'
 import type { RecurringBill } from './types'
@@ -8,13 +10,14 @@ type BillDueDateProps = {
 }
 
 export const BillDueDate = ({ bill, className }: BillDueDateProps) => {
+  const { t } = useI18n()
   const isDue = bill.status === 'due'
 
   return (
     <p className={cn('flex items-center gap-100 text-preset-5 text-green', isDue && 'text-red', className)}>
-      {bill.dueDate}
+      {t('Monthly')} {bill.dueDay}
       <span
-        aria-label={isDue ? 'Due soon' : 'Paid'}
+        aria-label={t(isDue ? 'Due soon' : 'Paid')}
         className={cn(
           'grid h-3 w-3 place-items-center rounded-full bg-green text-[8px] leading-none text-white',
           isDue && 'bg-red'

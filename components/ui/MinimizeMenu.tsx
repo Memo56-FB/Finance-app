@@ -1,16 +1,18 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n/client'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { ArrowFatLinesLeft } from '@phosphor-icons/react'
 import clsx from 'clsx'
 import React from 'react'
 
 const MinimizeMenu = ({onClick}: {onClick: () => void}) => {
+  const { t } = useI18n()
   const isOpen = useSidebarStore( state => state.isOpen)
   return (
     <button
       type="button"
-      aria-label={isOpen ? 'Minimize Menu' : 'Expand Menu'}
+      aria-label={isOpen ? t('Minimize Menu') : t('Expand Menu')}
       aria-expanded={isOpen}
       onClick={onClick}
       className='items-center gap-200 text-preset-3 text-grey-300 hover:text-white transition-colors px-400 py-200 self-end hidden lg:flex lg:text-nowrap ease-in-out'
@@ -23,7 +25,7 @@ const MinimizeMenu = ({onClick}: {onClick: () => void}) => {
       )} />
       {
         isOpen &&
-          'Minimize Menu'
+          t('Minimize Menu')
       }
     </button>
   )

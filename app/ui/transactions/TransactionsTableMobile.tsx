@@ -1,3 +1,5 @@
+import { Text } from '@/lib/i18n/client'
+
 import React from 'react'
 import { TransactionsCardTable } from './TransactionsCardTable'
 import { Separator } from '@/components/ui/separator'
@@ -13,7 +15,7 @@ export const TransactionsTableMobile = ({ transactions }: { transactions: readon
         </React.Fragment>
       ))}
       {transactions.length === 0 && (
-        <p className='py-300 text-center text-grey-500'>No transactions found.</p>
+        <p className='py-300 text-center text-grey-500'><Text id="No transactions found." /></p>
       )}
     </div>
   )

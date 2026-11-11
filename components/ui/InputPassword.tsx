@@ -1,5 +1,6 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n/client'
 import React, { FC } from 'react'
 import { Input } from './input'
 import { Eye, EyeSlash } from '@phosphor-icons/react'
@@ -9,6 +10,8 @@ interface InputPasswordProps extends
 Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {}
 
 export const InputPassword:FC<InputPasswordProps> = ({className, ...props}) => {
+  const { t } = useI18n()
+
   const [showPassword, setShowPassword] = React.useState(false)
 
   return (
@@ -19,7 +22,7 @@ export const InputPassword:FC<InputPasswordProps> = ({className, ...props}) => {
         {...props}
       />
       <button
-        aria-label='Toggle password visibility'
+        aria-label={t("Toggle password visibility")}
         type='button'
         className='absolute right-250 top-150'
         onClick={() => setShowPassword(prev => !prev)}

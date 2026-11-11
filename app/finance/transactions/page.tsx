@@ -1,5 +1,6 @@
 'use client'
 
+import { Text, useI18n } from '@/lib/i18n/client'
 import { TransactionsTableMobile } from '@/app/ui/transactions/TransactionsTableMobile'
 import { TransactionTableDesktop } from '@/app/ui/transactions/TransactionTableDesktop'
 import { transactions } from '@/app/ui/transactions/data'
@@ -24,6 +25,8 @@ const categoryOptions = ['All Transactions', 'Entertainment', 'Bills', 'Grocerie
 const pageSize = 4
 
 const TransactionsPage = () => {
+  const { t, messages } = useI18n()
+
   const searchParams = useSearchParams()
   const urlQuery = searchParams.get('query') ?? ''
   // Keep typing synchronous while URL updates render in a transition.
@@ -75,15 +78,15 @@ const TransactionsPage = () => {
 
   return (
     <>
-      <h1 className='text-preset-1 text-grey-900'>Transactions</h1>
+      <h1 className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>
       <section className='bg-white mt-400 px-250 py-300 rounded-xl grid gap-300'>
         <div className='flex gap-300 items-center justify-between mb-300'>
-          <InputSearch aria-label='Search transactions' type='text' placeholder='Search transaction' value={query} onChange={handleQueryChange} />
+          <InputSearch aria-label={t("Search transactions")} type='text' placeholder={t("Search transaction")} value={query} onChange={handleQueryChange} />
           <div className='flex gap-300'>
-            <ResponsiveSelect label='Sort By' options={sortOptions} value={sortBy} onValueChange={handleSortChange}>
+            <ResponsiveSelect label={t("Sort By")} options={sortOptions.map(value => ({ value, label: messages[value as keyof typeof messages] ?? value }))} value={sortBy} onValueChange={handleSortChange}>
               <SortAscending weight='fill' size={20} className='text-grey-900' />
             </ResponsiveSelect>
-            <ResponsiveSelect label='Category' options={categoryOptions} value={category} onValueChange={handleCategoryChange}>
+            <ResponsiveSelect label={t("Category")} options={categoryOptions.map(value => ({ value, label: messages[value as keyof typeof messages] ?? value }))} value={category} onValueChange={handleCategoryChange}>
               <Funnel weight='fill' size={20} className='text-grey-900' />
             </ResponsiveSelect>
           </div>
@@ -123,7 +126,7 @@ const TransactionsPage = () => {
 
 export default function Page() {
   return (
-    <Suspense fallback={<h1 className='text-preset-1 text-grey-900'>Transactions</h1>}>
+    <Suspense fallback={<h1 className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>}>
       <TransactionsPage />
     </Suspense>
   )

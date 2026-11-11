@@ -1,6 +1,9 @@
+import { PreferencesProvider } from '@/lib/i18n/client'
+import { en } from '@/lib/i18n'
+import { defaults } from '@/lib/i18n/preferences'
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render as baseRender, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { InputPassword } from '@/components/ui/InputPassword'
@@ -60,3 +63,5 @@ describe('interactive UI smoke tests', () => {
     expect(screen.getByRole('button', { name: button })).toBeDisabled()
   })
 })
+
+function render(ui: React.ReactNode) { return baseRender(<PreferencesProvider preferences={defaults} messages={en}>{ui}</PreferencesProvider>) }

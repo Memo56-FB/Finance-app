@@ -1,4 +1,6 @@
-import { currencyFormatter } from '@/lib/utils'
+'use client'
+
+import { ControlledLabel, Text, useI18n } from '@/lib/i18n/client'
 import type { RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
 
 type RecurringBillsSummaryProps = {
@@ -6,27 +8,28 @@ type RecurringBillsSummaryProps = {
 }
 
 export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) => {
+  const { money } = useI18n()
   const summaryItems = [
     {
       label: 'Paid Bills',
-      value: `${summary.paid.count} (${currencyFormatter.format(summary.paid.amount)})`,
+      value: `${summary.paid.count} (${money(summary.paid.amount)})`,
       isDanger: false,
     },
     {
       label: 'Total Upcoming',
-      value: `${summary.upcoming.count} (${currencyFormatter.format(summary.upcoming.amount)})`,
+      value: `${summary.upcoming.count} (${money(summary.upcoming.amount)})`,
       isDanger: false,
     },
     {
       label: 'Due Soon',
-      value: `${summary.dueSoon.count} (${currencyFormatter.format(summary.dueSoon.amount)})`,
+      value: `${summary.dueSoon.count} (${money(summary.dueSoon.amount)})`,
       isDanger: true,
     },
   ]
 
   return (
     <article className='bg-white rounded-xl px-250 py-250 grid gap-250'>
-      <h2 className='text-preset-3 text-grey-900'>Summary</h2>
+      <h2 className='text-preset-3 text-grey-900'><Text id="Summary" /></h2>
       <div className='grid'>
         {summaryItems.map((item) => (
           <div
@@ -34,7 +37,7 @@ export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) =
             key={item.label}
           >
             <p className={item.isDanger ? 'text-preset-5 text-red' : 'text-preset-5 text-grey-500'}>
-              {item.label}
+              <ControlledLabel value={item.label} />
             </p>
             <p className={item.isDanger ? 'text-preset-5-bold text-red' : 'text-preset-5-bold text-grey-900'}>
               {item.value}

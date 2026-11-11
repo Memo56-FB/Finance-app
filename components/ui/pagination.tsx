@@ -1,5 +1,6 @@
 'use client'
 
+import { Text, useI18n } from '@/lib/i18n/client'
 import * as React from "react"
 import { MoreHorizontal } from "lucide-react"
 
@@ -7,14 +8,14 @@ import { cn } from "@/lib/utils"
 import { CaretLeft, CaretRight } from "@phosphor-icons/react"
 import Link from "next/link"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => { const { t } = useI18n(); return (
   <nav
     role="navigation"
-    aria-label="pagination"
+    aria-label={t("pagination")}
     className={cn("mx-auto flex w-full justify-center", className)}
     {...props}
   />
-)
+) }
 Pagination.displayName = "Pagination"
 
 const PaginationContent = React.forwardRef<
@@ -71,34 +72,34 @@ const PaginationPrevious = ({
   className,
   disabled,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink>) => { const { t } = useI18n(); return (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-label={t("Go to previous page")}
     disabled={disabled}
     className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
     <CaretLeft className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
-    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block">Prev</span>
+    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block"><Text id="Prev" /></span>
   </PaginationLink>
-)
+) }
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
   disabled,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink>) => { const { t } = useI18n(); return (
   <PaginationLink
-    aria-label="Go to next page"
+    aria-label={t("Go to next page")}
     disabled={disabled}
     className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
     {...props}
   >
-    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block">Next</span>
+    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block"><Text id="Next" /></span>
     <CaretRight className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
   </PaginationLink>
-)
+) }
 PaginationNext.displayName = "PaginationNext"
 
 const PaginationEllipsis = ({
@@ -111,7 +112,7 @@ const PaginationEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4 group-hover:text-white" />
-    <span className="sr-only">More pages</span>
+    <span className="sr-only"><Text id="More pages" /></span>
   </span>
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"

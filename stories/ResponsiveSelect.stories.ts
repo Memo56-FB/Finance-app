@@ -27,7 +27,7 @@ type Story = StoryObj<typeof ResponsiveSelect>;
 
 export const ResponsiveSelectStory: Story = {
   args: {
-    options: ['Latest', 'Profile', 'Billing', 'Team', 'Subscription'],
+    options: ['Latest', 'Profile', 'Billing', 'Team', 'Subscription'].map(value => ({ value, label: value })),
     label: 'Sort By',
   },
 };

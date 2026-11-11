@@ -1,4 +1,6 @@
-import { cn, currencyFormatter } from '@/lib/utils'
+import { Money } from '@/lib/i18n/client'
+
+import { cn } from '@/lib/utils'
 import { BillDueDate } from './BillDueDate'
 import type { RecurringBill } from './types'
 
@@ -25,7 +27,7 @@ export const RecurringBillRow = ({ bill }: RecurringBillRowProps) => {
       <BillDueDate bill={bill} className='hidden md:flex' />
 
       <p className={cn('self-end text-right text-preset-4-bold text-grey-900', isDue && 'text-red')}>
-        {currencyFormatter.format(bill.amount)}
+        <Money value={bill.amount} />
       </p>
     </article>
   )

@@ -1,13 +1,15 @@
 "use client"
+
+import { Text, useI18n } from '@/lib/i18n/client'
 import { Label, Pie, PieChart } from "recharts"
 
 import {
   ChartContainer,
 } from "@/components/ui/chart"
 import { budgets, totalBudget, totalSpent } from './budgets/data'
-import { currencyFormatter } from '@/lib/utils'
 
 export const BudgetChart = () => {
+  const { money } = useI18n()
   return (
     <ChartContainer
       config={{}}
@@ -36,15 +38,13 @@ export const BudgetChart = () => {
                       y={viewBox.cy}
                       className="fill-foreground text-preset-1 text-grey-900"
                     >
-                      {currencyFormatter.format(totalSpent)}
+                      {money(totalSpent)}
                     </tspan>
                     <tspan
                       x={viewBox.cx}
                       y={(viewBox.cy || 0) + 24}
                       className="fill-muted-foreground text-preset-5 text-grey-500"
-                    >
-                      of {currencyFormatter.format(totalBudget)} limit
-                    </tspan>
+                    >{' '}<Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" />{' '}</tspan>
                   </text>
                 )
               }

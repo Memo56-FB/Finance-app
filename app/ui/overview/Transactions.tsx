@@ -1,3 +1,5 @@
+import { CalendarDate, Money, Text } from '@/lib/i18n/client'
+
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import clsx from 'clsx'
@@ -8,14 +10,14 @@ import Link from 'next/link'
 const TransactionCard = ({ src, name, value, date }: {
   src: string
   name: string
-  value: string | number
+  value: number
   date: string
 }) => {
   return (
     <article className='flex items-center justify-between'>
       <div className='flex gap-200 items-center'>
         <Image
-          alt='profile picture'
+          alt=""
           src={src}
           width={32}
           height={32}
@@ -28,12 +30,12 @@ const TransactionCard = ({ src, name, value, date }: {
       <div className='grid gap-100 text-right'>
         <p className={clsx(
           'text-preset-4-bold',
-          value.toString().includes('-') ? 'text-grey-900' : 'text-green'
+          value < 0 ? 'text-grey-900' : 'text-green'
           )}
         >
-          {value}
+          <Money signed value={value} />
         </p>
-        <p className='text-preset-5 text-grey-500'>{date}</p>
+        <p className='text-preset-5 text-grey-500'><CalendarDate value={date} /></p>
       </div>
     </article>
   )
@@ -43,36 +45,36 @@ export const Transactions = () => {
   return (
     <article className='grid gap-400 py-300 px-250 md:p-400 bg-white rounded-xl'>
       <div className="flex justify-between">
-        <h2 className="text-preset-2 text-grey-900">Transactions</h2>
-        <Button variant={'tertiary'} asChild><Link href="/finance/transactions">See Details</Link></Button>
+        <h2 className="text-preset-2 text-grey-900"><Text id="Transactions" /></h2>
+        <Button variant={'tertiary'} asChild><Link href="/finance/transactions"><Text id="See Details" /></Link></Button>
       </div>
       <section className='grid gap-250'>
         <TransactionCard
-          date='19 Aug 2024'
+          date='2024-08-19T00:00:00Z'
           name='Emma Richardson'
           src='/profilePictures/Logo-1.jpg'
-          value={'+$75.50'}
+          value={75.50}
         />
         <Separator className='bg-grey-100' />
         <TransactionCard
-          date='19 Aug 2024'
+          date='2024-08-19T00:00:00Z'
           name='Savory Bites Bistro'
           src='/profilePictures/Logo-6.png'
-          value={'-$55.50'}
+          value={-55.50}
         />
         <Separator className='bg-grey-100' />
         <TransactionCard
-          date='18 Aug 2024'
+          date='2024-08-18T00:00:00Z'
           name='Daniel Carter'
           src='/profilePictures/Person-1.jpg'
-          value={'-$42.30'}
+          value={-42.30}
         />
         <Separator className='bg-grey-100'/>
         <TransactionCard
-          date='17 Aug 2024'
+          date='2024-08-17T00:00:00Z'
           name='Sun Park'
           src='/profilePictures/Person-10.jpg'
-          value={'+$120.00'}
+          value={120.00}
         />
       </section>
     </article>

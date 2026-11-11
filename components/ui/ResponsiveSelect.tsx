@@ -6,14 +6,14 @@ import { HeartBreak } from '@phosphor-icons/react'
 import React, { useId, useState } from 'react'
 
 export const ResponsiveSelect = ({ options, label, children, value, onValueChange }: {
-  options: string[]
+  options: { value: string; label: string }[]
   label: string
   children: React.ReactNode
   value?: string
   onValueChange?: (value: string) => void
 }) => {
   const selectId = useId()
-  const [selectedValue, setSelectedValue] = useState(options[0])
+  const [selectedValue, setSelectedValue] = useState(options[0]?.value ?? '')
   const currentValue = value ?? selectedValue
   const handleValueChange = (nextValue: string) => {
     setSelectedValue(nextValue)
@@ -31,25 +31,25 @@ export const ResponsiveSelect = ({ options, label, children, value, onValueChang
         </DropdownMenuTrigger>
         <DropdownMenuContent className='px-250 py-150 rounded-lg *:p-0 text-preset-4 text-grey-900 grid gap-150'>
           {options.map((option, index) => {
-            const activeStyle = option === currentValue ? 'text-preset-4-bold' : ''
+            const activeStyle = option.value === currentValue ? 'text-preset-4-bold' : ''
             if (options.length === index + 1) {
               return (
                 <DropdownMenuItem
                   className={activeStyle}
-                  key={option}
-                  onClick={() => handleValueChange(option)}
+                  key={option.value}
+                  onClick={() => handleValueChange(option.value)}
                 >
-                  {option}
+                  {option.label}
                 </DropdownMenuItem>
               )
             }
             return (
-              <React.Fragment key={option}>
+              <React.Fragment key={option.value}>
                 <DropdownMenuItem
-                  onClick={() => handleValueChange(option)}
+                  onClick={() => handleValueChange(option.value)}
                   className={activeStyle}
                 >
-                  {option}
+                  {option.label}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </React.Fragment>
@@ -62,23 +62,23 @@ export const ResponsiveSelect = ({ options, label, children, value, onValueChang
         <Select value={currentValue} onValueChange={handleValueChange}>
           <SelectTrigger id={selectId}>
             <SelectValue>
-              {currentValue}
+              {options.find(option => option.value === currentValue)?.label}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className='px-250 py-150 rounded-lg text-preset-4 text-grey-900 [&>div]:grid [&>div]:p-0 [&>*]:gap-150'>
             {options.map((option, index) => {
-              const activeStyle = option === currentValue ? 'text-preset-4-bold' : ''
+              const activeStyle = option.value === currentValue ? 'text-preset-4-bold' : ''
               if (options.length === index + 1) {
                 return (
-                  <SelectItem key={option} value={option} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
-                    {option}
+                  <SelectItem key={option.value} value={option.value} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
+                    {option.label}
                   </SelectItem>
                 )
               }
               return (
-                <React.Fragment key={option}>
-                  <SelectItem value={option} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
-                    {option}
+                <React.Fragment key={option.value}>
+                  <SelectItem value={option.value} className={`p-0 focus:text-preset-4-bold ${activeStyle}`} hideCheck={true}>
+                    {option.label}
                   </SelectItem>
                   <DropdownMenuSeparator />
                 </React.Fragment>
