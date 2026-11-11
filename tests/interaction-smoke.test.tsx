@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { InputPassword } from '@/components/ui/InputPassword'
 import { AddMoneyPot } from '@/app/ui/pots/AddMoneyPot'
+import { LoginForm } from '@/app/ui/LoginForm'
+import { SingupForm } from '@/app/ui/SingupForm'
 
 describe('interactive UI smoke tests', () => {
   it('toggles password visibility', async () => {
@@ -38,5 +40,16 @@ describe('interactive UI smoke tests', () => {
 
     expect(screen.getByText('$110.00')).toBeInTheDocument()
     expect(screen.getByText('55.00%')).toBeInTheDocument()
+  })
+  it.each([
+    { name: 'login', Component: LoginForm, button: 'Login' },
+    { name: 'signup', Component: SingupForm, button: 'Create Account' },
+  ])('blocks the demo $name form from sending credentials', ({ Component, button }) => {
+    const { container } = render(<Component />)
+    const form = container.querySelector('form')!
+
+    expect(form).toHaveAttribute('method', 'post')
+    expect(fireEvent.submit(form)).toBe(false)
+    expect(screen.getByRole('button', { name: button })).toBeDisabled()
   })
 })

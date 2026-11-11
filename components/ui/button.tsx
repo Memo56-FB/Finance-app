@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { CaretRight } from "@phosphor-icons/react/dist/ssr"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none p-200 text-[14px] leading-[150%] tracking-normal font-bold h-[53px]",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 p-200 text-[14px] leading-[150%] tracking-normal font-bold h-[53px]",
   {
     variants: {
       variant: {
