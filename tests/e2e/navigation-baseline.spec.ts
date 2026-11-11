@@ -19,5 +19,13 @@ test('transactions navigation baseline', async ({ page }) => {
   await page.getByRole('link', { name: 'Go to next page' }).click()
 
   await expect(page.getByRole('link', { name: '2' })).toHaveAttribute('aria-current', 'page')
+  await expect(page).toHaveURL(/page=2/)
   await expect(table.getByText('Sun Park')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByRole('link', { name: '2', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(table.getByText('Sun Park')).toBeVisible()
+
+  await page.goBack()
+  await expect(page.getByRole('link', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page')
 })

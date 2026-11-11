@@ -16,33 +16,46 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import React, { useMemo, useState } from 'react'
+import React, { Suspense, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const sortOptions: TransactionSort[] = ['Latest', 'Oldest', 'A to Z', 'Z to A', 'Highest', 'Lowest']
 const categoryOptions = ['All Transactions', 'Entertainment', 'Bills', 'Groceries', 'Dining Out', 'Transportation', 'Personal Care']
 const pageSize = 4
 
-const Page = () => {
-  const [filters, setFilters] = useState<TransactionFilters>({
-    query: '',
-    category: 'All Transactions',
-    sortBy: 'Latest',
-  })
-  const [page, setPage] = useState(1)
+const TransactionsPage = () => {
+  const searchParams = useSearchParams()
+  const urlQuery = searchParams.get('query') ?? ''
+  // Keep typing synchronous while URL updates render in a transition.
+  const [search, setSearch] = useState({ urlQuery, value: urlQuery })
+  if (search.urlQuery !== urlQuery) {
+    setSearch({ urlQuery, value: urlQuery })
+  }
+  const filters: TransactionFilters = {
+    query: search.value,
+    category: categoryOptions.find((option) => option === searchParams.get('category')) ?? 'All Transactions',
+    sortBy: sortOptions.find((option) => option === searchParams.get('sortBy')) ?? 'Latest',
+  }
   const { query, category, sortBy } = filters
 
   const filteredAndSortedTransactions = useMemo(() => (
     sortTransactions(filterTransactions(transactions, query, category), sortBy)
   ), [category, query, sortBy])
   const pageCount = getPageCount(filteredAndSortedTransactions, pageSize)
+  const requestedPage = Number(searchParams.get('page') ?? 1)
+  const page = Number.isSafeInteger(requestedPage) ? Math.min(Math.max(requestedPage, 1), pageCount) : 1
   const visibleTransactions = paginateTransactions(filteredAndSortedTransactions, page, pageSize)
 
   const updateFilters = (nextFilters: TransactionFilters) => {
-    setFilters(nextFilters)
-    setPage(getPageAfterFilterChange(filters, nextFilters, page))
+    const params = new URLSearchParams({
+      ...nextFilters,
+      page: String(getPageAfterFilterChange(filters, nextFilters, page)),
+    })
+    window.history.replaceState(null, '', `?${params}`)
   }
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch({ urlQuery, value: event.currentTarget.value })
     updateFilters({ ...filters, query: event.currentTarget.value })
   }
 
@@ -54,8 +67,10 @@ const Page = () => {
     updateFilters({ ...filters, sortBy: nextSort as TransactionSort })
   }
 
-  const goToPage = (nextPage: number) => {
-    setPage(Math.min(Math.max(nextPage, 1), pageCount))
+  const pageHref = (nextPage: number) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('page', String(Math.min(Math.max(nextPage, 1), pageCount)))
+    return `/finance/transactions?${params}`
   }
 
   return (
@@ -79,23 +94,15 @@ const Page = () => {
           <PaginationContent className='w-full justify-center'>
             <PaginationItem className='justify-self-start mr-auto'>
               <PaginationPrevious
-                href={`/finance/transactions?page=${page - 1}`}
+                href={pageHref(page - 1)}
                 disabled={page <= 1}
-                onClick={(event) => {
-                  event.preventDefault()
-                  goToPage(page - 1)
-                }}
               />
             </PaginationItem>
             {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
               <PaginationItem key={pageNumber}>
                 <PaginationLink
-                  href={`/finance/transactions?page=${pageNumber}`}
+                  href={pageHref(pageNumber)}
                   isActive={pageNumber === page}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    goToPage(pageNumber)
-                  }}
                 >
                   {pageNumber}
                 </PaginationLink>
@@ -103,12 +110,8 @@ const Page = () => {
             ))}
             <PaginationItem className='ml-auto'>
               <PaginationNext
-                href={`/finance/transactions?page=${page + 1}`}
+                href={pageHref(page + 1)}
                 disabled={page >= pageCount}
-                onClick={(event) => {
-                  event.preventDefault()
-                  goToPage(page + 1)
-                }}
               />
             </PaginationItem>
           </PaginationContent>
@@ -118,4 +121,10 @@ const Page = () => {
   )
 }
 
-export default Page
+export default function Page() {
+  return (
+    <Suspense fallback={<h1 className='text-preset-1 text-grey-900'>Transactions</h1>}>
+      <TransactionsPage />
+    </Suspense>
+  )
+}

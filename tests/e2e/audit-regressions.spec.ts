@@ -36,6 +36,27 @@ test('budget cards and chart use the same transactions', async ({ page }) => {
   await expect(page.getByText('$270.50', { exact: true })).toBeVisible()
 })
 
+test('transaction URLs validate page bounds and preserve search text', async ({ page }) => {
+  for (const [value, expectedPage] of [['-1', '1'], ['invalid', '1'], ['1.5', '1'], ['999', '3']]) {
+    await page.goto(`/finance/transactions?page=${value}`)
+    await expect(page.getByRole('link', { name: expectedPage, exact: true })).toHaveAttribute('aria-current', 'page')
+  }
+
+  const search = page.getByRole('textbox', { name: 'Search transactions', exact: true })
+  await search.pressSequentially('Savory')
+  await expect(search).toHaveValue('Savory')
+  await expect(page.locator('table').getByText('Bravo Zen Spa')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page')
+  await page.reload()
+  await expect(search).toHaveValue('Savory')
+  await expect(page.locator('table').getByText('Savory Bites Bistro')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Transactions', exact: true }).click()
+  await expect(search).toHaveValue('')
+  await page.goBack()
+  await expect(search).toHaveValue('Savory')
+})
+
 test('pot fields are labelled and their preview cannot confirm unsaved money', async ({ page }) => {
   await page.goto('/finance/pots')
   await page.getByRole('button', { name: '+ Add New Pot', exact: true }).click()
