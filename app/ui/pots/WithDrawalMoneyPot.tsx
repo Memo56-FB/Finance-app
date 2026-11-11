@@ -12,17 +12,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { ProgressDiff } from '@/components/ui/ProgressDiff'
+import { currencyFormatter } from '@/lib/utils'
 
 type WithDrawalMoneyPotProps = {
   title: string
   totalSaved: number
   targetOf: number
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
 
 export const WithDrawalMoneyPot = ({
   title,

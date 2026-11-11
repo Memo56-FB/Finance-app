@@ -1,10 +1,5 @@
 import type { RecurringBill } from './types'
 
-export const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
-
 export type RecurringBillsSummary = {
   total: { amount: number; count: number }
   paid: { amount: number; count: number }

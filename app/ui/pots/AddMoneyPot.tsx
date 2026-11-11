@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { ProgressDiff } from '@/components/ui/ProgressDiff'
+import { currencyFormatter } from '@/lib/utils'
 
 type AddMoneyPotProps = {
   title: string
@@ -19,11 +20,6 @@ type AddMoneyPotProps = {
   targetOf: number
   color: string
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
 
 export const AddMoneyPot = ({
   title,

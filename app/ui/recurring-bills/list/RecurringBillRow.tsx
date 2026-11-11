@@ -1,7 +1,6 @@
-import { cn } from '@/lib/utils'
+import { cn, currencyFormatter } from '@/lib/utils'
 import { BillDueDate } from './BillDueDate'
 import type { RecurringBill } from './types'
-import { currencyFormatter } from './utils'
 
 type RecurringBillRowProps = {
   bill: RecurringBill

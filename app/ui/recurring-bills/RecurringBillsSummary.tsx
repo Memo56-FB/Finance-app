@@ -1,4 +1,5 @@
-import { currencyFormatter, type RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
+import { currencyFormatter } from '@/lib/utils'
+import type { RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
 
 type RecurringBillsSummaryProps = {
   summary: RecurringBillsSummaryData

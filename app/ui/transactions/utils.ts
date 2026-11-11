@@ -1,4 +1,5 @@
 import type { Transaction, TransactionFilters, TransactionSort } from './types'
+import { currencyFormatter } from '@/lib/utils'
 
 export const filterTransactions = (
   source: readonly Transaction[],
@@ -73,10 +74,7 @@ export const getPageAfterFilterChange = (
 }
 
 export const formatTransactionAmount = (amount: number) => {
-  const formattedAmount = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(Math.abs(amount))
+  const formattedAmount = currencyFormatter.format(Math.abs(amount))
 
   return `${amount < 0 ? '-' : amount > 0 ? '+' : ''}${formattedAmount}`
 }

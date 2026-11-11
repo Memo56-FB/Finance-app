@@ -1,5 +1,5 @@
 import { Receipt } from '@phosphor-icons/react/dist/ssr'
-import { currencyFormatter } from './list/utils'
+import { currencyFormatter } from '@/lib/utils'
 
 type RecurringBillsTotalProps = {
   total: { amount: number; count: number }
