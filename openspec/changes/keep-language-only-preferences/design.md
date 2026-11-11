@@ -2,6 +2,8 @@
 
 > Actualización solicitada tras la implementación: los importes usan solo `$` con dos decimales, sin moneda asignada. Esta decisión reemplaza las referencias siguientes a USD fijo.
 
+> Ajuste de escritorio solicitado después: el selector sale del flujo con posición absoluta arriba a la derecha; el contenido financiero reserva espacio superior y el sidebar ocupa toda la altura desde el borde superior. En móvil se conserva la fila en flujo normal. Esta decisión sustituye la restricción de posición de la sección 4.
+
 ## Context
 
 Ver `proposal.md` para la motivación y `specs/` para el contrato final. Este diseño es necesario porque la preferencia monetaria cruza cookies, contexto, formato, controles y pruebas.

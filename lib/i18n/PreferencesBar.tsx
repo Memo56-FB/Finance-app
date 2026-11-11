@@ -24,7 +24,7 @@ export function PreferencesBar() {
       startTransition(() => router.refresh())
     } catch { setError(true) }
   }
-  return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5">
+  return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5 lg:absolute lg:right-0 lg:top-0 lg:z-10">
       <label htmlFor="preference-language" className="sr-only">{locale.t('Language')}</label>
       <Select value={locale.language} disabled={pending} onValueChange={change}>
         <SelectTrigger id="preference-language" className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900">

@@ -24,6 +24,7 @@ La aplicación SHALL ofrecer un único selector de idioma por página en las cin
 
 - **WHEN** se abre cualquiera de las cinco vistas de finanzas en escritorio
 - **THEN** el selector se encuentra arriba a la derecha
+- **AND** el menú lateral empieza en el borde superior y ocupa toda la altura de la ventana, sin un hueco reservado para el selector
 - **AND** los botones para crear presupuestos o apartados siguen visibles y accionables
 
 #### Scenario: Mobile and authentication placement

@@ -39,7 +39,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 The global language selector at the top right offers English (default) with the
 United States flag and Español with the Mexico flag. The flags identify the
-language options, not currencies. The browser
+language options, not currencies. On desktop, the selector floats at the top
+right so the sidebar fills the full viewport height. The browser
 remembers the selection for up to one year in the `finance-language` cookie.
 Next.js reads it per request, so the first HTML already matches the selection.
 The preference applies when navigating, reloading or opening another tab in the

@@ -150,9 +150,14 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
         await expect(selector).toHaveCount(1)
         await expect(selector).toBeVisible()
         const control = (await selector.boundingBox())!
-        const main = (await page.locator('main').boundingBox())!
         expect(control.x + control.width).toBeCloseTo(width - (width >= 768 ? 40 : 16), 0)
-        expect(control.y + control.height).toBeLessThanOrEqual(main.y)
+        const heading = (await page.locator('h1').first().boundingBox())!
+        expect(control.y + control.height).toBeLessThanOrEqual(heading.y)
+        if (width >= 1024 && route.startsWith('/finance')) {
+          const navigation = (await page.locator('nav').first().boundingBox())!
+          expect(navigation.y).toBe(0)
+          expect(navigation.height).toBe(900)
+        }
         await selector.click()
         const menu = page.getByRole('listbox')
         await expect(menu).toBeVisible()

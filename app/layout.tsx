@@ -20,7 +20,7 @@ export default async function RootLayout({
   return (
     <html lang={locale.language}>
       <SpeedInsights />
-      <body className={`${publicSans.className} h-dvh w-full flex flex-col bg-beige-100`}>
+      <body className={`${publicSans.className} relative h-dvh w-full flex flex-col bg-beige-100`}>
         <PreferencesProvider preferences={{ language: locale.language }} messages={locale.messages}>
           <PreferencesBar />
           <div className="flex flex-1 min-h-0 flex-col">{children}</div>
