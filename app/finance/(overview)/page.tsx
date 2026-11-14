@@ -1,3 +1,5 @@
+import { requireAccess } from '@/lib/auth/server'
+import type { PageProps } from '@/lib/auth/types'
 import { Text } from '@/lib/i18n/client'
 
 import { Budgets } from '@/app/ui/overview/Budgets'
@@ -7,7 +9,8 @@ import { Summary } from '@/app/ui/overview/Summary'
 import { Transactions } from '@/app/ui/overview/Transactions'
 import React from 'react'
 
-const page = () => {
+const page = async ({ searchParams }: PageProps) => {
+  await requireAccess('/finance', await searchParams)
   return (
     <>
       <h1 className='text-preset-1 text-grey-900'><Text id="Overview" /></h1>

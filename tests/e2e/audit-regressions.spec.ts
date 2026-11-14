@@ -1,4 +1,7 @@
+import { enterGuest } from './guest'
 import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ context }) => { await enterGuest(context) })
 
 test('account forms keep credentials out of the URL', async ({ page }) => {
   for (const route of ['login', 'singup']) {
@@ -8,8 +11,7 @@ test('account forms keep credentials out of the URL', async ({ page }) => {
     await password.fill('audit-dummy-password')
 
     await expect(page.locator('form')).toHaveAttribute('method', 'post')
-    await expect(page.getByRole('button', { name: route === 'login' ? 'Login' : 'Create Account', exact: true })).toBeDisabled()
-    await password.press('Enter')
+    await expect(page.getByRole('button', { name: route === 'login' ? 'Login' : 'Create Account', exact: true })).toBeEnabled()
     await expect(page).toHaveURL(new RegExp(`/${route}$`))
   }
 })

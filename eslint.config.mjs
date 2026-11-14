@@ -13,6 +13,6 @@ const compat = new FlatCompat({
     allConfig: js.configs.all
 });
 
-export default defineConfig([{
+export default defineConfig([{ ignores: [".next*/**"] }, {
     extends: [...nextCoreWebVitals, ...compat.extends("plugin:storybook/recommended")],
 }]);

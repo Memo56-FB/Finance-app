@@ -1,9 +1,11 @@
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeQueryClient } from '@/lib/api/QueryProvider'
 import { PreferencesProvider } from '@/lib/i18n/client'
 import { en } from '@/lib/i18n'
 import { defaults } from '@/lib/i18n/preferences'
 // @vitest-environment jsdom
 
-import { fireEvent, render as baseRender, screen } from '@testing-library/react'
+import { render as baseRender, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { InputPassword } from '@/components/ui/InputPassword'
@@ -54,14 +56,13 @@ describe('interactive UI smoke tests', () => {
   it.each([
     { name: 'login', Component: LoginForm, button: 'Login' },
     { name: 'signup', Component: SingupForm, button: 'Create Account' },
-  ])('blocks the demo $name form from sending credentials', ({ Component, button }) => {
+  ])('keeps the $name form on POST and enables account access after hydration', ({ Component, button }) => {
     const { container } = render(<Component />)
     const form = container.querySelector('form')!
 
     expect(form).toHaveAttribute('method', 'post')
-    expect(fireEvent.submit(form)).toBe(false)
-    expect(screen.getByRole('button', { name: button })).toBeDisabled()
+    expect(screen.getByRole('button', { name: button })).toBeEnabled()
   })
 })
 
-function render(ui: React.ReactNode) { return baseRender(<PreferencesProvider preferences={defaults} messages={en}>{ui}</PreferencesProvider>) }
+function render(ui: React.ReactNode) { return baseRender(<QueryClientProvider client={makeQueryClient()}><PreferencesProvider preferences={defaults} messages={en}>{ui}</PreferencesProvider></QueryClientProvider>) }

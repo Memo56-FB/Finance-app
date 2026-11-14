@@ -1,3 +1,5 @@
+import { publicAccess } from '@/lib/auth/server'
+import type { PageProps } from '@/lib/auth/types'
 import { Text } from '@/lib/i18n/client'
 import { PreferencesBar } from '@/lib/i18n/PreferencesBar'
 
@@ -5,7 +7,9 @@ import Image from 'next/image'
 import React from 'react'
 import { LoginForm } from '../ui/LoginForm'
 
-const page = () => {
+const page = async ({ searchParams }: PageProps) => {
+  const params = await searchParams
+  const access = await publicAccess(params)
 
   return (
     <>
@@ -24,7 +28,7 @@ const page = () => {
         </div>
       </aside>
       <section className='px-200 md:px-500 py-300 md:py-400 grid place-items-center lg:flex-grow'>
-        <LoginForm />
+        <LoginForm next={typeof params.next === "string" ? params.next : undefined} unavailable={access.kind === "unavailable"} />
       </section>
     </main>
     </>

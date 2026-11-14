@@ -1,4 +1,7 @@
+import { enterGuest } from './guest'
 import { test, expect } from '@playwright/test'
+
+test.beforeEach(async ({ context }) => { await enterGuest(context) })
 const routes = ['/finance','/finance/transactions','/finance/budgets','/finance/pots','/finance/recurring-bills','/login','/singup']
 async function select(page: import('@playwright/test').Page, id: string, option: string) {
   await page.locator(`#preference-${id}`).click()
@@ -50,8 +53,8 @@ test('preferences persist, preserve canonical filters and work on mobile', async
 for (const legacyCurrency of ['MXN', 'bad']) {
   test(`language changes ignore and never renew legacy ${legacyCurrency}`, async ({ page, context }) => {
     await context.addCookies([
-      { name: 'finance-language', value: 'es', url: 'http://localhost:3000' },
-      { name: 'finance-currency', value: legacyCurrency, url: 'http://localhost:3000', expires: Math.floor(Date.now() / 1000) + 3600 },
+      { name: 'finance-language', value: 'es', url: 'http://localhost:3100' },
+      { name: 'finance-currency', value: legacyCurrency, url: 'http://localhost:3100', expires: Math.floor(Date.now() / 1000) + 3600 },
     ])
     const previousCookie = (await context.cookies()).find(cookie => cookie.name === 'finance-currency')
     await page.goto('/finance')
@@ -68,7 +71,8 @@ for (const legacyCurrency of ['MXN', 'bad']) {
 for (const language of ['en','es']) {
   test(`all seven routes render ${language} before JavaScript`, async ({ browser }) => {
     const context=await browser.newContext({javaScriptEnabled:false,locale:'es-MX'})
-    await context.addCookies([{name:'finance-language',value:language,url:'http://localhost:3000'}])
+    await context.addCookies([{name:'finance-language',value:language,url:'http://localhost:3100'}])
+    await enterGuest(context)
     const page=await context.newPage()
     for(const route of routes){
       await page.goto(route)
@@ -86,9 +90,10 @@ for (const language of ['en','es']) {
 }
 test('request languages are isolated and legacy currency cookies have no effect', async ({ browser }) => {
   const contexts=await Promise.all([browser.newContext({locale:'es-MX'}),browser.newContext(),browser.newContext()])
-  await contexts[1].addCookies([{name:'finance-language',value:'invalid',url:'http://localhost:3000'},{name:'finance-currency',value:'MXN',url:'http://localhost:3000'}])
-  await contexts[2].addCookies([{name:'finance-language',value:'es',url:'http://localhost:3000'},{name:'finance-currency',value:'bad',url:'http://localhost:3000'}])
+  await contexts[1].addCookies([{name:'finance-language',value:'invalid',url:'http://localhost:3100'},{name:'finance-currency',value:'MXN',url:'http://localhost:3100'}])
+  await contexts[2].addCookies([{name:'finance-language',value:'es',url:'http://localhost:3100'},{name:'finance-currency',value:'bad',url:'http://localhost:3100'}])
   await Promise.all(contexts.map(async (context,i) => {
+    await enterGuest(context)
     const page=await context.newPage();await page.goto('/finance')
     await expect(page.locator('html')).toHaveAttribute('lang',i===2?'es':'en')
     await expect(page.locator('#preference-currency')).toHaveCount(0)
@@ -98,7 +103,7 @@ test('request languages are isolated and legacy currency cookies have no effect'
   await Promise.all(contexts.map(c=>c.close()))
 })
 test('Spanish auth forms and money previews preserve demo safeguards', async ({ page, context }) => {
-  await context.addCookies([{name:'finance-language',value:'es',url:'http://localhost:3000'},{name:'finance-currency',value:'MXN',url:'http://localhost:3000'}])
+  await context.addCookies([{name:'finance-language',value:'es',url:'http://localhost:3100'},{name:'finance-currency',value:'MXN',url:'http://localhost:3100'}])
   await page.goto('/finance/pots')
   await page.getByRole('button',{name:'+Agregar dinero',exact:true}).first().click()
   await page.getByRole('spinbutton',{name:'Importe a agregar',exact:true}).fill('10.50')
@@ -110,8 +115,7 @@ test('Spanish auth forms and money previews preserve demo safeguards', async ({ 
     await page.getByLabel('Correo electrónico',{exact:true}).fill('test@example.invalid')
     await page.locator('input[name="password"]').fill('dummy-password')
     await expect(page.locator('form')).toHaveAttribute('method','post')
-    await expect(page.locator('button[type="submit"]')).toBeDisabled()
-    await page.locator('input[name="password"]').press('Enter')
+    await expect(page.locator('button[type="submit"]')).toBeEnabled()
     await expect(page).toHaveURL(new RegExp(route+'$'))
   }
 })
@@ -136,7 +140,8 @@ test('blocked cookies keep the previous effective language and show an error', a
 for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
   test(`localized money and layouts: ${language} at ${width}px`, async ({ browser }) => {
     const context=await browser.newContext()
-    await context.addCookies([{name:'finance-language',value:language,url:'http://localhost:3000'}])
+    await context.addCookies([{name:'finance-language',value:language,url:'http://localhost:3100'}])
+    await enterGuest(context)
     const page=await context.newPage()
     const errors: string[]=[]
     page.on('pageerror',error=>errors.push(error.message))
@@ -153,6 +158,18 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
         expect(control.x + control.width).toBeCloseTo(width - (width >= 768 ? 40 : 16), 0)
         await expect.poll(async () => (await page.locator('h1').first().boundingBox())?.y ?? -Infinity)
           .toBeGreaterThanOrEqual(control.y + control.height)
+        if (route.startsWith('/finance')) {
+          const label = language === 'es' ? 'Cerrar sesión' : 'Logout'
+          const logout = page.getByRole('button', { name: label, exact: true })
+          await expect(logout).toHaveAttribute('title', label)
+          await expect(logout.locator('svg')).toBeVisible()
+          const exit = (await logout.boundingBox())!
+          const content = (await page.locator('main').boundingBox())!
+          expect(exit.x).toBeCloseTo(content.x + (width >= 768 ? 40 : 16), 0)
+          expect(exit.y).toBeCloseTo(control.y, 0)
+          expect(exit.x + exit.width).toBeLessThan(control.x)
+          await expect(page.locator('body')).not.toContainText(/Demo data|Datos de ejemplo/)
+        }
         if (width >= 1024 && route.startsWith('/finance')) {
           const navigation = (await page.locator('nav').first().boundingBox())!
           expect(navigation.y).toBe(0)
@@ -196,7 +213,7 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
   })
 }
 test('Spanish recurring bill labels keep search, sort and totals', async ({ page, context }) => {
-  await context.addCookies([{name:'finance-language',value:'es',url:'http://localhost:3000'}])
+  await context.addCookies([{name:'finance-language',value:'es',url:'http://localhost:3100'}])
   await page.goto('/finance/recurring-bills')
   await expect(page.getByText(/1,550\.00/)).toBeVisible()
   await expect(page.getByText(/1,510\.00/)).toBeVisible()

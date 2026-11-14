@@ -1,4 +1,7 @@
+import { enterGuest } from './guest'
 import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ context }) => { await enterGuest(context) })
 
 test('transactions navigation baseline', async ({ page }) => {
   await page.goto('/finance/transactions')

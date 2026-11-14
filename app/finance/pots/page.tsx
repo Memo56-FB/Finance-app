@@ -1,10 +1,13 @@
+import { requireAccess } from '@/lib/auth/server'
+import type { PageProps } from '@/lib/auth/types'
 import { Text } from '@/lib/i18n/client'
 
 import { CreatePot } from '@/app/ui/pots/CreatePot'
 import { PotCard } from '@/app/ui/pots/PotCard'
 import React from 'react'
 
-const page = () => {
+const page = async ({ searchParams }: PageProps) => {
+  await requireAccess('/finance/pots', await searchParams)
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>
