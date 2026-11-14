@@ -51,3 +51,58 @@ Amounts use only the `$` sign and two decimal places, with no currency assigned.
 language does not change financial values or convert money. Older currency
 cookies are ignored and are no longer written or renewed. These routes require
 a Next.js server runtime because they read request cookies.
+
+### Account access and guest demo
+
+Copy .env.example to .env.local, start financeApi as described in its README,
+then run pnpm dev. Next.js must reach FINANCE_API_URL (locally port 8080).
+FINANCE_APP_ORIGIN must equal the public frontend origin; configure the same
+value as FINANCE_FRONTEND_ORIGIN in Spring. These are server variables. Production
+requires HTTPS and a backend URL reachable from the Next.js host.
+
+The existing /login and /singup forms use the real API. Registration creates
+an account and asks you to log in. Spring's HttpOnly JSESSIONID is the sole
+account session. Next.js transports and verifies it, including session rotation
+and CSRF renewal. Axios attaches CSRF; React Query handles pending operations
+without automatic POST replay or offline credential queues. Authentication
+responses are not publicly cached. Sessions currently disappear when Spring
+restarts.
+
+Finance pages require a verified account or an explicit “Continue as guest”.
+Guests use the current fixtures, never create backend accounts, and do not save
+financial changes. The guest cookie is a separate browser session cookie; “Exit
+guest mode” removes it. Closing a window may preserve session cookies depending
+on browser restore settings. Account access also uses demo data until financial
+APIs are integrated. The header places the logout icon on the left and the language
+selector on the right; the icon has a localized native tooltip and accessible name,
+with no permanent demo-data banner. Logout calls Spring; guest exit works with the API offline.
+Both preserve the independent language preference.
+
+The root redirects temporarily according to access. Each finance page checks access
+on the server, including RSC requests. Return URLs are limited to known finance
+routes and retain filters. Public forms retain server-rendered HTML; JavaScript
+is needed to submit. Finance is noindex, nofollow; public metadata remains
+available. This does not promise search indexing of protected pages.
+
+Before public deployment, configure login/registration rate limits at the ingress
+as required by financeApi. No deployment or backend schema change is included.
+
+| Entry | Anonymous | Guest | Verified account |
+| --- | --- | --- | --- |
+| / | Login | Finance demo | Finance demo |
+| /login, /singup | Public forms | Forms for account access | Finance destination |
+| /finance and its four subpages | Login with safe return URL | Demo | Demo |
+| /api/auth/me | 401 | 401 | Backend account email |
+
+Run pnpm test, pnpm exec tsc --noEmit, pnpm lint and pnpm build for local checks.
+pnpm test:e2e starts an isolated Next instance on port 3100 and a contract fixture
+on 3101; it does not reuse your development server or require Spring. Its output
+uses .next-e2e. The auth suite covers real HTTP requests from both the browser and
+SSR, while the existing finance regressions explicitly prepare guest access.
+
+For a real Spring smoke test, start Spring with an isolated disposable database,
+start Next configured for that backend and matching frontend origin, then run:
+FINANCE_SMOKE_ORIGIN=http://localhost:3000 node tests/integration/auth-real.mjs
+This creates a throwaway account and verifies registration, browser login, session
+rotation, HttpOnly cookies, CSRF renewal and logout. Do not point this test at a
+production database.

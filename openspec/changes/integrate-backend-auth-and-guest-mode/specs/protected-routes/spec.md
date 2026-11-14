@@ -102,4 +102,6 @@ Los controles de acceso y sus errores SHALL respetar inglés y español. Entrar,
 
 - **WHEN** se usan los controles de sesión en escritorio y móvil y se desplaza el contenido
 - **THEN** no hay desbordamiento horizontal ni controles tapados
+- **AND** el icono de salida está a la izquierda y el selector a la derecha, separados por el espacio disponible
+- **AND** el icono tiene nombre accesible y tooltip `Cerrar sesión` en español o `Logout` en inglés
 - **AND** el sidebar de escritorio empieza en el borde superior y el selector de idioma sale de vista con el contenido

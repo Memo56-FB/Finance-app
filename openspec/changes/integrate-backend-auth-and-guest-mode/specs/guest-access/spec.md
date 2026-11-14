@@ -55,9 +55,9 @@ Entrar, recorrer y salir del modo invitado SHALL funcionar con el backend no dis
 - **WHEN** el backend está detenido y la persona elige invitado, visita las cinco pantallas y sale
 - **THEN** puede completar ese recorrido sin peticiones de autenticación a financeApi
 
-### Requirement: Visible guest status and exit controls
+### Requirement: Accessible guest exit controls
 
-Las páginas financieras SHALL identificar el modo invitado y ofrecer controles accesibles para ir al login y salir de la demostración. Salir SHALL borrar el estado invitado y el estado de sesión local asociado, volver al login y conservar únicamente preferencias independientes como el idioma.
+Las páginas financieras SHALL ofrecer controles accesibles para ir al login y salir de la demostración, sin una leyenda permanente de datos de ejemplo. Salir SHALL borrar el estado invitado y el estado de sesión local asociado, volver al login y conservar únicamente preferencias independientes como el idioma.
 
 #### Scenario: Exit prevents implicit reentry
 

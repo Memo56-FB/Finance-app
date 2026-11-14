@@ -103,12 +103,12 @@ La aplicación SHALL permitir cerrar sesión con `POST /api/auth/logout` y CSRF 
 - **WHEN** la petición de logout no puede completarse
 - **THEN** se muestra un error accesible con opción de reintentar y no un mensaje falso de cierre exitoso
 
-### Requirement: Financial demonstrations remain explicit
+### Requirement: Financial demonstration restrictions remain
 
-Iniciar sesión SHALL NOT presentar los datos financieros de ejemplo como datos personales persistidos. Las pantallas SHALL mantener una indicación de demostración y las restricciones actuales para guardar, editar o eliminar información financiera hasta que exista una integración específica de esos datos.
+Iniciar sesión SHALL NOT presentar los datos financieros de ejemplo como datos personales persistidos. Las pantallas SHALL conservar las restricciones actuales para guardar, editar o eliminar información financiera, sin una leyenda permanente de datos de ejemplo en el encabezado.
 
 #### Scenario: Newly registered account sees demonstration data
 
 - **WHEN** una cuenta nueva inicia sesión y abre presupuestos o apartados
-- **THEN** puede ver la demostración, identificada como tal, sin afirmar que los ejemplos pertenecen a su cuenta
+- **THEN** puede ver los datos existentes sin una leyenda de datos de ejemplo en el encabezado ni afirmar que los ejemplos pertenecen a su cuenta
 - **AND** las acciones financieras que hoy no guardan cambios siguen sin guardarlos

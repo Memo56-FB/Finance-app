@@ -104,7 +104,7 @@ Conservar `method="post"`; mantener los controles de envío deshabilitados hasta
 
 El `201` de registro muestra confirmación y enlace al login con `next` validado, sin email o contraseña en query strings ni login automático. Puede resolverse en el propio formulario; no hace falta una nueva ruta de confirmación.
 
-Añadir controles de cuenta/invitado dentro del área superior desplazable de `app/finance/layout.tsx`, junto al selector de idioma y con ajuste de línea en móvil. Invitado muestra su estado, ir al login y salir; cuenta muestra cerrar sesión. Identificar los datos financieros como demo también al autenticar una cuenta. El selector continúa arriba a la derecha, sin sticky/fixed; el sidebar sigue ocupando desde el borde superior. Las acciones de sesión no se agregan como un sexto elemento a la navegación móvil existente.
+Los controles de sesión están a la izquierda del encabezado desplazable y el selector de idioma a la derecha, separados con `justify-between`. La salida usa un icono con nombre accesible y tooltip nativo `Cerrar sesión` en español o `Logout` en inglés. Invitado conserva el enlace al login. Por petición del usuario se elimina la leyenda permanente de datos de ejemplo. El selector continúa arriba a la derecha, sin sticky/fixed; el sidebar sigue ocupando desde el borde superior. Las acciones de sesión no se agregan como un sexto elemento a la navegación móvil existente.
 
 ### 6. Renderizado e indexación
 
@@ -130,12 +130,12 @@ Completar además una prueba real contra Spring y una base aislada: CSRF → reg
 - Backend local aún sin limitación de intentos → antes de exponer login/registro públicamente, configurar límites en el ingress, tal como ya indica `financeApi/README.md`. No se incluye un despliegue en este cambio.
 - Cookie de sesión de invitado restaurada por el navegador → no prometer que cerrar una ventana siempre termina la demo; la salida explícita elimina su acceso local.
 - Contenido ya mostrado en una pestaña antes de caducar → revalidar al recuperar foco y en cada nueva petición protegida; no prometer borrar retroactivamente datos ya entregados. Las transiciones explícitas limpian cachés y fuerzan comprobación al restaurar historial.
-- Finanzas sigue usando fixtures tras login → indicarlo en UI y documentación y mantener bloqueadas las operaciones no persistidas.
+- Finanzas sigue usando fixtures tras login → conservar la documentación y mantener bloqueadas las operaciones no persistidas.
 - Coste de comprobar `/me` en SSR → deduplicar dentro de la petición; no sacrificar revocación compartiendo identidad entre solicitudes.
 
 ## Migration Plan
 
-1. Implementar los grupos de `tasks.md` en commits atómicos con prefijo y sus comprobaciones correspondientes; no desplegar un estado intermedio con protección parcial.
+1. La implementación y sus comprobaciones se completaron sin commits durante el apply. Tras la revisión y autorización del usuario, registrar los cambios en commits atómicos con prefijo; no desplegar un estado intermedio con protección parcial.
 2. Documentar variables, arranque de ambos servicios, límites existentes y prueba real. No hay migración de datos ni cambios de código requeridos en `financeApi`.
 3. Ejecutar pruebas, tipos, lint y build, verificar el cambio OpenSpec y registrar resultados antes de considerar terminado el apply.
 4. La publicación es un trabajo separado. Si se revierte una implementación publicada, no volver a servir finanzas públicamente: mantener una versión de mantenimiento o el guard de acceso mientras se retiran las piezas defectuosas. Las cuentas ya creadas en el backend se conservan.

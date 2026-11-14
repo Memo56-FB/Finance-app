@@ -38,4 +38,4 @@ Ninguna especificación principal: `openspec list --specs` no contiene capacidad
 - Configuración: dependencias y lockfile pnpm, variables de entorno solo de servidor, redirección actual de `next.config.mjs` y configuración de pruebas.
 - Verificación: sustituir las pruebas de formularios de demostración deshabilitados, preparar acceso invitado en las regresiones existentes y cubrir cookies, CSRF, errores, rutas directas y separación de usuarios.
 - Backend observado en `/home/memo56/projects/financeApp/financeApi`: se reutilizan sus cinco endpoints; no requiere cambios de código ni de base de datos. El despliegue deberá hacer accesible esa API desde el servidor Next.js y coordinar HTTPS y origen permitido.
-- Entrega mediante commits atómicos con prefijos convencionales, incluidos los artefactos de planificación.
+- El plan y la implementación se registran con prefijos convencionales. El usuario ya revisó la implementación y autorizó sus commits posteriores.
