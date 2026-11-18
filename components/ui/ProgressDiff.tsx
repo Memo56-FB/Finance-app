@@ -1,5 +1,6 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { safeColor } from '@/lib/finance/colors'
 
 interface ProgressDiffProps extends React.HTMLAttributes<HTMLSpanElement> {
   max: number
@@ -56,6 +57,7 @@ export const ProgressDiff = ({
           `bg-${color}`
         )}
         style={{
+          backgroundColor: safeColor(color),
           left: `calc(${diffStartPercentage}% + ${gapOffset})`,
           width: `max(0px, calc(${diffPercentage}% - ${gapOffset}))`,
         }}

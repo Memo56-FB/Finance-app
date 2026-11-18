@@ -2,7 +2,7 @@ import { enterGuest } from './guest'
 import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ context }) => { await enterGuest(context) })
-const routes = ['/finance','/finance/transactions','/finance/budgets','/finance/pots','/finance/recurring-bills','/login','/singup']
+const routes = ['/finance','/finance/transactions','/finance/categories','/finance/budgets','/finance/pots','/finance/recurring-bills','/login','/singup']
 async function select(page: import('@playwright/test').Page, id: string, option: string) {
   await page.locator(`#preference-${id}`).click()
   await page.getByRole('option', { name: option, exact: true }).click()
@@ -41,6 +41,8 @@ test('preferences persist, preserve canonical filters and work on mobile', async
   await expect(page.getByRole('textbox',{name:'Search transactions',exact:true})).toHaveValue('Cinema')
   await page.reload()
   await expect(page.getByRole('textbox',{name:'Search transactions',exact:true})).toHaveValue('Cinema')
+  const devBadge=page.getByRole('button',{name:'Collapse issues badge',exact:true})
+  if(await devBadge.isVisible()) await devBadge.click()
   await page.getByRole('link',{name:'Transactions',exact:true}).click()
   await expect(page.getByRole('textbox',{name:'Search transactions',exact:true})).toHaveValue('')
   await page.goBack()
@@ -183,6 +185,11 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
         expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(width)
         await page.keyboard.press('Escape')
         await expect(menu).toHaveCount(0)
+        if (route === '/finance/transactions') {
+          await expect(page.locator('main img')).toHaveCount(0)
+          await expect(page.getByText('Ticket refund', { exact: true }).filter({ visible: true })).toBeVisible()
+          if (width >= 768) await expect(page.getByRole('columnheader', { name: language === 'es' ? 'Nombre' : 'Name', exact: true })).toBeVisible()
+        }
         if (route === '/finance/budgets' || route === '/finance/pots') {
           const action = page.locator('main > header button')
           await expect(action).toBeVisible()

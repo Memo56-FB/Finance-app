@@ -1,5 +1,6 @@
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
+import { handleFinance } from './finance-api.mjs'
 const sessions = new Map()
 const users = new Map([['first@example.test', 'test-password-123'], ['second@example.test', 'test-password-123']])
 const server = createServer(async (req,res) => {
@@ -23,6 +24,7 @@ const server = createServer(async (req,res) => {
   if (action === '/api/auth/me') return session?.email ? send(200,{email:session.email}) : send(401)
   let body = ''
   for await (const chunk of req) body += chunk
+  if (!action.startsWith('/api/auth/')) return handleFinance(req,res,session,body)
   if (!session || req.headers['x-csrf-token'] !== session.token) return send(403)
   if (action === '/api/auth/register') {
     let data

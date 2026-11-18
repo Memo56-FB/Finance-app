@@ -1,9 +1,9 @@
 import { RecurringBillsSummary } from './RecurringBillsSummary'
 import { RecurringBillsTotal } from './RecurringBillsTotal'
-import type { RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
+import type { RecurringBillsSummaryView } from './RecurringBillsSummary'
 
 type RecurringBillsOverviewProps = {
-  summary: RecurringBillsSummaryData
+  summary: RecurringBillsSummaryView
 }
 
 export const RecurringBillsOverview = ({ summary }: RecurringBillsOverviewProps) => {

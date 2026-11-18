@@ -1,9 +1,10 @@
 import { Money, Text } from '@/lib/i18n/client'
 
 import { Receipt } from '@phosphor-icons/react/dist/ssr'
+import type { MoneyValue } from '@/lib/finance/money'
 
 type RecurringBillsTotalProps = {
-  total: { amount: number; count: number }
+  total: { amount: MoneyValue }
 }
 
 export const RecurringBillsTotal = ({ total }: RecurringBillsTotalProps) => {
@@ -12,7 +13,7 @@ export const RecurringBillsTotal = ({ total }: RecurringBillsTotalProps) => {
       <Receipt size={32} className='text-white' />
       <div className='grid gap-100'>
         <p className='text-preset-4'><Text id="Total Bills" /></p>
-        <p className='text-preset-1'><Money value={total.amount} /></p>
+        <p className='text-preset-1 break-all'><Money value={total.amount} /></p>
       </div>
     </article>
   )

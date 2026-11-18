@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Sidebar } from '@/components/ui/Sidebar'
 import { PreferencesBar } from '@/lib/i18n/PreferencesBar'
 import React from 'react'
+import { AccountScope } from '@/lib/finance/AccountScope'
 
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
@@ -24,7 +25,7 @@ const layout = async ({children}: Readonly<{
           <PreferencesBar />
         </div>
         <main className='flex flex-col gap-400 py-300 md:py-400 px-200 md:px-500'>
-          {children}
+          {access.kind === 'account' ? <AccountScope key={access.email} account={access.email}>{children}</AccountScope> : children}
         </main>
       </div>
     </div>

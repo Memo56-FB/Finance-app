@@ -1,3 +1,5 @@
+import { FinanceHydration } from '@/lib/finance/server'
+import { Pots as LivePots } from '@/app/ui/finance/Pots'
 import { requireAccess } from '@/lib/auth/server'
 import type { PageProps } from '@/lib/auth/types'
 import { Text } from '@/lib/i18n/client'
@@ -7,7 +9,9 @@ import { PotCard } from '@/app/ui/pots/PotCard'
 import React from 'react'
 
 const page = async ({ searchParams }: PageProps) => {
-  await requireAccess('/finance/pots', await searchParams)
+  const params=await searchParams
+  const access=await requireAccess('/finance/pots', params)
+  if(access.kind === 'account') return <FinanceHydration account={access.email} section="pots" params={params}><LivePots/></FinanceHydration>
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>

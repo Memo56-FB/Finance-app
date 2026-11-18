@@ -5,6 +5,7 @@ import React from 'react'
 import Link from 'next/link'
 import { recurringBills } from '../recurring-bills/list/data'
 import { calculateRecurringBillsSummary } from '../recurring-bills/list/utils'
+import type { PaymentSummary } from '@/lib/finance/types'
 
 const RecurringBillsCard = ({title, value, color}: {
   title: string
@@ -19,8 +20,8 @@ const RecurringBillsCard = ({title, value, color}: {
   )
 }
 
-export const RecurringBills = () => {
-  const summary = calculateRecurringBillsSummary(recurringBills)
+export const RecurringBills = ({summary:actual}: {summary?:PaymentSummary}) => {
+  const summary = actual ? {paid:{amount:actual.paid.totalAmount},upcoming:{amount:actual.pending.totalAmount},dueSoon:{amount:actual.dueSoon.totalAmount}} : calculateRecurringBillsSummary(recurringBills)
   return (
     <article className='grid gap-400 bg-white rounded-xl px-250 py-300 md:p-400'>
       <div className='flex flex-wrap justify-between gap-100'>

@@ -1,4 +1,6 @@
+import { financeEn } from './finance'
 export const en = {
+  ...financeEn,
   "Continue as guest": "Continue as guest",
   "Log out": "Logout",
   "Could not sign out. Please retry.": "Could not sign out. Please retry.",
@@ -80,7 +82,6 @@ export const en = {
   "Preview changes to your spending limits. Changes are not saved in this demo.": "Preview changes to your spending limits. Changes are not saved in this demo.",
   "Preview your savings after adding money. Changes are not saved in this demo.": "Preview your savings after adding money. Changes are not saved in this demo.",
   "Preview your savings after withdrawing money. Changes are not saved in this demo.": "Preview your savings after withdrawing money. Changes are not saved in this demo.",
-  "Recipient / Sender": "Recipient / Sender",
   "Recurring Bills": "Recurring Bills",
   "Save Changes": "Save Changes",
   "Search bills": "Search bills",

@@ -40,3 +40,7 @@ export const ColorTag: Story = {
     ]
   }
 }
+
+export const ExistingHexColor: Story = {
+  args: { options:[{value:'#277C78',label:'Green'}], value:'#ABCDEF' },
+}

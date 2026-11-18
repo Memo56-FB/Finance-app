@@ -1,3 +1,5 @@
+import { FinanceHydration } from '@/lib/finance/server'
+import { Budgets as LiveBudgets } from '@/app/ui/finance/Budgets'
 import { requireAccess } from '@/lib/auth/server'
 import type { PageProps } from '@/lib/auth/types'
 import { Text } from '@/lib/i18n/client'
@@ -9,7 +11,9 @@ import { CreateBudget } from '@/app/ui/budgets/CreateBudget'
 import { budgets } from '@/app/ui/budgets/data'
 
 const page = async ({ searchParams }: PageProps) => {
-  await requireAccess('/finance/budgets', await searchParams)
+  const params=await searchParams
+  const access=await requireAccess('/finance/budgets', params)
+  if(access.kind === 'account') return <FinanceHydration account={access.email} section="budgets" params={params}><LiveBudgets/></FinanceHydration>
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>

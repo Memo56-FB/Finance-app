@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { baseURL, enterGuest } from './guest'
 const apiURL = 'http://127.0.0.1:3101'
-const routes = ['/finance','/finance/transactions','/finance/budgets','/finance/pots','/finance/recurring-bills']
+const routes = ['/finance','/finance/transactions','/finance/categories','/finance/budgets','/finance/pots','/finance/recurring-bills']
 async function login(page: Page, email='first@example.test', password='test-password-123') {
   await page.goto('/login')
   await page.getByLabel('Email',{exact:true}).fill(email)

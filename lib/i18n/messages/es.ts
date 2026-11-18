@@ -1,5 +1,7 @@
 import type { Messages } from './en'
+import { financeEs } from './finance'
 export const es: Messages = {
+  ...financeEs,
   "Continue as guest": "Continuar como invitado",
   "Log out": "Cerrar sesión",
   "Could not sign out. Please retry.": "No se pudo cerrar la sesión. Inténtalo de nuevo.",
@@ -81,7 +83,6 @@ export const es: Messages = {
   "Preview changes to your spending limits. Changes are not saved in this demo.": "Previsualiza tus límites de gasto. Los cambios no se guardan en esta demostración.",
   "Preview your savings after adding money. Changes are not saved in this demo.": "Previsualiza tus ahorros después de agregar dinero. Los cambios no se guardan en esta demostración.",
   "Preview your savings after withdrawing money. Changes are not saved in this demo.": "Previsualiza tus ahorros después de retirar dinero. Los cambios no se guardan en esta demostración.",
-  "Recipient / Sender": "Destinatario / Remitente",
   "Recurring Bills": "Pagos recurrentes",
   "Save Changes": "Guardar cambios",
   "Search bills": "Buscar pagos",

@@ -1,10 +1,13 @@
 'use client'
 
 import { ControlledLabel, Text, useI18n } from '@/lib/i18n/client'
-import type { RecurringBillsSummary as RecurringBillsSummaryData } from './list/utils'
+import type { MoneyValue } from '@/lib/finance/money'
+
+type SummaryGroup = { amount: MoneyValue; count: string | number }
+export type RecurringBillsSummaryView = { total: SummaryGroup; paid: SummaryGroup; upcoming: SummaryGroup; dueSoon: SummaryGroup }
 
 type RecurringBillsSummaryProps = {
-  summary: RecurringBillsSummaryData
+  summary: RecurringBillsSummaryView
 }
 
 export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) => {
@@ -33,13 +36,13 @@ export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) =
       <div className='grid'>
         {summaryItems.map((item) => (
           <div
-            className='flex items-center justify-between border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0'
+            className='flex flex-wrap gap-100 items-center justify-between border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0'
             key={item.label}
           >
             <p className={item.isDanger ? 'text-preset-5 text-red' : 'text-preset-5 text-grey-500'}>
               <ControlledLabel value={item.label} />
             </p>
-            <p className={item.isDanger ? 'text-preset-5-bold text-red' : 'text-preset-5-bold text-grey-900'}>
+            <p className={item.isDanger ? 'text-preset-5-bold text-red break-all' : 'text-preset-5-bold text-grey-900 break-all'}>
               {item.value}
             </p>
           </div>

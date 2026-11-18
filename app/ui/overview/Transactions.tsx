@@ -5,10 +5,12 @@ import { Separator } from '@/components/ui/separator'
 import clsx from 'clsx'
 import React from 'react'
 import Link from 'next/link'
+import { cents, type MoneyValue } from '@/lib/finance/money'
+import type { Transaction } from '@/lib/finance/types'
 
 const TransactionCard = ({ name, value, date }: {
   name: string
-  value: number
+  value: MoneyValue
   date: string
 }) => {
   return (
@@ -21,7 +23,7 @@ const TransactionCard = ({ name, value, date }: {
       <div className='grid gap-100 text-right'>
         <p className={clsx(
           'text-preset-4-bold',
-          value < 0 ? 'text-grey-900' : 'text-green'
+          cents(value) < 0n ? 'text-grey-900' : 'text-green'
           )}
         >
           <Money signed value={value} />
@@ -32,7 +34,7 @@ const TransactionCard = ({ name, value, date }: {
   )
 }
 
-export const Transactions = () => {
+export const Transactions = ({items}: {items?:Transaction[]}) => {
   return (
     <article className='grid gap-400 py-300 px-250 md:p-400 bg-white rounded-xl'>
       <div className="flex flex-wrap justify-between gap-100">
@@ -40,7 +42,7 @@ export const Transactions = () => {
         <Button variant={'tertiary'} asChild><Link href="/finance/transactions"><Text id="See Details" /></Link></Button>
       </div>
       <section className='grid gap-250'>
-        <TransactionCard
+        {items ? items.length ? items.map((row,index)=><React.Fragment key={row.id}><TransactionCard name={row.name} date={row.transactionDate} value={row.amount}/>{index < items.length-1 && <Separator className="bg-grey-100"/>}</React.Fragment>) : <p className="text-preset-4 text-grey-500"><Text id="No transactions found."/></p> : <><TransactionCard
           date='2024-08-19T00:00:00Z'
           name='Ticket refund'
           value={75.50}
@@ -62,7 +64,7 @@ export const Transactions = () => {
           date='2024-08-17T00:00:00Z'
           name='Grocery refund'
           value={120.00}
-        />
+        /></>}
       </section>
     </article>
   )
