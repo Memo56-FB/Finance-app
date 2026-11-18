@@ -72,8 +72,8 @@ Finance pages require a verified account or an explicit “Continue as guest”.
 Guests use the current fixtures, never create backend accounts, and do not save
 financial changes. The guest cookie is a separate browser session cookie; “Exit
 guest mode” removes it. Closing a window may preserve session cookies depending
-on browser restore settings. Account access also uses demo data until financial
-APIs are integrated. The header places the logout icon on the left and the language
+on browser restore settings. Accounts use their stored financial data, including empty
+lists for new accounts. The header places the logout icon on the left and the language
 selector on the right; the icon has a localized native tooltip and accessible name,
 with no permanent demo-data banner. Logout calls Spring; guest exit works with the API offline.
 Both preserve the independent language preference.
@@ -89,9 +89,9 @@ as required by financeApi. No deployment or backend schema change is included.
 
 | Entry | Anonymous | Guest | Verified account |
 | --- | --- | --- | --- |
-| / | Login | Finance demo | Finance demo |
+| / | Login | Finance demo | Stored finances |
 | /login, /singup | Public forms | Forms for account access | Finance destination |
-| /finance and its four subpages | Login with safe return URL | Demo | Demo |
+| /finance and its five subpages | Login with safe return URL | Read-only demo | Stored finances |
 | /api/auth/me | 401 | 401 | Backend account email |
 
 Run pnpm test, pnpm exec tsc --noEmit, pnpm lint and pnpm build for local checks.
@@ -106,3 +106,30 @@ FINANCE_SMOKE_ORIGIN=http://localhost:3000 node tests/integration/auth-real.mjs
 This creates a throwaway account and verifies registration, browser login, session
 rotation, HttpOnly cookies, CSRF renewal and logout. Do not point this test at a
 production database.
+
+### Financial services
+
+All six finance pages use the existing Spring session. Browser requests go through
+`/api/finance/*`, a closed same-origin route list; server rendering reads Spring
+directly with `no-store`. Axios shares one CSRF interceptor for POST, PUT and DELETE.
+Financial errors preserve forms; writes have no automatic retries or offline queue.
+After a lost response, reload server data before deciding whether to submit again.
+
+The backend must include the optional transaction `categoryId` filter, applied before
+pagination and counting. Deploy that compatible extension before this frontend.
+No new database migration is needed by this frontend change.
+
+Money and IDs are decoded from raw JSON with `lossless-json`, held as decimal
+strings and serialized as exact JSON numbers. Forms accept a decimal point without
+group separators, at most 17 integer digits and two fractional digits. Financial
+calculations never use JavaScript floating-point amounts; chart geometry uses
+normalized ratios while labels keep the exact values. TypeScript targets ES2020
+for native bigint arithmetic. Display remains `$` with no assigned currency.
+
+Queries use account-specific keys, request-local SSR caches and no persistent
+browser cache. Confirmed changes invalidate that account's financial data. Visible
+views refresh every 60 seconds and on focus to observe Spring's automatic payments.
+Guest pages use local examples and send no financial requests.
+
+See [the financial integration guide](docs/financial-integration.md) for module rules,
+error handling and integration checks.
