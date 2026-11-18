@@ -1,4 +1,5 @@
 export const financeEn = {
+  'Notifications':'Notifications',
   'Choose a category to set a spending budget.':'Choose a category to set a spending budget.',
   'Create a pot to set savings targets.':'Create a pot to set savings targets.',
   'Preview changes to your savings target.':'Preview changes to your savings target.',
@@ -34,6 +35,7 @@ export const financeEn = {
   'This payment will be recorded for the selected month.':'This payment will be recorded for the selected month.',
 }
 export const financeEs: Record<keyof typeof financeEn,string> = {
+  'Notifications':'Notificaciones',
   'Choose a category to set a spending budget.':'Elige una categoría para establecer un presupuesto de gastos.',
   'Create a pot to set savings targets.':'Crea un apartado para establecer tus metas de ahorro.',
   'Preview changes to your savings target.':'Previsualiza los cambios a tu meta de ahorro.',

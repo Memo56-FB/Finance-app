@@ -1,4 +1,5 @@
 import { QueryProvider } from '@/lib/api/QueryProvider'
+import { Notifications } from '@/components/ui/Notifications'
 import { PreferencesProvider } from '@/lib/i18n/client'
 import { getI18n } from '@/lib/i18n/server'
 import type { Metadata } from "next";
@@ -24,6 +25,7 @@ export default async function RootLayout({
         <QueryProvider>
         <PreferencesProvider preferences={{ language: locale.language }} messages={locale.messages}>
           <div className="flex flex-1 min-h-0 flex-col">{children}</div>
+          <Notifications />
         </PreferencesProvider>
         </QueryProvider>
       </body>

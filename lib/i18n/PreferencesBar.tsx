@@ -1,10 +1,11 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
+import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { savePreference } from './cookie'
-import { useI18n } from './client'
+import { Text, useI18n } from './client'
 
 const languages = {
   en: { label: 'English', flag: 'us' },
@@ -16,13 +17,12 @@ export function PreferencesBar() {
   const selected = languages[locale.language]
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [error, setError] = useState(false)
   function change(value: string) {
-    setError(false)
     try {
       savePreference(document, value, location.protocol === 'https:')
+      toast.dismiss('preference-error')
       startTransition(() => router.refresh())
-    } catch { setError(true) }
+    } catch { toast.error(<Text id="Could not save preferences."/>,{toastId:'preference-error',role:'alert',autoClose:false}) }
   }
   return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5">
       <label htmlFor="preference-language" className="sr-only">{locale.t('Language')}</label>
@@ -46,6 +46,5 @@ export function PreferencesBar() {
           ))}
         </SelectContent>
       </Select>
-    {error && <p role="alert" className="text-right">{locale.t('Could not save preferences.')}</p>}
   </aside>
 }

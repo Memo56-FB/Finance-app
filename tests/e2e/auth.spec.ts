@@ -149,8 +149,12 @@ test('login confirmation retry never resends credentials and logout failure is r
   await expect(page).toHaveURL('/finance')
   expect(logins).toBe(1)
   await page.route('**/api/auth/logout',route=>route.fulfill({status:503}))
+  await expect(page.getByRole('heading',{name:'Overview',exact:true})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Logout',exact:true})).toBeEnabled()
+  const mainBefore=(await page.locator('main').boundingBox())!
   await page.getByRole('button',{name:'Logout',exact:true}).click()
-  await expect(page.locator('p[role="alert"]')).toContainText('Could not sign out')
+  await expect(page.getByRole('alert').filter({hasText:'Could not sign out'})).toBeVisible()
+  expect((await page.locator('main').boundingBox())!.y).toBe(mainBefore.y)
   await expect(page).toHaveURL('/finance')
   expect((await context.request.get('/api/auth/me')).status()).toBe(200)
   await page.unroute('**/api/auth/logout')

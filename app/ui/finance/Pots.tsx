@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/Progress'
 import { useFinance } from '@/lib/finance/AccountScope'
@@ -16,11 +17,11 @@ export function undoDeadline(deletion:PotDeletion,receivedAt=Date.now()) {
   const remaining=Date.parse(deletion.restoreUntil)-(Number.isFinite(server) ? server : receivedAt)
   return receivedAt+Math.max(0,Math.min(10_000,remaining))
 }
-function UndoNotice({deletion,onDone}:{deletion:PotDeletion;onDone:()=>void}) {
-  const {refresh}=useFinance(),{t}=useI18n(),[deadline]=useState(()=>undoDeadline(deletion)),[expired,setExpired]=useState(()=>deadline <= Date.now())
+function UndoNotice({deletion,name,deadline,refresh,onDone}:{deletion:PotDeletion;name:string;deadline:number;refresh:()=>Promise<unknown>;onDone:()=>void}) {
+  const {t}=useI18n(),[expired,setExpired]=useState(()=>deadline <= Date.now())
   useEffect(()=>{const timer=window.setTimeout(()=>setExpired(true),Math.max(0,deadline-Date.now()));return ()=>window.clearTimeout(timer)},[deadline])
   const restore=useMutation({mutationFn:()=>restorePot(deletion.id),retry:false,onSuccess:()=>{void refresh();onDone()},onError:()=>{void refresh()}})
-  return <div role="status" className="flex flex-wrap items-center gap-200 rounded-lg bg-white p-200 text-preset-4"><p>{t('Pot deleted.')}</p>{expired ? <p>{t('The undo window has expired.')}</p> : <Button variant="secondary" onClick={()=>{if(!restore.isPending)restore.mutate()}} disabled={restore.isPending}>{t(restore.isPending ? 'Please wait…' : 'Undo')}</Button>}{restore.error && <p role="alert">{t('status' in restore.error && restore.error.status === 409 ? 'The undo window has expired.' : errorLabel(restore.error))}</p>}</div>
+  return <div className="grid gap-150 min-w-0 break-words"><p>{t('Pot deleted.')} {name}</p>{expired ? <p>{t('The undo window has expired.')}</p> : <Button variant="secondary" onClick={()=>{if(Date.now() >= deadline)setExpired(true);else if(!restore.isPending)restore.mutate()}} disabled={restore.isPending}>{t(restore.isPending ? 'Please wait…' : 'Undo')}</Button>}{restore.error && <p role="alert">{t('status' in restore.error && restore.error.status === 409 ? 'The undo window has expired.' : errorLabel(restore.error))}</p>}</div>
 }
 function PotCard({pot,onDeleted}:{pot:Pot;onDeleted:(result:PotDeletion)=>void}) {
   const {t}=useI18n(),progress=moneyRatio(pot.balance,pot.targetAmount)
@@ -30,7 +31,11 @@ function PotCard({pot,onDeleted}:{pot:Pot;onDeleted:(result:PotDeletion)=>void})
     <div className="grid grid-cols-2 gap-200"><NewDialog title="Amount to Add" heading={<>{t('Add to')} &apos;{pot.name}&apos;</>} description="Preview your savings after adding money." contentClassName={moneyDialog} buttonLabel="+Add Money" prefix={false} variant="secondary">{done=><PotMoneyForm record={pot} action="deposits" onDone={done}/>}</NewDialog><NewDialog title="Amount to Withdraw" heading={<>{t('Withdraw from')} &apos;{pot.name}&apos;</>} description="Preview your savings after withdrawing money." contentClassName={moneyDialog} buttonLabel="Withdraw" prefix={false} variant="secondary">{done=><PotMoneyForm record={pot} action="withdrawals" onDone={done}/>}</NewDialog></div>
   </article>
 }
+function showUndoNotice(deletion:PotDeletion,name:string,refresh:()=>Promise<unknown>) {
+  const receivedAt=Date.now(),deadline=undoDeadline(deletion,receivedAt)
+  toast(({closeToast})=><UndoNotice deletion={deletion} name={name} deadline={deadline} refresh={refresh} onDone={closeToast}/>,{autoClose:Math.max(1,deadline-receivedAt)+4000,pauseOnHover:false,pauseOnFocusLoss:false})
+}
 export function Pots() {
-  const {queries}=useFinance(),query=useQuery(queries.pots()),[deletion,setDeletion]=useState<PotDeletion | null>(null)
-  return <><PageHeader title="Pots"><NewDialog title="Add New Pot" contentClassName={financeDialog}>{done=><PotForm onDone={done}/>}</NewDialog></PageHeader>{deletion && <UndoNotice key={deletion.id+deletion.restoreUntil} deletion={deletion} onDone={()=>setDeletion(null)}/>}<QueryMessage query={query}/>{query.data && (query.data.items.length ? <section className="grid gap-300 xl:grid-cols-2">{query.data.items.map(pot=><PotCard key={pot.id} pot={pot} onDeleted={setDeletion}/>)}</section> : <section className={panel}><Empty label="No pots yet."/></section>)}</>
+  const {queries,refresh}=useFinance(),query=useQuery(queries.pots())
+  return <><PageHeader title="Pots"><NewDialog title="Add New Pot" contentClassName={financeDialog}>{done=><PotForm onDone={done}/>}</NewDialog></PageHeader><QueryMessage query={query}/>{query.data && (query.data.items.length ? <section className="grid gap-300 xl:grid-cols-2">{query.data.items.map(pot=><PotCard key={pot.id} pot={pot} onDeleted={deletion=>showUndoNotice(deletion,pot.name,refresh)}/>)}</section> : <section className={panel}><Empty label="No pots yet."/></section>)}</>
 }

@@ -22,7 +22,41 @@ async function save(page:Page) {const dialog=page.getByRole('dialog');await dial
 async function category(page:Page,name:string) {await page.getByRole('button',{name:'+ Add category',exact:true}).click();await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill(name);await save(page)}
 async function menu(page:Page,row:Locator,action:string) {await row.getByRole('button',{name:/^Actions:/}).click();await page.getByRole('menuitem',{name:action,exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible()}
 
+test('floating notifications preserve layout, translations and dismissal',async({page,context})=>{
+  await account(context)
+  for(const [width,language,add,name,saved,close] of [[1280,'en','+ Add category','Name','Saved.','Close'],[390,'es','+ Agregar categoría','Nombre','Guardado.','Cerrar']] as const) {
+    await page.setViewportSize({width,height:900})
+    await context.addCookies([{name:'finance-language',value:language,url:origin}])
+    await page.goto('/finance/categories')
+    const heading=page.getByRole('heading',{level:1}),before=(await heading.boundingBox())!
+    await page.getByRole('button',{name:add,exact:true}).click()
+    await page.getByRole('dialog').getByLabel(name,{exact:true}).fill('Toast '+language)
+    await save(page)
+    const notice=page.locator('.Toastify__toast').filter({hasText:saved})
+    await expect(notice).toBeVisible()
+    await expect(page.locator('.Toastify__toast-container')).toHaveCSS('position','fixed')
+    expect((await heading.boundingBox())!.y).toBe(before.y)
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await notice.getByRole('button',{name:close,exact:true}).click()
+    await expect(notice).toBeHidden()
+  }
+})
 
+test('pot undo notification expires after ten seconds even while hovered',async({page,context})=>{
+  await account(context)
+  await write(context,'savings-pots','POST','{"name":"Undo deadline","targetAmount":100,"color":"#277C78"}')
+  await page.clock.install()
+  await page.goto('/finance/pots')
+  const pot=page.locator('article').filter({has:page.getByRole('heading',{name:'Undo deadline',exact:true})})
+  await menu(page,pot,'Delete');await save(page)
+  const notice=page.locator('.Toastify__toast').filter({hasText:'Pot deleted.'})
+  await expect(notice.getByRole('button',{name:'Undo',exact:true})).toBeVisible()
+  await notice.hover()
+  await page.clock.runFor(10_100)
+  await expect(notice.getByRole('button',{name:'Undo',exact:true})).toHaveCount(0)
+  await expect(notice).toContainText('The undo window has expired.')
+  await expect(pot).toHaveCount(0)
+})
 
 test('month filters show the current month inside the calendar without extra text',async({page,context})=>{
   await account(context)

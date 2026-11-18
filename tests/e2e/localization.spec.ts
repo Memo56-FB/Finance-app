@@ -128,15 +128,16 @@ test('blocked cookies keep the previous effective language and show an error', a
   })
   await page.setViewportSize({ width: 320, height: 844 })
   await page.goto('/finance')
+  const mainBefore=(await page.locator('main').boundingBox())!
   await page.locator('#preference-language').click()
   await page.getByRole('option',{name:'Español',exact:true}).click()
-  await expect(page.locator('p[role="alert"]')).toHaveText('Could not save preferences.')
+  await expect(page.getByRole('alert').filter({hasText:'Could not save preferences.'})).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang','en')
   await expect(page.locator('#preference-language')).toContainText('English')
   await expect(page.locator('#preference-language')).toBeEnabled()
-  const error = (await page.locator('p[role="alert"]').boundingBox())!
   const main = (await page.locator('main').boundingBox())!
-  expect(error.y + error.height).toBeLessThanOrEqual(main.y)
+  expect(main.y).toBe(mainBefore.y)
+  await expect(page.locator('.Toastify__toast-container')).toHaveCSS('position','fixed')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
