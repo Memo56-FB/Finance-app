@@ -7,7 +7,12 @@ export function appOrigin() {
   return origin
 }
 export function upstream(action: string, init: RequestInit = {}) {
+  return upstreamPath('/api/auth/' + action, init)
+}
+export function upstreamPath(path: string, init: RequestInit = {}) {
   const url = new URL(process.env.FINANCE_API_URL ?? 'http://localhost:8080')
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('Invalid API origin')
-  return fetch(new URL('/api/auth/' + action, url), { ...init, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(10_000) })
+  if (!path.startsWith('/api/') || path.includes('\\') || path.includes('#') || /[\r\n]/.test(path)) throw new Error('Invalid API path')
+  const timeout = AbortSignal.timeout(10_000)
+  return fetch(new URL(path, url), { ...init, cache: 'no-store', redirect: 'manual', signal: init.signal ? AbortSignal.any([init.signal, timeout]) : timeout })
 }

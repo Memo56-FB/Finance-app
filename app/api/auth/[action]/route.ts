@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { bodyText } from '@/lib/api/request'
 import { appOrigin, upstream } from '@/lib/api/upstream'
 
 export const runtime = 'nodejs'
@@ -7,21 +8,6 @@ const cacheHeaders = { 'Cache-Control': 'private, no-store' }
 function reply(status: number) { return new NextResponse(null, { status, headers: cacheHeaders }) }
 function clearGuest(response: NextResponse, secure: boolean) {
   response.cookies.set('finance-guest', '', { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: 0 })
-}
-async function bodyText(request: NextRequest) {
-  if (Number(request.headers.get('content-length')) > 8192) throw new Error('Body too large')
-  const reader = request.body?.getReader()
-  if (!reader) return ''
-  let size = 0
-  const chunks: Uint8Array[] = []
-  while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
-    size += value.length
-    if (size > 8192) { await reader.cancel(); throw new Error('Body too large') }
-    chunks.push(value)
-  }
-  return Buffer.concat(chunks).toString('utf8')
 }
 async function handle(request: NextRequest, context: { params: Promise<{ action: string }> }) {
   const { action } = await context.params
