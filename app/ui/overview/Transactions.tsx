@@ -3,12 +3,10 @@ import { CalendarDate, Money, Text } from '@/lib/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import clsx from 'clsx'
-import Image from 'next/image'
 import React from 'react'
 import Link from 'next/link'
 
-const TransactionCard = ({ src, name, value, date }: {
-  src: string
+const TransactionCard = ({ name, value, date }: {
   name: string
   value: number
   date: string
@@ -16,13 +14,6 @@ const TransactionCard = ({ src, name, value, date }: {
   return (
     <article className='flex items-center justify-between'>
       <div className='flex gap-200 items-center'>
-        <Image
-          alt=""
-          src={src}
-          width={32}
-          height={32}
-          className='rounded-full'
-        />
         <h2 className='text-preset-4-bold text-grey-900'>
           {name}
         </h2>
@@ -51,29 +42,25 @@ export const Transactions = () => {
       <section className='grid gap-250'>
         <TransactionCard
           date='2024-08-19T00:00:00Z'
-          name='Emma Richardson'
-          src='/profilePictures/Logo-1.jpg'
+          name='Ticket refund'
           value={75.50}
         />
         <Separator className='bg-grey-100' />
         <TransactionCard
           date='2024-08-19T00:00:00Z'
-          name='Savory Bites Bistro'
-          src='/profilePictures/Logo-6.png'
+          name='Dinner'
           value={-55.50}
         />
         <Separator className='bg-grey-100' />
         <TransactionCard
           date='2024-08-18T00:00:00Z'
-          name='Daniel Carter'
-          src='/profilePictures/Person-1.jpg'
+          name='Bus pass'
           value={-42.30}
         />
         <Separator className='bg-grey-100'/>
         <TransactionCard
           date='2024-08-17T00:00:00Z'
-          name='Sun Park'
-          src='/profilePictures/Person-10.jpg'
+          name='Grocery refund'
           value={120.00}
         />
       </section>

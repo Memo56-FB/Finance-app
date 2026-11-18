@@ -11,7 +11,7 @@ export const filterTransactions = (
 
   return source.filter((transaction) => {
     const matchesQuery = normalizedQuery.length === 0
-      || transaction.recipient.toLowerCase().includes(normalizedQuery)
+      || transaction.name.toLowerCase().includes(normalizedQuery)
     const matchesCategory = category === 'All Transactions'
       || transaction.category === category
 
@@ -24,11 +24,11 @@ const compareById = (first: Transaction, second: Transaction) => first.id.locale
 export const sortTransactions = (source: readonly Transaction[], sortBy: TransactionSort | string) => {
   return [...source].sort((first, second) => {
     if (sortBy === 'A to Z') {
-      return first.recipient.localeCompare(second.recipient) || compareById(first, second)
+      return first.name.localeCompare(second.name) || compareById(first, second)
     }
 
     if (sortBy === 'Z to A') {
-      return second.recipient.localeCompare(first.recipient) || compareById(first, second)
+      return second.name.localeCompare(first.name) || compareById(first, second)
     }
 
     if (sortBy === 'Highest') {

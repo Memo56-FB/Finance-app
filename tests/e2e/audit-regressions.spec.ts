@@ -26,11 +26,14 @@ test('mobile navigation and filters have accessible names', async ({ page }) => 
   await expect(page.getByRole('button', { name: 'Sort By', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Category', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Bills', exact: true }).click()
-  await expect(page.getByRole('article').filter({ hasText: 'Connect Care' })).toBeVisible()
+  await expect(page.getByRole('article').filter({ hasText: 'Internet bill' })).toBeVisible()
 })
 
 test('overview links include their arrow in the clickable area', async ({ page }) => {
   await page.goto('/finance')
+  const transactions = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Transactions', exact: true }) })
+  await expect(transactions.getByRole('heading', { name: 'Ticket refund', exact: true })).toBeVisible()
+  await expect(transactions.locator('img')).toHaveCount(0)
   for (const route of ['pots', 'transactions', 'budgets', 'recurring-bills']) {
     await expect(page.locator(`a[href="/finance/${route}"]`).filter({ hasText: 'See Details' })).toHaveCount(1)
   }
@@ -47,7 +50,7 @@ test('budget cards and chart use the same transactions', async ({ page }) => {
   await expect(page.getByText('$270.50', { exact: true })).toBeVisible()
   await entertainment.getByRole('link', { name: 'See All', exact: true }).click()
   await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toContainText('Entertainment')
-  await expect(page.locator('table').getByText('Oak and Ivy', { exact: true })).toBeVisible()
+  await expect(page.locator('table').getByText('Cinema ticket', { exact: true })).toBeVisible()
 })
 
 test('transaction URLs validate page bounds and preserve search text', async ({ page }) => {
@@ -57,18 +60,18 @@ test('transaction URLs validate page bounds and preserve search text', async ({ 
   }
 
   const search = page.getByRole('textbox', { name: 'Search transactions', exact: true })
-  await search.pressSequentially('Savory')
-  await expect(search).toHaveValue('Savory')
-  await expect(page.locator('table').getByText('Bravo Zen Spa')).toHaveCount(0)
+  await search.pressSequentially('Dinner')
+  await expect(search).toHaveValue('Dinner')
+  await expect(page.locator('table').getByText('Spa appointment')).toHaveCount(0)
   await expect(page.getByRole('link', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page')
   await page.reload()
-  await expect(search).toHaveValue('Savory')
-  await expect(page.locator('table').getByText('Savory Bites Bistro')).toBeVisible()
+  await expect(search).toHaveValue('Dinner')
+  await expect(page.locator('table').getByText('Dinner')).toBeVisible()
 
   await page.getByRole('link', { name: 'Transactions', exact: true }).click()
   await expect(search).toHaveValue('')
   await page.goBack()
-  await expect(search).toHaveValue('Savory')
+  await expect(search).toHaveValue('Dinner')
 })
 
 test('pot fields are labelled and their preview cannot confirm unsaved money', async ({ page }) => {

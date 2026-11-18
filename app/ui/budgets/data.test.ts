@@ -9,7 +9,7 @@ describe('budget spending', () => {
       { title: 'Dining Out', spent: 55.5 },
       { title: 'Personal Care', spent: 25 },
     ])
-    expect(budgets[0].latest.map(({ recipient }) => recipient)).toEqual(['Oak and Ivy'])
+    expect(budgets[0].latest.map(({ name }) => name)).toEqual(['Cinema ticket'])
     expect(totalBudget).toBe(975)
     expect(totalSpent).toBe(270.5)
   })

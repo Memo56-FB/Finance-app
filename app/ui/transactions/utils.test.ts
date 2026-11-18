@@ -3,10 +3,10 @@ import { filterTransactions, getPageAfterFilterChange, getPageCount, paginateTra
 import type { Transaction, TransactionFilters } from './types'
 
 const sampleTransactions: Transaction[] = [
-  { id: 'z', recipient: 'Zed', category: 'Bills', date: new Date('2024-08-20'), amount: -120, avatarPath: '/z.jpg' },
-  { id: 'a', recipient: 'Alice', category: 'Groceries', date: new Date('2024-08-22'), amount: 75, avatarPath: '/a.jpg' },
-  { id: 'm', recipient: 'Mia', category: 'Bills', date: new Date('2024-08-21'), amount: -25, avatarPath: '/m.jpg' },
-  { id: 'b', recipient: 'Bob', category: 'Groceries', date: new Date('2024-08-23'), amount: 150, avatarPath: '/b.jpg' },
+  { id: 'z', name: 'Zed', category: 'Bills', date: new Date('2024-08-20'), amount: -120 },
+  { id: 'a', name: 'Alice', category: 'Groceries', date: new Date('2024-08-22'), amount: 75 },
+  { id: 'm', name: 'Mia', category: 'Bills', date: new Date('2024-08-21'), amount: -25 },
+  { id: 'b', name: 'Bob', category: 'Groceries', date: new Date('2024-08-23'), amount: 150 },
 ]
 
 describe('sortTransactions', () => {
@@ -31,7 +31,7 @@ describe('sortTransactions', () => {
 })
 
 describe('filterTransactions', () => {
-  it('matches recipient substrings case-insensitively', () => {
+  it('matches name substrings case-insensitively', () => {
     expect(filterTransactions(sampleTransactions, '  ALI  ', 'All Transactions').map(({ id }) => id)).toEqual(['a'])
   })
 

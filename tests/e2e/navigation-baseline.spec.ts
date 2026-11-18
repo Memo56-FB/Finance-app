@@ -10,24 +10,26 @@ test('transactions navigation baseline', async ({ page }) => {
   await expect(page.getByRole('link', { name: '1' })).toHaveAttribute('aria-current', 'page')
 
   const table = page.locator('table')
+  await expect(table.getByRole('columnheader', { name: 'Name', exact: true })).toBeVisible()
+  await expect(table.locator('img')).toHaveCount(0)
   const search = page.getByPlaceholder('Search transaction')
   await expect(async () => {
-    await search.fill('Emma')
-    await expect(table.getByText('Emma Richardson')).toBeVisible()
-    await expect(table.getByText('Bravo Zen Spa')).toHaveCount(0)
+    await search.fill('Ticket')
+    await expect(table.getByText('Ticket refund')).toBeVisible()
+    await expect(table.getByText('Spa appointment')).toHaveCount(0)
   }).toPass()
   await search.fill('')
-  await expect(table.getByText('Bravo Zen Spa')).toBeVisible()
+  await expect(table.getByText('Spa appointment')).toBeVisible()
 
   await page.getByRole('link', { name: 'Go to next page' }).click()
 
   await expect(page.getByRole('link', { name: '2' })).toHaveAttribute('aria-current', 'page')
   await expect(page).toHaveURL(/page=2/)
-  await expect(table.getByText('Sun Park')).toBeVisible()
+  await expect(table.getByText('Grocery refund')).toBeVisible()
 
   await page.reload()
   await expect(page.getByRole('link', { name: '2', exact: true })).toHaveAttribute('aria-current', 'page')
-  await expect(table.getByText('Sun Park')).toBeVisible()
+  await expect(table.getByText('Grocery refund')).toBeVisible()
 
   await page.goBack()
   await expect(page.getByRole('link', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page')

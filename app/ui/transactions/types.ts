@@ -1,10 +1,9 @@
 export type Transaction = {
   id: string
-  recipient: string
+  name: string
   category: string
   date: Date
   amount: number
-  avatarPath: string
 }
 
 export type TransactionSort =

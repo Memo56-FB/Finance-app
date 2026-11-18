@@ -13,15 +13,15 @@ test('all finance HTML and RSC entries reject anonymous access', async ({ reques
     for (const headers of [{} as Record<string,string>, { RSC:'1' }]) {
       const response = await request.get(route,{headers,maxRedirects:0})
       const body = await response.text()
-      expect(body).not.toContain('Emma Richardson')
+      expect(body).not.toContain('Ticket refund')
       expect(body).not.toContain('$5,113.75')
       expect(response.status() === 307 || body.includes('/login?')).toBe(true)
     }
   }
-  await page.goto('/finance/transactions?query=Emma&page=2')
+  await page.goto('/finance/transactions?query=Ticket&page=2')
   await expect(page).toHaveURL(/\/login\?next=/)
   await page.getByRole('button',{name:'Continue as guest'}).click()
-  await expect(page).toHaveURL(/\/finance\/transactions\?query=Emma&page=2/)
+  await expect(page).toHaveURL(/\/finance\/transactions\?query=Ticket&page=2/)
   await expect(page.getByRole('button',{name:'Logout',exact:true})).toBeVisible()
 })
 test('registration confirms without login; real form login and logout rotate cookies', async ({ page, context }) => {
