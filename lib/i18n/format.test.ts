@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createFormatters } from './format'
-import { en, es } from './index'
+import { createI18n, en, es } from './index'
 
 describe('localized amounts with a dollar sign', () => {
   it('keeps catalog parity', () => expect(Object.keys(es).sort()).toEqual(Object.keys(en).sort()))
@@ -19,6 +19,9 @@ describe('localized amounts with a dollar sign', () => {
       expect(f.percent(0.5525)).toContain('55.25')
       expect(f.date('2024-08-29T00:00:00Z')).toContain('29')
       expect(f.date('2024-08-29T00:00:00Z')).toContain(language === 'es' ? 'ago' : 'Aug')
+      const locale=createI18n({language})
+      expect(locale.recurringFrequency(1)).toBe(language === 'es' ? 'Cada mes' : 'Every month')
+      for(const months of [3,12]) expect(locale.recurringFrequency(months)).toBe(language === 'es' ? `Cada ${months} meses` : `Every ${months} months`)
     })
   }
 })

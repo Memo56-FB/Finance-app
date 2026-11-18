@@ -15,7 +15,7 @@ export type Summary = { periodStart: string; periodEnd: string; currentBalance: 
 export type CutSettings = { frequency: 'MONTHLY' | 'SEMIMONTHLY'; startDay: number }
 export type RecurringPayment = Category & {
   categoryId: string; categoryName: string; type: 'SUBSCRIPTION' | 'INSTALLMENT'; amount: string; firstDueDate: string
-  billingDay: number; totalInstallments: number | null; paidInstallments: string; month: string; dueDate: string | null
+  billingDay: number; totalInstallments: number | null; intervalMonths: number; paidInstallments: string; month: string; dueDate: string | null
   status: 'PENDING' | 'PAID' | 'VOID' | 'NOT_SCHEDULED'; occurrenceId: string | null; paidAmount: string | null; paidAt: string | null
 }
 export type PaymentGroup = { count: string; totalAmount: string }

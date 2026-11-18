@@ -21,11 +21,11 @@ function summaryView(summary:PaymentSummary) {
   return {total:group(summary.total),paid:group(summary.paid),upcoming:group(summary.pending),dueSoon:group(summary.dueSoon)}
 }
 function PaymentDueDate({row,className}:{row:RecurringPayment;className:string}) {
-  const {t}=useI18n()
+  const {t,recurringFrequency}=useI18n()
   const status={PENDING:'Pending',PAID:'Paid',VOID:'Void',NOT_SCHEDULED:'Not scheduled'} as const
   const paid=row.status === 'PAID'
   return <p className={`items-center gap-100 text-preset-5 ${paid ? 'text-green' : row.status === 'NOT_SCHEDULED' ? 'text-grey-500' : 'text-red'} ${className}`}>
-    {row.dueDate ? <time dateTime={row.dueDate}>{t('Monthly')} {Number(row.dueDate.slice(8))}</time> : t('Not scheduled')}
+    {row.dueDate ? <time dateTime={row.dueDate}>{recurringFrequency(row.intervalMonths)} · {Number(row.dueDate.slice(8))}</time> : t('Not scheduled')}
     <span className={`grid h-3 w-3 place-items-center rounded-full text-[8px] leading-none text-white ${paid ? 'bg-green' : 'bg-red'}`} aria-hidden="true">{paid ? <Check size={8} weight="bold"/> : '!'}</span><span className="sr-only">{t(status[row.status])}</span>
   </p>
 }

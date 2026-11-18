@@ -104,8 +104,12 @@ the deadline, and an expired window is not simulated by creating another pot.
 
 ## Recurring payments
 
-Subscriptions omit installment count; installment purchases require a positive
-whole count and an amount per payment. The displayed installment sequence depends
+Subscriptions omit installment count and accept `intervalMonths` from 1 to 12,
+defaulting to 1. Create/edit preserves that frequency and the list translates it.
+Installment purchases require a positive whole count and always send an interval
+of 1 month. Amounts remain per payment; the interval never multiplies the amount.
+Spring determines scheduled months, due dates and monthly totals, including paid
+history after frequency edits. The displayed installment sequence depends
 on the selected month relative to the first due date, independently of paid count.
 List search/sort/page do not alter monthly aggregates. Total is paid plus pending;
 due soon is a subset of pending from today through seven days, excluding overdue.

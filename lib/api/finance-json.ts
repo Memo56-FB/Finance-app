@@ -2,7 +2,7 @@ import { isLosslessNumber, LosslessNumber, parse, stringify } from 'lossless-jso
 
 const ids = new Set(['id', 'categoryId', 'potId', 'recurringPaymentId', 'occurrenceId', 'budgetId'])
 const amounts = new Set(['amount', 'targetAmount', 'balance', 'totalBalance', 'spendingLimit', 'spent', 'available', 'exceededAmount', 'currentBalance', 'income', 'expenses', 'totalAmount', 'paidAmount'])
-const integers = new Set(['page', 'size', 'startDay', 'billingDay', 'totalInstallments'])
+const integers = new Set(['page', 'size', 'startDay', 'billingDay', 'totalInstallments', 'intervalMonths'])
 const counts = new Set(['totalElements', 'totalPages', 'count', 'paidInstallments'])
 
 export function validId(value: string) {

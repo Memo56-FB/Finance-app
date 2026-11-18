@@ -22,6 +22,13 @@ it('normalizes URL filters and separates every account and parameter combination
   expect(financeQueries('a').pots().queryKey).not.toEqual(financeQueries('b').pots().queryKey)
   expect(financeQueries('a').transactions({page:0}).queryKey).not.toEqual(financeQueries('a').transactions({page:1}).queryKey)
 })
+it('accepts subscription intervals and rejects invalid or nonmonthly installments',()=>{
+  const row={id:'1',name:'Streaming',categoryId:'1',categoryName:'Bills',type:'SUBSCRIPTION',amount:'30.00',firstDueDate:'2027-01-31',billingDay:31,totalInstallments:null,intervalMonths:3,paidInstallments:'0',month:'2027-04',dueDate:'2027-04-30',status:'PENDING',occurrenceId:null,paidAmount:null,paidAt:null}
+  for(const intervalMonths of [1,3,12]) expect(financialRow['recurring-payments']({...row,intervalMonths}).intervalMonths).toBe(intervalMonths)
+  for(const intervalMonths of [undefined,null,'3',0,13,1.5]) expect(()=>financialRow['recurring-payments']({...row,intervalMonths})).toThrow()
+  expect(()=>financialRow['recurring-payments']({...row,type:'INSTALLMENT',totalInstallments:12})).toThrow()
+  expect(financialRow['recurring-payments']({...row,type:'INSTALLMENT',totalInstallments:12,intervalMonths:1}).intervalMonths).toBe(1)
+})
 it('finds three monthly expenses beyond income and future-date pages, stopping at older months',async()=>{
   const source=financialServices(vi.fn())
   source.transactions=vi.fn()

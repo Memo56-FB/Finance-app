@@ -29,7 +29,7 @@ api.interceptors.response.use(response => {
   if (status === 403) clearCsrf()
   if (status === 401 && error.config?.baseURL === '/api/finance' && typeof window !== 'undefined') window.dispatchEvent(new Event('finance-session-expired'))
   const errors = axios.isAxiosError(error) ? error.response?.data?.errors : undefined
-  const fields = Array.isArray(errors) ? errors.map(e => e?.field === 'nonzeroAmount' ? 'amount' : e?.field === 'validInstallmentCount' ? 'totalInstallments' : e?.field).filter((f): f is string => ['name', 'email', 'password', 'amount', 'categoryId', 'transactionDate', 'spendingLimit', 'color', 'targetAmount', 'type', 'firstDueDate', 'totalInstallments', 'startDay', 'frequency'].includes(f)) : []
+  const fields = Array.isArray(errors) ? errors.map(e => e?.field === 'nonzeroAmount' ? 'amount' : e?.field === 'validInstallmentCount' ? 'totalInstallments' : e?.field === 'validInterval' ? 'intervalMonths' : e?.field).filter((f): f is string => ['name', 'email', 'password', 'amount', 'categoryId', 'transactionDate', 'spendingLimit', 'color', 'targetAmount', 'type', 'firstDueDate', 'totalInstallments', 'intervalMonths', 'startDay', 'frequency'].includes(f)) : []
   return Promise.reject(new ApiError(status, fields))
 })
 

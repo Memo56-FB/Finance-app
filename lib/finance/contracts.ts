@@ -40,6 +40,7 @@ function recurring(value: unknown): RecurringPayment {
   check(id(row.categoryId) && text(row.categoryName) && ['SUBSCRIPTION','INSTALLMENT'].includes(String(row.type)) && money(row.amount) && date(row.firstDueDate))
   check(Number.isInteger(row.billingDay) && Number(row.billingDay) >= 1 && Number(row.billingDay) <= 31)
   check(row.totalInstallments === null || Number.isInteger(row.totalInstallments) && Number(row.totalInstallments) > 0)
+  check(Number.isInteger(row.intervalMonths) && Number(row.intervalMonths) >= 1 && Number(row.intervalMonths) <= 12 && (row.type !== 'INSTALLMENT' || row.intervalMonths === 1))
   check(text(row.paidInstallments) && /^\d+$/.test(row.paidInstallments) && text(row.month) && validMonth(row.month) && (row.dueDate === null || date(row.dueDate)))
   check(['PENDING','PAID','VOID','NOT_SCHEDULED'].includes(String(row.status)) && (row.occurrenceId === null || id(row.occurrenceId)) && (row.paidAmount === null || money(row.paidAmount)) && (row.paidAt === null || instant(row.paidAt)))
   return row as RecurringPayment

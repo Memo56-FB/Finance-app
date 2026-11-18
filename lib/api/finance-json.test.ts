@@ -9,7 +9,11 @@ describe('exact finance values', () => {
     expect(stringifyFinance({ name: '123', id: '9007199254740993', amount: '-99999999999999999.99', categoryId: null })).toBe('{"name":"123","id":9007199254740993,"amount":-99999999999999999.99,"categoryId":null}')
   })
   it('rejects malformed financial contracts', () => {
-    for (const text of ['{"id":-1}', '{"id":9223372036854775808}', '{"amount":"1.00"}', '{"amount":1.001}', '{"page":0.5}', '{"totalElements":-1}']) expect(() => parseFinance(text)).toThrow()
+    for (const text of ['{"id":-1}', '{"id":9223372036854775808}', '{"amount":"1.00"}', '{"amount":1.001}', '{"page":0.5}', '{"totalElements":-1}', '{"intervalMonths":1.5}', '{"intervalMonths":"3"}']) expect(() => parseFinance(text)).toThrow()
+  })
+  it('reads and writes subscription intervals as JSON integers', () => {
+    expect(parseFinance('{"intervalMonths":3}')).toEqual({intervalMonths:3})
+    expect(stringifyFinance({intervalMonths:'12'})).toBe('{"intervalMonths":12}')
   })
   it('validates individual amounts without limiting aggregates', () => {
     expect(validAmount('99999999999999999.99')).toBe(true)

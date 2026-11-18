@@ -41,6 +41,6 @@ it('shares CSRF across financial verbs, preserves raw numbers and maps financial
   }
   for(const method of ['POST','PUT','DELETE']) expect(await financeRequest({url:'transactions/1',method,...(method === 'POST' ? {data:{amount:'99999999999999999.99',categoryId:'9007199254740993'}} : {})})).toEqual({id:'9007199254740993',amount:'99999999999999999.99'})
   expect(calls.filter(path=>path === 'csrf')).toHaveLength(1)
-  api.defaults.adapter=async config => { throw new AxiosError('private','ERR_BAD_REQUEST',config,undefined,{data:{errors:[{field:'nonzeroAmount'},{field:'validInstallmentCount'},{field:'unknown'}]},status:400,statusText:'',headers:new AxiosHeaders(),config}) }
-  await expect(financeRequest({url:'transactions'})).rejects.toMatchObject({status:400,fields:['amount','totalInstallments']})
+  api.defaults.adapter=async config => { throw new AxiosError('private','ERR_BAD_REQUEST',config,undefined,{data:{errors:[{field:'nonzeroAmount'},{field:'validInstallmentCount'},{field:'validInterval'},{field:'unknown'}]},status:400,statusText:'',headers:new AxiosHeaders(),config}) }
+  await expect(financeRequest({url:'transactions'})).rejects.toMatchObject({status:400,fields:['amount','totalInstallments','intervalMonths']})
 })

@@ -36,9 +36,9 @@ export function handleFinance(req,res,session,body) {
   }
   const warnings=row=>active(db.budgets).filter(budget=>budget.categoryId === row.categoryId).map(budget=>budgetView(budget,row.transactionDate.slice(0,7))).filter(budget=>budget.limitReached).map(({id:budgetId,categoryId,month,limitReached,exceededAmount})=>({budgetId,categoryId,month,limitReached,exceededAmount}))
   const occurrence=(row,month)=>db.occurrences.find(item=>item.recurringPaymentId === row.id && item.month === month)
-  const scheduled=(row,month)=>{const [year,m]=month.split('-').map(Number),[firstYear,firstMonth]=row.firstDueDate.split('-').map(Number),index=(year-firstYear)*12+m-firstMonth;return index>=0 && (row.type === 'SUBSCRIPTION' || index<row.totalInstallments)}
+  const scheduled=(row,month)=>{const [year,m]=month.split('-').map(Number),[firstYear,firstMonth]=row.firstDueDate.split('-').map(Number),index=(year-firstYear)*12+m-firstMonth;return index>=0 && index%row.intervalMonths===0 && (row.type === 'SUBSCRIPTION' || index<row.totalInstallments)}
   const recurringView=(row,month=selectedMonth)=>{
-    const paid=occurrence(row,month),day=Math.min(row.billingDay,new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),0)).getUTCDate()),dueDate=scheduled(row,month)?month+'-'+String(day).padStart(2,'0'):null
+    const paid=occurrence(row,month),day=Math.min(row.billingDay,new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),0)).getUTCDate()),dueDate=paid || scheduled(row,month)?month+'-'+String(day).padStart(2,'0'):null
     return {...row,categoryName:categoryName(row.categoryId),paidInstallments:String(db.occurrences.filter(item=>item.recurringPaymentId === row.id && item.status === 'PAID').length),month,dueDate,status:paid?.status ?? (dueDate?'PENDING':'NOT_SCHEDULED'),occurrenceId:paid?.id ?? null,paidAmount:paid?.amount ?? null,paidAt:paid?.paidAt ?? null}
   }
   const pay=(row,month)=>{
@@ -92,6 +92,10 @@ export function handleFinance(req,res,session,body) {
     if(resource !== 'budgets' && (!name || name.length>100))return problem(400,'name')
     if(['transactions','budgets','recurring-payments'].includes(resource) && data.categoryId !== null && !active(db.categories).some(cat=>cat.id === data.categoryId) && row?.categoryId !== data.categoryId)return problem(400,'categoryId')
     if(resource === 'budgets' && active(db.budgets).some(item=>item.id !== id && item.categoryId === data.categoryId))return problem(409)
+    if(resource === 'recurring-payments') {
+      const interval=Number(data.intervalMonths ?? 1)
+      if(!Number.isInteger(interval) || interval<1 || interval>12 || data.type === 'INSTALLMENT' && interval !== 1)return problem(400,'intervalMonths')
+    }
     if(resource === 'transactions') {
       if(row?.occurrenceId && cents(data.amount)<0n && effective().some(item=>item.id !== row.id && item.occurrenceId === row.occurrenceId && cents(item.amount)<0n))return problem(409)
       if(row?.potId) {const pot=db.pots.find(pot=>pot.id === row.potId),balance=cents(pot.balance)+cents(data.amount)-cents(row.amount);if(balance<0n || balance>9999999999999999999n)return problem(409);pot.balance=money(balance)}
@@ -104,13 +108,13 @@ export function handleFinance(req,res,session,body) {
       if(resource === 'savings-pots')row.balance='0.00'
     }
     Object.assign(row,data,...(name?[{name}]:[]))
-    if(resource === 'recurring-payments')Object.assign(row,{totalInstallments:row.type === 'SUBSCRIPTION'?null:Number(row.totalInstallments),billingDay:Number(row.firstDueDate.slice(8))})
+    if(resource === 'recurring-payments')Object.assign(row,{totalInstallments:row.type === 'SUBSCRIPTION'?null:Number(row.totalInstallments),intervalMonths:Number(data.intervalMonths ?? 1),billingDay:Number(row.firstDueDate.slice(8))})
     return send(method === 'POST'?201:200,resource === 'budgets'?budgetView(row):resource === 'recurring-payments'?recurringView(row):resource === 'transactions'?{...txView(row),budgetWarnings:warnings(row)}:row)
   }
   if(row)return send(200,resource === 'budgets'?budgetView(row):resource === 'recurring-payments'?recurringView(row):resource === 'transactions'?txView(row):row)
   if(['transactions','recurring-payments'].includes(resource)) {
     const search=(url.searchParams.get('search') ?? '').toLowerCase(),sort=url.searchParams.get('sort') ?? 'newest',page=Number(url.searchParams.get('page') ?? 0),size=Number(url.searchParams.get('size') ?? 20)
-    let rows=resource === 'transactions'?effective().map(txView):active(db.recurring).filter(row=>scheduled(row,selectedMonth)).map(row=>recurringView(row))
+    let rows=resource === 'transactions'?effective().map(txView):active(db.recurring).filter(row=>scheduled(row,selectedMonth) || occurrence(row,selectedMonth)).map(row=>recurringView(row))
     rows=rows.filter(row=>row.name.toLowerCase().includes(search) && (!url.searchParams.get('categoryId') || row.categoryId === url.searchParams.get('categoryId')))
     const compare=(a,b)=>a<b?-1:a>b?1:0
     rows.sort((a,b)=>{const result=sort.startsWith('name_')?a.name.toLowerCase().localeCompare(b.name.toLowerCase()):sort.startsWith('amount_')?compare(cents(a.amount),cents(b.amount)):compare(a.transactionDate ?? a.dueDate,b.transactionDate ?? b.dueDate);const tie=result || compare(BigInt(a.id),BigInt(b.id));return ['newest','name_desc','amount_desc'].includes(sort)?-tie:tie})
