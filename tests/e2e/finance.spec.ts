@@ -24,6 +24,30 @@ async function menu(page:Page,row:Locator,action:string) {await row.getByRole('b
 
 
 
+test('month filters show the current month inside the calendar without extra text',async({page,context})=>{
+  await account(context)
+  await page.goto('/finance/budgets')
+  const currentMonth=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit'}).format(new Date())
+  await expect(page.getByLabel('Month',{exact:true})).toHaveValue(currentMonth)
+  const cat=await(await write(context,'categories','POST','{"name":"Monthly budget"}')).json()
+  await write(context,'budgets','POST',`{"categoryId":${cat.id},"spendingLimit":200,"color":"#277C78"}`)
+  for(const route of ['/finance/budgets','/finance/recurring-bills']) {
+    await page.goto(route)
+    await expect(page.getByRole('button',{name:'Logout',exact:true})).toBeEnabled()
+    const calendar=page.getByLabel('Month',{exact:true})
+    await expect(calendar).toHaveValue('2027-03')
+    await expect(page.getByRole('button',{name:'Current month',exact:true})).toHaveCount(0)
+    await expect(page.getByText('2027-03',{exact:true})).toHaveCount(0)
+    await calendar.fill('2027-02')
+    await expect(page).toHaveURL(/month=2027-02/)
+    await page.reload()
+    await expect(page.getByRole('button',{name:'Logout',exact:true})).toBeEnabled()
+    await expect(calendar).toHaveValue('2027-02')
+    await calendar.fill('')
+    await expect(page).not.toHaveURL(/month=/)
+    await expect(calendar).toHaveValue('2027-03')
+  }
+})
 
 test('budget tooltips show exact amounts and ignore the decorative ring',async({page,context})=>{
   await account(context)

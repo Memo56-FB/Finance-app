@@ -16,8 +16,9 @@ import { Empty, financeDialog, FormInput, NewDialog, PageHeader, panel, QueryMes
 import { TransactionRows, useFinancialURL } from './Transactions'
 
 export function MonthControl({effective}:{effective?:string}) {
-  const {params,update}=useFinancialURL(),{t}=useI18n()
-  return <div className="flex flex-wrap items-end gap-150"><FormInput label="Month" type="month" value={validMonth(params.get('month') ?? '') ? params.get('month')! : ''} onChange={event=>update('month',event.target.value)}/><Button variant="secondary" onClick={()=>update('month','')}>{t('Current month')}</Button>{effective && <span className="text-preset-5 py-150">{effective}</span>}</div>
+  const {params,update}=useFinancialURL()
+  const currentMonth=effective ?? new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit'}).format(new Date())
+  return <div className="flex"><FormInput label="Month" type="month" value={validMonth(params.get('month') ?? '') ? params.get('month')! : currentMonth} onChange={event=>update('month',event.target.value)}/></div>
 }
 function LatestExpenses({budget}:{budget:Budget}) {
   const {account}=useFinance(),{t}=useI18n()
