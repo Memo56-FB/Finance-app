@@ -56,7 +56,7 @@ export function SaveForm({save,children,category=false,submitLabel='Save',classN
   const {t}=useI18n()
   return <form noValidate className={cn('grid gap-200',className)} onSubmit={event=>{event.preventDefault();if(!save.isPending) save.mutate()}}>
     <fieldset disabled={save.isPending} className="grid gap-[inherit] min-w-0">{children}</fieldset>
-    {save.error && <div role="alert" className="grid gap-100 text-red"><p>{t(errorLabel(save.error,category))}</p><Button type="button" variant="secondary" onClick={()=>void save.refresh()}>{t('Reload data')}</Button></div>}
+    {save.error && <div role="alert" className="grid gap-100 text-red"><p>{t(errorLabel(save.error,category))}</p>{!(save.error instanceof ApiError && save.error.status === 400) && <Button type="button" variant="secondary" onClick={()=>void save.refresh()}>{t('Reload data')}</Button>}</div>}
     <Button type="submit" disabled={save.isPending} variant={destructive ? 'destroy' : undefined} className="text-white">{t(save.isPending ? 'Please wait…' : submitLabel)}</Button>
   </form>
 }
