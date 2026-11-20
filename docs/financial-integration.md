@@ -32,7 +32,22 @@ and direct no-store backend requests. The browser hydrates those results, refres
 after confirmed writes, on focus and every 60 visible seconds, and clears/cancels
 private data when leaving a session. No cache persists in localStorage.
 
-401 triggers login; 403 permits an explicit retry with fresh CSRF; 400 marks known
+Financial SSR reads are 6 for Overview, 2 for Transactions, 1 for Categories,
+1 for Budgets, 1 for Pots and 2 for Recurring Bills. Session verification is
+separate. The transaction category filter is hydrated on entry. Budget and
+recurring editors load categories on first open and reuse a fresh cached list.
+The two account searches publish settled text after 300 ms, with obsolete
+GETs cancellable through the gateway. Saving the reporting-cut preference
+uses the confirmed settings response and refreshes just the summary.
+
+Returning to an account tab verifies the session before refreshing private data.
+Confirmed login, logout and guest transitions notify other tabs without sharing
+credentials or account identifiers. A changed identity discards the previous
+draft and cache. A temporary identity-check failure offers a retry. During login
+confirmation this retry checks the session only. A confirmed expiration makes a
+new explicit login available.
+
+An expired session returns to the authorized guest or login view. A 403 permits an explicit retry with fresh CSRF. A 400 marks known
 fields; 404 requests a reload; 409 preserves the form and explains the conflict.
 Uncertain network outcomes require reading server state before deciding to repeat.
 Deposits and withdrawals are not idempotent. No mutation is automatically replayed.
@@ -84,7 +99,8 @@ server-owned; income does not reduce spending. Overspending shows negative avail
 funds with bounded visual progress. Lower limits and recorded expenses remain valid.
 Deleting a budget preserves its transactions.
 
-The latest-expenses preview scans newest-first category pages until it finds three
+With exactly zero confirmed spending, the preview is empty and sends no history
+request. For positive spending it scans newest-first category pages until it finds three
 negative movements in the selected month or passes that month's start. It never
 calculates totals from a partial page. An old month can require extra page reads;
 month/sign backend filters can be proposed separately if volume warrants them.

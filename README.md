@@ -127,8 +127,11 @@ normalized ratios while labels keep the exact values. TypeScript targets ES2020
 for native bigint arithmetic. Display remains `$` with no assigned currency.
 
 Queries use account-specific keys, request-local SSR caches and no persistent
-browser cache. Confirmed changes invalidate that account's financial data. Visible
-views refresh every 60 seconds and on focus to observe Spring's automatic payments.
+browser cache. Account views verify the active session before refreshing on focus
+and also refresh every 60 visible seconds to observe Spring's automatic payments.
+Changing the reporting cut updates its settings from the response and requests
+only the period summary. Transaction and recurring searches wait 300 ms for
+typing to settle. Budget history loads only for cards with confirmed spending.
 Guest pages use local examples and send no financial requests.
 
 See [the financial integration guide](docs/financial-integration.md) for module rules,
