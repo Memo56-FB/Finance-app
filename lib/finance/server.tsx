@@ -4,6 +4,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import { upstreamPath } from '@/lib/api/upstream'
 import { ApiError } from '@/lib/api/client'
 import { parseFinance } from '@/lib/api/finance-json'
+import { validMonth } from '@/lib/api/finance-path'
 import { financialServices } from './services'
 import { financeQueries, filtersFromURL } from './queries'
 import type { SearchParams } from '@/lib/auth/types'
@@ -22,9 +23,10 @@ export async function FinanceHydration({ account, section, params, children }: {
   const client=new QueryClient()
   const search=new URLSearchParams()
   for(const [key,value] of Object.entries(params)) if(typeof value === 'string') search.set(key,value)
-  const month=search.get('month') || undefined
+  const requestedMonth = search.get('month') ?? ''
+  const month = validMonth(requestedMonth) ? requestedMonth : undefined
   const requests:Promise<unknown>[]=[]
-  if(['categories','transactions','budgets','recurring'].includes(section)) requests.push(client.prefetchQuery(queries.categories()))
+  if(section === 'categories' || section === 'transactions') requests.push(client.prefetchQuery(queries.categories()))
   if(section === 'transactions') requests.push(client.prefetchQuery(queries.transactions(filtersFromURL(search))))
   if(section === 'budgets' || section === 'overview') requests.push(client.prefetchQuery(queries.budgets(section === 'overview' ? undefined : month)))
   if(section === 'pots' || section === 'overview') requests.push(client.prefetchQuery(queries.pots()))

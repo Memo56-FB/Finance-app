@@ -19,3 +19,19 @@ it('uses direct no-store reads and separate hydrated caches for concurrent accou
   expect(stateA).toContain('9007199254740993');expect(stateA).toContain('a@example.test');expect(stateA).not.toContain('b@example.test')
   expect(stateB).toContain('b@example.test');expect(stateB).not.toContain('JSESSIONID=a')
 })
+
+it.each([
+  ['overview', ['budgets','savings-pots','recurring-payments/summary','financial-summary','financial-summary/settings','transactions']],
+  ['transactions', ['categories','transactions']],
+  ['categories', ['categories']],
+  ['budgets', ['budgets']],
+  ['pots', ['savings-pots']],
+  ['recurring', ['recurring-payments','recurring-payments/summary']],
+] as const)('prefetches only the necessary reads for %s', async (section, expected) => {
+  const fetch = vi.fn(async (_url: URL) => new Response(null, {status:503}))
+  vi.stubGlobal('fetch', fetch)
+  await FinanceHydration({account:'a@example.test', section, params:{month:'2027-13'}, children:null})
+  const urls = fetch.mock.calls.map(([url]) => url)
+  expect(urls.map(url => url.pathname.slice(5)).sort()).toEqual([...expected].sort())
+  expect(urls.every(url => !url.searchParams.has('month'))).toBe(true)
+})

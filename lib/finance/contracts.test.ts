@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest'
-import { categoryOptions } from '@/app/ui/finance/forms'
+import { categoryOptions } from './categories'
 import { financialRow, page, calendarDate } from './contracts'
 import { filtersFromURL, financeQueries } from './queries'
 import { recentExpenses } from './recent-expenses'

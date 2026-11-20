@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
-import { PotMoneyForm } from '@/app/ui/finance/forms'
+import { PotMoneyForm } from '@/app/ui/finance/PotForms'
 import { makeQueryClient } from '@/lib/api/QueryProvider'
 import { ApiError } from '@/lib/api/client'
 import { AccountScope } from '@/lib/finance/AccountScope'
@@ -20,7 +20,7 @@ vi.mock('@/lib/auth/client', async importOriginal => ({
 const pot:Pot={id:'1',name:'Holiday',balance:'100.00',targetAmount:'200.00',color:'#123456'}
 async function preview(action:'deposits'|'withdrawals',record=pot) {
   const client=makeQueryClient()
-  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview@example.test"><PotMoneyForm record={record} action={action} onDone={()=>{}}/></AccountScope></PreferencesProvider></QueryClientProvider>)
+  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview@example.test"><PotMoneyForm record={record} action={action}/></AccountScope></PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   return {...view,client}
 }

@@ -22,6 +22,131 @@ async function save(page:Page) {const dialog=page.getByRole('dialog');await dial
 async function category(page:Page,name:string) {await page.getByRole('button',{name:'+ Add category',exact:true}).click();await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill(name);await save(page)}
 async function menu(page:Page,row:Locator,action:string) {await row.getByRole('button',{name:/^Actions:/}).click();await page.getByRole('menuitem',{name:action,exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible()}
 
+test('category dialogs preserve the draft throughout the exit animation', async ({page, context}) => {
+  await account(context)
+  await write(context, 'categories', 'POST', '{"name":"First"}')
+  await write(context, 'categories', 'POST', '{"name":"Second"}')
+  await page.goto('/finance/categories')
+  const add = page.getByRole('button', {name:'+ Add category', exact:true})
+  const dialog = page.getByRole('dialog')
+
+  for (const [record, dismiss] of [
+    [null, () => page.keyboard.press('Escape')],
+    ['First', () => dialog.getByRole('button', {name:'Close', exact:true}).click()],
+    ['Second', () => page.mouse.click(4, 4)],
+  ] as const) {
+    const row = page.getByRole('row').filter({hasText: record ?? 'First'})
+    if (record) await menu(page, row, 'Edit')
+    else await add.click()
+    await expect(dialog.getByLabel('Name', {exact:true})).toHaveValue(record ?? '')
+    await dialog.getByLabel('Name', {exact:true}).fill('Unsaved draft')
+    await dialog.evaluate(panel => {
+      const snapshot = () => ({
+        title: panel.querySelector('h2')?.textContent,
+        value: panel.querySelector('input')?.value ?? null,
+        fields: panel.querySelectorAll('input').length,
+      })
+      const before = snapshot()
+      const observer = new MutationObserver(() => {
+        if (panel.dataset.state !== 'closed') return
+        document.body.dataset.dialogExit = JSON.stringify({before, during: snapshot()})
+        observer.disconnect()
+      })
+      delete document.body.dataset.dialogExit
+      observer.observe(panel, {attributes: true, attributeFilter: ['data-state']})
+    })
+    await dismiss()
+    await expect(dialog).toHaveCount(0)
+    const snapshot = JSON.parse((await page.locator('body').getAttribute('data-dialog-exit'))!)
+    expect(snapshot.before).toMatchObject({fields:1, value:'Unsaved draft'})
+    expect(snapshot.during).toEqual(snapshot.before)
+    await expect(record ? row.getByRole('button', {name:/^Actions:/}) : add).toBeFocused()
+  }
+  await page.emulateMedia({reducedMotion:'reduce'})
+  await add.click()
+  await expect(dialog.getByLabel('Name', {exact:true})).toHaveValue('')
+  await expect(dialog).toHaveCSS('animation-name', 'none')
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await expect(add).toBeFocused()
+})
+
+test('a pending category save retains the editor and sends one write', async ({page, context}) => {
+  await account(context)
+  await page.goto('/finance/categories')
+  const add = page.getByRole('button', {name:'+ Add category', exact:true})
+  const dialog = page.getByRole('dialog')
+  let writes = 0
+  for (const accepted of [false, true]) {
+    const response = Promise.withResolvers<void>()
+    await page.route('**/api/finance/categories', async route => {
+      if (route.request().method() !== 'POST') return route.continue()
+      writes++
+      await response.promise
+      if (accepted) await route.continue()
+      else await route.fulfill({status:409})
+    })
+    await add.click()
+    const field = dialog.getByLabel('Name', {exact:true})
+    await field.fill('My draft')
+    await dialog.getByRole('button', {name:'Save', exact:true}).click()
+    try {
+      await expect(dialog.getByRole('status')).toHaveText('Please wait…')
+      await expect(dialog.getByRole('button', {name:'Close', exact:true})).toBeDisabled()
+      await page.keyboard.press('Escape')
+      await page.mouse.click(4, 4)
+      await dialog.locator('form').evaluate(form => (form as HTMLFormElement).requestSubmit())
+      await expect(field).toHaveValue('My draft')
+      await expect.poll(() => writes).toBe(accepted ? 2 : 1)
+    } finally { response.resolve() }
+    if (accepted) {
+      await expect(dialog).toHaveCount(0)
+      await expect(add).toBeFocused()
+    } else {
+      await expect(dialog.getByRole('alert')).toContainText('conflicts')
+      await expect(field).toHaveValue('My draft')
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+    }
+    await page.unroute('**/api/finance/categories')
+  }
+  const row = page.getByRole('row').filter({hasText:'My draft'})
+  await expect(row).toBeVisible()
+  await menu(page,row,'Delete')
+  await save(page)
+  await expect(row).toHaveCount(0)
+  await expect(page.getByRole('heading', {name:'Categories', exact:true})).toBeFocused()
+})
+
+test('retrying categories with the keyboard does not submit a valid edit', async ({page, context}) => {
+  await account(context)
+  const cat = await (await write(context,'categories','POST','{"name":"Food"}')).json()
+  await write(context,'transactions','POST',`{"categoryId":${cat.id},"amount":-10,"name":"Lunch","transactionDate":"2027-03-20"}`)
+  await page.goto('/finance/transactions')
+  const dialog = page.getByRole('dialog')
+  await menu(page, page.getByRole('row').filter({hasText:'Lunch'}),'Edit')
+  let reads = 0, writes = 0
+  let unavailable = true
+  await page.route('**/api/finance/categories', route => {
+    reads++
+    return unavailable ? route.fulfill({status:503}) : route.continue()
+  })
+  page.on('request', request => {
+    if (request.url().includes('/api/finance/') && request.method() !== 'GET') writes++
+  })
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  const reload = dialog.getByRole('button', {name:'Reload data', exact:true})
+  await expect(reload).toBeVisible()
+  const previousReads = reads
+  unavailable = false
+  await reload.focus()
+  await page.keyboard.press('Enter')
+  await expect(reload).toHaveCount(0)
+  await expect(dialog.getByLabel('Name', {exact:true})).toHaveValue('Lunch')
+  expect(reads - previousReads).toBe(1)
+  expect(writes).toBe(0)
+})
+
 test('search publishes the settled value and preserves filters through navigation', async ({page, context}) => {
   await account(context)
   await write(context,'categories','POST','{"name":"Search category"}')
@@ -85,6 +210,67 @@ test('search publishes the settled value and preserves filters through navigatio
       expect(searches).not.toContain('leave before publish')
     } finally { page.off('request', listen) }
   }
+})
+
+test('editors load category choices on demand and reuse a fresh list', async ({page, context}) => {
+  await account(context)
+  await write(context,'categories','POST','{"name":"Choices"}')
+  for (const [path, label] of [
+    ['/finance/budgets', /^\+ Add New Budget$/i],
+    ['/finance/recurring-bills', /^\+ Add recurring payment$/i],
+  ] as const) {
+    let reads = 0
+    await page.route('**/api/finance/categories', route => { reads++; return route.continue() })
+    await page.goto(path)
+    const add = page.getByRole('button',{name:label})
+    await expect(add).toBeVisible()
+    await expect(page.locator('main [inert]')).toHaveCount(0)
+    expect(reads).toBe(0)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await add.click()
+      await choose(page,'Category','Choices')
+      await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await expect(add).toBeFocused()
+      expect(reads).toBe(1)
+    }
+    await page.unroute('**/api/finance/categories')
+  }
+})
+
+test('reporting cuts validate the day and refresh only the summary', async ({page, context}) => {
+  await account(context)
+  await page.goto('/finance')
+  const configure = page.getByRole('button',{name:'Configure period', exact:true})
+  await expect(configure).toBeVisible()
+  const dialog = page.getByRole('dialog')
+  const updates: number[] = []
+  const reads: string[] = []
+  page.on('request', request => {
+    const url = new URL(request.url())
+    if (!url.pathname.startsWith('/api/finance/')) return
+    if (request.method() === 'PUT') updates.push(request.postDataJSON().startDay)
+    else if (request.method() === 'GET') reads.push(url.pathname)
+  })
+  await configure.click()
+  const day = dialog.getByLabel('Start day', {exact:true})
+  const submit = dialog.getByRole('button', {name:'Save', exact:true})
+  for (const value of ['', '0', '1.5', '32']) {
+    await day.fill(value)
+    await submit.click()
+    await expect(day).toHaveAttribute('aria-invalid','true')
+    expect(updates).toEqual([])
+  }
+  const before = await page.getByText(/Reporting period/).textContent()
+  for (const [i, value] of ['01','1','31'].entries()) {
+    await day.fill(value)
+    await save(page)
+    await expect.poll(() => reads.length).toBe(i + 1)
+    if (i < 2) await configure.click()
+  }
+  expect(updates).toEqual([1,1,31])
+  expect([...new Set(reads)]).toEqual(['/api/finance/financial-summary'])
+  await expect(page.getByText(/Reporting period/)).not.toHaveText(before ?? '')
 })
 
 test('zero-spend budgets skip history and keep the exact chart label', async ({page, context}) => {
@@ -427,7 +613,13 @@ test('transactions use global filters and stable pages while editing linked move
   await page.goto(`/finance/transactions?category=${cat.id}&query=Corrected`)
   await expect(page.locator('main')).toContainText('Corrected')
   const edited=page.locator('article').filter({has:page.getByText('Corrected',{exact:true})})
-  await menu(page,edited,'Edit');await page.getByRole('dialog').getByLabel('Amount',{exact:true}).fill('2');await save(page)
+  await menu(page,edited,'Edit')
+  const editor = page.getByRole('dialog')
+  await expect(editor.getByText('Manual',{exact:true})).toBeVisible()
+  await editor.getByLabel('Amount',{exact:true}).fill('2')
+  const update = page.waitForRequest(request => request.method() === 'PUT' && request.url().includes('/api/finance/transactions/'))
+  await save(page)
+  expect(Object.keys((await update).postDataJSON()).sort()).toEqual(['amount','categoryId','name','transactionDate'])
   await expect(edited).toContainText('-$2.00')
 })
 
@@ -496,6 +688,7 @@ test('linked corrections update pot balances, VOID payments and server conflicts
   await page.goto('/finance/transactions')
   let row=page.locator('article').filter({hasText:'Linked pot'}).filter({hasText:'-$20.00'})
   await menu(page,row,'Edit');await expect(page.getByRole('dialog').getByRole('combobox',{name:'Category',exact:true})).toContainText('No category')
+  await expect(page.getByRole('dialog').getByText('Pot movement · Linked pot',{exact:true})).toBeVisible()
   await page.getByRole('dialog').getByLabel('Amount',{exact:true}).fill('25');await save(page)
   await page.goto('/finance/pots');await expect(page.locator('main')).toContainText('$75.00')
   await page.goto('/finance/transactions');row=page.locator('article').filter({hasText:'Linked pot'}).filter({hasText:'+$100.00'})
@@ -505,7 +698,9 @@ test('linked corrections update pot balances, VOID payments and server conflicts
   const recurring=await(await write(context,'recurring-payments','POST',`{"name":"Linked recurring","categoryId":${cat.id},"type":"INSTALLMENT","amount":10,"firstDueDate":"2027-01-31","totalInstallments":12}`)).json()
   await write(context,`recurring-payments/${recurring.id}/payments/2027-03`,'PUT')
   await page.goto('/finance/transactions?query=Linked+recurring');row=page.locator('article').filter({has:page.getByText('Linked recurring',{exact:true})})
-  await menu(page,row,'Edit');await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill('Corrected refund');await choose(page,'Transaction type','Income');await save(page)
+  await menu(page,row,'Edit')
+  await expect(page.getByRole('dialog').getByText('Recurring payment',{exact:true})).toBeVisible()
+  await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill('Corrected refund');await choose(page,'Transaction type','Income');await save(page)
   await page.goto('/finance/recurring-bills');const bill=page.locator('article').filter({has:page.getByText('Linked recurring',{exact:true})}).last()
   await expect(bill).toContainText('Void');await expect(bill).toContainText('Installment 3/12');await expect(bill).toContainText('Paid installments: 0')
   await expect(bill.getByText('Installment 3/12 · Paid: $0.00 of $120.00')).toBeVisible()

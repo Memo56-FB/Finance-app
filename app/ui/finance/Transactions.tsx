@@ -12,7 +12,13 @@ import { useFinance } from '@/lib/finance/AccountScope'
 import { filtersFromURL } from '@/lib/finance/queries'
 import { validId } from '@/lib/api/finance-json'
 import type { Transaction } from '@/lib/finance/types'
-import { categoryOptions, DeleteForm, TransactionForm } from './forms'
+import { calendarDate } from '@/lib/finance/contracts'
+import { categoryOptions } from '@/lib/finance/categories'
+import { validAmount } from '@/lib/finance/money'
+import { saveRecord } from '@/lib/finance/services'
+import { FormInput, FormSelect, SaveForm, useSave } from './common'
+import { AmountHelp, CategoryField, nameValid, useFieldError, validate } from './form-fields'
+import { DeleteForm } from './DeleteForm'
 import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
 
 export function useFinancialURL() {
@@ -162,7 +168,7 @@ export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Tr
       <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-grey-500 break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
       <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-grey-500 md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
       <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p></div>
-      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={done=><TransactionForm record={row} onDone={done}/>} remove={done=><DeleteForm resource="transactions" id={row.id} onDone={done}/>}/></div>
+      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id}/>}/></div>
     </article>)}</div>
   </div>
 }
@@ -170,5 +176,39 @@ export function Transactions() {
   const search = useFinancialSearch()
   const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params),query=useQuery(queries.transactions(filters))
   useEffect(()=>{const category=params.get('category');if(category && !validId(category)){const next=new URLSearchParams(params);next.delete('category');next.set('page','1');window.history.replaceState(null,'','?'+next)}},[params])
-  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{done=><TransactionForm onDone={done}/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query}/>{query.data && <><TransactionRows rows={query.data.items} actions/><PagedNavigation data={query.data} applyFilter={search.applyFilter}/></>}</section></>
+  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{<TransactionForm/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query}/>{query.data && <><TransactionRows rows={query.data.items} actions/><PagedNavigation data={query.data} applyFilter={search.applyFilter}/></>}</section></>
+}
+
+function TransactionForm({ record }: { record?: Transaction }) {
+  const { t } = useI18n()
+  const nullable = record?.sourceType === 'POT'
+  const [name, setName] = useState(record?.name ?? '')
+  const [categoryId, setCategory] = useState(record?.categoryId ?? (nullable ? 'none' : ''))
+  const [date, setDate] = useState(record?.transactionDate ?? '')
+  const [amount, setAmount] = useState(record?.amount.replace(/^-/, '') ?? '')
+  const [sign, setSign] = useState(record?.amount.startsWith('-') || !record ? 'expense' : 'income')
+  const save = useSave(async () => {
+    validate({
+      name: nameValid(name),
+      categoryId: validId(categoryId) || nullable && categoryId === 'none',
+      transactionDate: calendarDate(date),
+      amount: validAmount(amount),
+    })
+    return saveRecord('transactions', {
+      name: name.trim(),
+      categoryId: categoryId === 'none' ? null : categoryId,
+      transactionDate: date,
+      amount: (sign === 'expense' ? '-' : '') + amount,
+    }, record?.id)
+  })
+  const error = useFieldError(save.error)
+  return <SaveForm save={save}>
+    {record && <p><Origin row={record}/></p>}
+    {record && record.sourceType !== 'MANUAL' && <p className="text-preset-4 text-grey-500">{t('This correction can change a linked pot balance or payment status.')}</p>}
+    <FormInput label="Name" value={name} onChange={e => setName(e.target.value)} maxLength={100} error={error('name')} required />
+    <CategoryField value={categoryId || (nullable ? 'none' : '')} onChange={setCategory} original={record?.categoryId ? { id: record.categoryId, name: record.categoryName ?? '' } : undefined} nullable={nullable} error={error('categoryId')} />
+    <FormInput label="Transaction Date" type="date" value={date} onChange={e => setDate(e.target.value)} error={error('transactionDate')} required />
+    <FormSelect label="Transaction type" value={sign} onChange={setSign} options={[{ value: 'income', label: t('Income') }, { value: 'expense', label: t('Expense') }]} />
+    <FormInput label="Amount" money inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} error={error('amount')} required /><AmountHelp />
+  </SaveForm>
 }

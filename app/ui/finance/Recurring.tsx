@@ -8,7 +8,8 @@ import { cents, decimal } from '@/lib/finance/money'
 import { filtersFromURL } from '@/lib/finance/queries'
 import { validMonth } from '@/lib/api/finance-path'
 import type { PaymentSummary, RecurringPayment } from '@/lib/finance/types'
-import { DeleteForm, PaymentForm, RecurringForm } from './forms'
+import { PaymentForm, RecurringForm } from './RecurringForms'
+import { DeleteForm } from './DeleteForm'
 import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
 import { ListToolbar, PagedNavigation, useFinancialSearch } from './Transactions'
 import { MonthControl } from './Budgets'
@@ -46,7 +47,7 @@ function RecurringRow({row}:{row:RecurringPayment}) {
     </div>
     <div role="cell" className="col-start-1 row-start-2 min-w-0 pl-[48px] md:col-start-2 md:row-start-1 md:pl-0"><PaymentDueDate row={row} className="flex"/></div>
     <p role="cell" className={`col-start-2 row-span-2 row-start-1 self-end text-right md:col-start-3 md:row-span-1 text-preset-4-bold break-all ${row.status === 'PENDING' || row.status === 'VOID' ? 'text-red' : 'text-grey-900'}`}><Money value={row.status === 'PAID' && row.paidAmount !== null ? row.paidAmount : row.amount}/></p>
-    <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-4 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={done=><RecurringForm record={row} onDone={done}/>} remove={done=><DeleteForm resource="recurring-payments" id={row.id} onDone={done}/>} extra={['PENDING','VOID'].includes(row.status) ? {label:'Mark paid',render:done=><PaymentForm record={row} onDone={done}/>} : undefined}/></div>
+    <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-4 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<RecurringForm record={row}/>} remove={<DeleteForm resource="recurring-payments" id={row.id}/>} extra={['PENDING','VOID'].includes(row.status) ? {label:'Mark paid',content:<PaymentForm record={row}/>} : undefined}/></div>
   </article>
 }
 export function Recurring() {
@@ -54,7 +55,7 @@ export function Recurring() {
   const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params,true),query=useQuery(queries.recurring(filters))
   const month=params.get('month') ?? '',summary=useQuery(queries.paymentSummary(validMonth(month) ? month : undefined)),{t}=useI18n()
   return <>
-    <PageHeader title="Recurring Bills"><NewDialog title="Add recurring payment" contentClassName={financeDialog}>{done=><RecurringForm onDone={done}/>}</NewDialog></PageHeader>
+    <PageHeader title="Recurring Bills"><NewDialog title="Add recurring payment" contentClassName={financeDialog}>{<RecurringForm/>}</NewDialog></PageHeader>
     <MonthControl effective={summary.data?.month} onMonthChange={value => search.applyFilter('month', value)}/><QueryMessage query={summary}/>
     <section className="grid gap-300 xl:grid-cols-[337px_1fr]">
       {summary.data && <RecurringBillsOverview summary={summaryView(summary.data)}/>}
