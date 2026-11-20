@@ -10,7 +10,7 @@ import { validMonth } from '@/lib/api/finance-path'
 import type { PaymentSummary, RecurringPayment } from '@/lib/finance/types'
 import { DeleteForm, PaymentForm, RecurringForm } from './forms'
 import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
-import { ListToolbar, PagedNavigation, useFinancialURL } from './Transactions'
+import { ListToolbar, PagedNavigation, useFinancialSearch } from './Transactions'
 import { MonthControl } from './Budgets'
 
 export function installmentNumber(firstDueDate:string,month:string) {
@@ -51,16 +51,17 @@ function RecurringRow({row}:{row:RecurringPayment}) {
   </article>
 }
 export function Recurring() {
-  const {queries}=useFinance(),{params}=useFinancialURL(),filters=filtersFromURL(params,true),query=useQuery(queries.recurring(filters))
+  const search = useFinancialSearch()
+  const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params,true),query=useQuery(queries.recurring(filters))
   const month=params.get('month') ?? '',summary=useQuery(queries.paymentSummary(validMonth(month) ? month : undefined)),{t}=useI18n()
   return <>
     <PageHeader title="Recurring Bills"><NewDialog title="Add recurring payment" contentClassName={financeDialog}>{done=><RecurringForm onDone={done}/>}</NewDialog></PageHeader>
-    <MonthControl effective={summary.data?.month}/><QueryMessage query={summary}/>
+    <MonthControl effective={summary.data?.month} onMonthChange={value => search.applyFilter('month', value)}/><QueryMessage query={summary}/>
     <section className="grid gap-300 xl:grid-cols-[337px_1fr]">
       {summary.data && <RecurringBillsOverview summary={summaryView(summary.data)}/>}
-      <section className="bg-white rounded-xl px-250 py-300 grid gap-300 md:px-400 min-w-0"><ListToolbar/><QueryMessage query={query}/>
+      <section className="bg-white rounded-xl px-250 py-300 grid gap-300 md:px-400 min-w-0"><ListToolbar search={search}/><QueryMessage query={query}/>
         <div className="hidden md:grid grid-cols-[minmax(0,1fr)_160px_120px_44px] gap-200 border-b border-grey-100 pb-150 text-preset-5 text-grey-500"><p>{t('Bill Title')}</p><p>{t('Due Date')}</p><p className="text-right">{t('Amount')}</p><span className="sr-only">{t('Actions')}</span></div>
-        {query.data && <><div className="grid">{query.data.items.length ? query.data.items.map(row=><RecurringRow key={row.id} row={row}/>) : <Empty label="No bills found."/>}</div><PagedNavigation data={query.data}/></>}
+        {query.data && <><div className="grid">{query.data.items.length ? query.data.items.map(row=><RecurringRow key={row.id} row={row}/>) : <Empty label="No bills found."/>}</div><PagedNavigation data={query.data} applyFilter={search.applyFilter}/></>}
       </section>
     </section>
   </>

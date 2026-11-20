@@ -27,7 +27,10 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
         headers.set('Content-Type', 'application/json')
       }
     }
-    const result = await upstreamPath(target.path, { method: request.method, headers, body })
+    const result = await upstreamPath(target.path, {
+      method: request.method, headers, body,
+      signal: request.method === 'GET' ? request.signal : undefined,
+    })
     if (result.status >= 300 && result.status < 400 || result.status >= 500) return reply(502)
     const response = new NextResponse(result.status === 204 ? null : await result.arrayBuffer(), {
       status: result.status,

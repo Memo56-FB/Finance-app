@@ -43,6 +43,8 @@ interface PaginationLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorEleme
   isActive?: boolean
   disabled?: boolean
   href: string
+  prefetch?: React.ComponentProps<typeof Link>['prefetch']
+  onNavigate?: React.ComponentProps<typeof Link>['onNavigate']
 }
 
 const PaginationLink = ({

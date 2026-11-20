@@ -1,5 +1,5 @@
 'use client'
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
@@ -19,28 +19,126 @@ export function useFinancialURL() {
   const current=useSearchParams()
   const text=current.toString()
   const params=useMemo(()=>new URLSearchParams(text),[text])
-  const update=useCallback((key:string,value:string) => { const next=new URLSearchParams(text);if(value)next.set(key,value);else next.delete(key);if(key !== 'page')next.set('page','1');window.history.replaceState(null,'','?'+next) },[text])
-  return {params,update}
+  const update = useCallback((key: string, value: string, pendingSearch?: string, pushPage = false) => {
+    const next = new URLSearchParams(window.location.search)
+    const apply = (name: string, input: string) => {
+      if (input) next.set(name, input)
+      else next.delete(name)
+    }
+    apply(key, value)
+    const changedSearch = pendingSearch !== undefined && pendingSearch !== (next.get('query') ?? '')
+    if (changedSearch) apply('query', pendingSearch)
+    if (key !== 'page' || changedSearch) next.set('page', '1')
+    const url = '?' + next
+    if (url === window.location.search) return
+    if (pushPage && !changedSearch) window.history.pushState(null, '', url)
+    else window.history.replaceState(null, '', url)
+  }, [])
+  return { params, update }
 }
-export function ListToolbar({category=false}:{category?:boolean}) {
-  const {queries}=useFinance(),categories=useQuery({...queries.categories(),enabled:category}),{params,update}=useFinancialURL(),{t}=useI18n()
-  const urlQuery=params.get('query') ?? '',[search,setSearch]=useState({urlQuery,value:urlQuery})
-  if(search.urlQuery !== urlQuery) setSearch({urlQuery,value:urlQuery})
+
+export function useFinancialSearch() {
+  const { params, update } = useFinancialURL()
+  const urlQuery = params.get('query') ?? ''
+  const [draft, setDraft] = useState({ source: urlQuery, text: urlQuery })
+  if (draft.source !== urlQuery) setDraft({ source: urlQuery, text: urlQuery })
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const pending = useRef<string | undefined>(undefined)
+  const composing = useRef(false)
+
+  useEffect(() => {
+    function cancelSearch() {
+      clearTimeout(timer.current)
+      pending.current = undefined
+      composing.current = false
+    }
+    function restore() {
+      cancelSearch()
+      const text = new URLSearchParams(window.location.search).get('query') ?? ''
+      setDraft({ source: text, text })
+    }
+    function followLink(event: MouseEvent) {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null
+      if (!link || (link.target && link.target !== '_self') || link.hasAttribute('download')) return
+      // Next may still be loading the destination when the debounce would write to history.
+      if (link.pathname !== window.location.pathname || link.origin !== window.location.origin) cancelSearch()
+    }
+    window.addEventListener('popstate', restore)
+    document.addEventListener('click', followLink, true)
+    return () => {
+      cancelSearch()
+      window.removeEventListener('popstate', restore)
+      document.removeEventListener('click', followLink, true)
+    }
+  }, [])
+
+  function enter(text: string) {
+    setDraft({ source: urlQuery, text })
+    clearTimeout(timer.current)
+    pending.current = text
+    if (composing.current) return
+    const source = window.location.href
+    timer.current = setTimeout(() => {
+      pending.current = undefined
+      if (window.location.href === source) update('query', text)
+    }, 300)
+  }
+
+  return {
+    params,
+    applyFilter(key: string, value: string) {
+      clearTimeout(timer.current)
+      const search = composing.current ? undefined : pending.current
+      if (!composing.current) pending.current = undefined
+      update(key, value, search, key === 'page')
+    },
+    input: {
+      value: draft.text,
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => enter(event.target.value),
+      onCompositionStart: () => {
+        composing.current = true
+        clearTimeout(timer.current)
+      },
+      onCompositionEnd: (event: React.CompositionEvent<HTMLInputElement>) => {
+        composing.current = false
+        enter(event.currentTarget.value)
+      },
+    },
+  }
+}
+export function ListToolbar({category=false, search}:{category?:boolean;search:ReturnType<typeof useFinancialSearch>}) {
+  const { queries, phase } = useFinance()
+  const categories = useQuery({ ...queries.categories(), enabled: category && phase === 'active' })
+  const { params, applyFilter: update, input } = search
+  const { t } = useI18n()
   const sort=filtersFromURL(params).sort!
   const sorts=[['newest','Latest'],['oldest','Oldest'],['name_asc','A to Z'],['name_desc','Z to A'],['amount_desc','Highest'],['amount_asc','Lowest']] as const
   const selected=params.get('category') ?? ''
   const options=[{value:'all',label:t('All categories')},...categoryOptions(categories.data?.items ?? [])]
   if(validId(selected) && !options.some(option=>option.value === selected)) options.push({value:selected,label:`${t('Inactive category')} (#${selected})`})
-  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} value={search.value} onChange={event=>{const value=event.target.value;setSearch({urlQuery,value});update('query',value)}}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>{category && <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>}</div></div>{category && <QueryMessage query={categories}/>}</>
+  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} {...input}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>{category && <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>}</div></div>{category && <QueryMessage query={categories}/>}</>
 }
-export function PagedNavigation({data}:{data:{page:number;totalPages:string}}) {
+export function PagedNavigation({data,applyFilter}:{data:{page:number;totalPages:string};applyFilter:(key:string,value:string)=>void}) {
   const {params,update}=useFinancialURL()
   const total=BigInt(data.totalPages),pages=Number(total > 2147483647n ? 2147483647n : total) || 1
   const page=Math.min(data.page+1,pages)
   useEffect(()=>{if(data.page+1 > pages)update('page',String(pages))},[data.page,pages,update])
   const href=(value:number) => { const next=new URLSearchParams(params);next.set('page',String(value));return '?'+next }
   const visible=[1,page-1,page,page+1,pages].filter((value,index,all)=>value >= 1 && value <= pages && all.indexOf(value) === index).sort((a,b)=>a-b)
-  return <Pagination><PaginationContent className="w-full flex-wrap"><PaginationItem className="mr-auto"><PaginationPrevious href={href(page-1)} disabled={page <= 1}/></PaginationItem>{visible.map(value=><PaginationItem key={value}><PaginationLink href={href(value)} isActive={value === page}>{value}</PaginationLink></PaginationItem>)}<PaginationItem className="ml-auto"><PaginationNext href={href(page+1)} disabled={page >= pages}/></PaginationItem></PaginationContent></Pagination>
+  const link = (value: number, disabled = false) => ({
+    href: href(value),
+    prefetch: false as const,
+    onNavigate(event: { preventDefault(): void }) {
+      event.preventDefault()
+      if (!disabled) applyFilter('page', String(value))
+    },
+  })
+  return <Pagination><PaginationContent className="w-full flex-wrap">
+    <PaginationItem className="mr-auto"><PaginationPrevious {...link(page-1, page <= 1)} disabled={page <= 1}/></PaginationItem>
+    {visible.map(value=><PaginationItem key={value}><PaginationLink {...link(value)} isActive={value === page}>{value}</PaginationLink></PaginationItem>)}
+    <PaginationItem className="ml-auto"><PaginationNext {...link(page+1, page >= pages)} disabled={page >= pages}/></PaginationItem>
+  </PaginationContent></Pagination>
 }
 function Origin({row}:{row:Transaction}) {
   const {t}=useI18n()
@@ -69,7 +167,8 @@ export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Tr
   </div>
 }
 export function Transactions() {
-  const {queries}=useFinance(),{params}=useFinancialURL(),filters=filtersFromURL(params),query=useQuery(queries.transactions(filters))
+  const search = useFinancialSearch()
+  const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params),query=useQuery(queries.transactions(filters))
   useEffect(()=>{const category=params.get('category');if(category && !validId(category)){const next=new URLSearchParams(params);next.delete('category');next.set('page','1');window.history.replaceState(null,'','?'+next)}},[params])
-  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{done=><TransactionForm onDone={done}/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category/><QueryMessage query={query}/>{query.data && <><TransactionRows rows={query.data.items} actions/><PagedNavigation data={query.data}/></>}</section></>
+  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{done=><TransactionForm onDone={done}/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query}/>{query.data && <><TransactionRows rows={query.data.items} actions/><PagedNavigation data={query.data} applyFilter={search.applyFilter}/></>}</section></>
 }

@@ -22,6 +22,71 @@ async function save(page:Page) {const dialog=page.getByRole('dialog');await dial
 async function category(page:Page,name:string) {await page.getByRole('button',{name:'+ Add category',exact:true}).click();await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill(name);await save(page)}
 async function menu(page:Page,row:Locator,action:string) {await row.getByRole('button',{name:/^Actions:/}).click();await page.getByRole('menuitem',{name:action,exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible()}
 
+test('search publishes the settled value and preserves filters through navigation', async ({page, context}) => {
+  await account(context)
+  await write(context,'categories','POST','{"name":"Search category"}')
+  for (const [path, resource, label] of [
+    ['/finance/transactions', 'transactions', 'Search transactions'],
+    ['/finance/recurring-bills', 'recurring-payments', 'Search bills'],
+  ] as const) {
+    await page.goto(path + '?page=1')
+    const input = page.getByRole('textbox', {name:label, exact:true})
+    await expect(input).toBeVisible()
+    await expect(page.locator('main [inert]')).toHaveCount(0)
+    const searches: string[] = []
+    const listen = (request: import('@playwright/test').Request) => {
+      const url = new URL(request.url())
+      if (url.pathname === '/api/finance/' + resource) searches.push(url.searchParams.get('search') ?? '')
+    }
+    page.on('request', listen)
+    try {
+      await input.pressSequentially('mercado',{delay:80})
+      await expect(input).toHaveValue('mercado')
+      await expect.poll(() => searches).toEqual(['mercado'])
+      await expect(page).toHaveURL(/page=1&query=mercado/)
+
+      await input.dispatchEvent('compositionstart')
+      await input.fill('漢字')
+      await expect(page).toHaveURL(/query=mercado/)
+      await input.dispatchEvent('compositionend', {data:'漢字'})
+      await expect.poll(() => searches).toEqual(['mercado', '漢字'])
+
+      await input.fill('latest')
+      if (resource === 'recurring-payments') {
+        await page.getByLabel('Month',{exact:true}).fill('2027-02')
+        await expect(page).toHaveURL(/month=2027-02/)
+      } else {
+        await page.getByRole('combobox',{name:'Sort By',exact:true}).click()
+        await page.getByRole('option',{name:'Oldest',exact:true}).click()
+        await expect(page).toHaveURL(/sortBy=oldest/)
+      }
+      await expect.poll(() => searches.at(-1)).toBe('latest')
+      await page.reload()
+      await expect(input).toHaveValue('latest')
+      await expect(page.locator('main [inert]')).toHaveCount(0)
+      const saved = page.url()
+      await input.fill('')
+      await expect(page).not.toHaveURL(/query=/)
+      await page.evaluate(url => window.history.pushState(null,'',url),saved)
+      await expect(input).toHaveValue('latest')
+      await page.goBack()
+      await expect(input).toHaveValue('')
+      await page.goForward()
+      await expect(input).toHaveValue('latest')
+      if (resource === 'transactions') {
+        await page.getByRole('combobox',{name:'Category',exact:true}).click()
+        await page.getByRole('option',{name:'Search category',exact:true}).click()
+        await expect(page).toHaveURL(/category=\d+/)
+        await expect(page).toHaveURL(/query=latest/)
+      }
+      await input.fill('leave before publish')
+      await page.getByRole('link',{name:'Categories',exact:true}).click()
+      await expect(page).toHaveURL('/finance/categories')
+      expect(searches).not.toContain('leave before publish')
+    } finally { page.off('request', listen) }
+  }
+})
+
 test('floating notifications preserve layout, translations and dismissal',async({page,context})=>{
   await account(context)
   for(const [width,language,add,name,saved,close] of [[1280,'en','+ Add category','Name','Saved.','Close'],[390,'es','+ Agregar categoría','Nombre','Guardado.','Cerrar']] as const) {
@@ -280,7 +345,13 @@ test('transactions use global filters and stable pages while editing linked move
   const cat=await(await write(context,'categories','POST','{"name":"History"}')).json(),other=await(await write(context,'categories','POST','{"name":"Other"}')).json()
   for(let i=0;i<7;i++)expect((await write(context,'transactions','POST',`{"name":"Matching ${i}","categoryId":${cat.id},"transactionDate":"2027-03-20","amount":-1}`)).status()).toBe(201)
   await write(context,'transactions','POST',`{"name":"Excluded","categoryId":${other.id},"transactionDate":"2027-03-20","amount":-1}`)
-  await page.goto(`/finance/transactions?category=${cat.id}&query=Matching&page=2`)
+  await page.goto('/finance/categories')
+  await page.goto(`/finance/transactions?category=${cat.id}&query=Matching&page=999`)
+  await expect(page).toHaveURL(/query=Matching&page=2$/)
+  await page.goBack()
+  await expect(page).toHaveURL('/finance/categories')
+  await page.goForward()
+  await expect(page).toHaveURL(/query=Matching&page=2$/)
   await expect(page.locator('main')).toContainText('Matching 2');await expect(page.locator('main')).not.toContainText('Excluded')
   await expect(page.getByRole('link',{name:'Go to next page',exact:true})).toHaveAttribute('aria-disabled','true')
   const row=page.locator('article').filter({has:page.getByText('Matching 2',{exact:true})})

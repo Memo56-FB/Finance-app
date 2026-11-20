@@ -4,14 +4,37 @@ import { GET, POST, PUT, DELETE } from '@/app/api/finance/[...path]/route'
 import { financePath } from './finance-path'
 
 afterEach(() => vi.unstubAllGlobals())
-function request(path: string, method = 'GET', options: { cookie?: string; origin?: string; token?: string; body?: string } = {}) {
+function request(path: string, method = 'GET', options: { cookie?: string; origin?: string; token?: string; body?: string; signal?: AbortSignal } = {}) {
   const headers: Record<string, string> = { Cookie: options.cookie ?? 'JSESSIONID=test', Origin: options.origin ?? 'http://localhost:3000', 'Content-Type': 'application/json' }
   if (options.token) headers['X-CSRF-TOKEN'] = options.token
-  return new NextRequest('http://localhost:3000/api/finance/' + path, { method, headers, ...(options.body ? { body: options.body } : {}) })
+  return new NextRequest('http://localhost:3000/api/finance/' + path, { method, headers, signal: options.signal, ...(options.body ? { body: options.body } : {}) })
 }
 const context = (path: string) => ({ params: Promise.resolve({ path: path.split('?')[0].split('/') }) })
 
 describe('closed finance forwarding', () => {
+  it('propagates an abandoned GET while a separate POST can finish once', async () => {
+    const pending = Promise.withResolvers<Response>()
+    const started = Promise.withResolvers<AbortSignal>()
+    const fetch = vi.fn((_url: URL, init: RequestInit) => {
+      if (init.method === 'POST') return pending.promise
+      const signal = init.signal!
+      started.resolve(signal)
+      return new Promise<Response>((_, reject) => signal.addEventListener('abort', () => reject(signal.reason), {once:true}))
+    })
+    vi.stubGlobal('fetch', fetch)
+    const read = new AbortController(), write = new AbortController()
+    const reading = GET(request('categories', 'GET', {signal:read.signal}), context('categories'))
+    const writing = POST(request('categories', 'POST', {token:'t', body:'{}', signal:write.signal}), context('categories'))
+    const upstreamSignal = await started.promise
+    read.abort()
+    write.abort()
+    expect(upstreamSignal.aborted).toBe(true)
+    expect((await reading).status).toBe(503)
+    pending.resolve(new Response('{}', {status:201}))
+    expect((await writing).status).toBe(201)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(fetch.mock.calls.find(([, options]) => options.method === 'POST')?.[1].signal?.aborted).toBe(false)
+  })
   it('validates paths, methods and parameters before contacting Spring', () => {
     for (const [path, method, status] of [['auth/login','POST',404],['transactions/1','POST',405],['transactions?categoryId=0','GET',400],['transactions?page=2147483648','GET',400],['transactions?size=0','GET',400],['budgets?month=2027-13','GET',400],['transactions?evil=x','GET',400],['transactions?size=1&size=2','GET',400]] as const) {
       const [route, query] = path.split('?')
