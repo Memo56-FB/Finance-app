@@ -25,8 +25,24 @@ test('mobile navigation and filters have accessible names', async ({ page }) => 
   }
   await expect(page.getByRole('button', { name: 'Sort By', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Category', exact: true }).click()
-  await page.getByRole('menuitem', { name: 'Bills', exact: true }).click()
+  const bills = page.getByRole('menuitemradio', { name: 'Bills', exact: true })
+  await bills.focus()
+  await page.keyboard.press('Enter')
   await expect(page.getByRole('article').filter({ hasText: 'Internet bill' })).toBeVisible()
+  await page.getByRole('button',{name:'Category',exact:true}).press('Enter')
+  await expect(page.getByRole('menuitemradio',{checked:true})).toHaveText('Bills')
+})
+
+test('guest recurring rows keep their due date associated with its header', async ({ page }) => {
+  await page.goto('/finance/recurring-bills')
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({width, height:900})
+    const table = page.getByRole('table', {name:'Recurring Bills', exact:true})
+    await expect(table.getByRole('columnheader')).toHaveText(['Bill Title', 'Due Date', 'Amount'])
+    const first = table.getByRole('row').nth(1)
+    await expect(first.getByRole('cell')).toHaveCount(3)
+    await expect(first.getByRole('cell').nth(1)).toContainText('Monthly')
+  }
 })
 
 test('overview links include their arrow in the clickable area', async ({ page }) => {

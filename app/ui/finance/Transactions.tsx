@@ -157,12 +157,12 @@ export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Tr
     <div role="row" className="sr-only md:not-sr-only md:grid md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400 md:py-150 md:border-b md:border-grey-100 text-preset-5 text-grey-500">
       <span role="columnheader" className="col-span-3">{t('Name')}</span><span role="columnheader">{t('Category')}</span><span role="columnheader">{t('Transaction Date')}</span><span role="columnheader">{t('Amount')}</span><span role="columnheader" className="sr-only">{t('Actions')}</span>
     </div>
-    <div role="rowgroup">{rows.map(row=><article role="row" key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto_44px] items-center gap-150 py-200 first:pt-0 last:pb-0 border-b border-grey-100 last:border-b-0 md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400">
-      <div role="cell" className="grid gap-50 min-w-0 md:col-span-3"><p className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</p><p className="text-preset-5 text-grey-500 md:hidden">{row.categoryName ?? t('No category')}</p><span className="sr-only"><Origin row={row}/></span></div>
-      <p role="cell" className="hidden md:block text-preset-5 text-grey-500 break-words">{row.categoryName ?? t('No category')}</p>
-      <p role="cell" className="hidden md:block text-preset-5 text-grey-500"><CalendarDate value={row.transactionDate}/></p>
-      <div role="cell" className="grid gap-50 text-right min-w-0 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p><p className="text-preset-5 text-grey-500 md:hidden"><CalendarDate value={row.transactionDate}/></p></div>
-      <div role="cell"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={done=><TransactionForm record={row} onDone={done}/>} remove={done=><DeleteForm resource="transactions" id={row.id} onDone={done}/>}/></div>
+    <div role="rowgroup">{rows.map(row=><article role="row" key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto_44px] items-center gap-x-150 gap-y-50 py-200 first:pt-0 last:pb-0 border-b border-grey-100 last:border-b-0 md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400">
+      <div role="cell" className="min-w-0 md:col-span-3"><p className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</p><span className="sr-only"><Origin row={row}/></span></div>
+      <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-grey-500 break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
+      <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-grey-500 md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
+      <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p></div>
+      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={done=><TransactionForm record={row} onDone={done}/>} remove={done=><DeleteForm resource="transactions" id={row.id} onDone={done}/>}/></div>
     </article>)}</div>
   </div>
 }

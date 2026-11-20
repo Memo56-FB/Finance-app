@@ -125,6 +125,33 @@ test('zero-spend budgets skip history and keep the exact chart label', async ({p
   await expect(page.getByText('Late preview',{exact:true})).toHaveCount(0)
 })
 
+test('financial table headers match each row at compact and desktop widths', async ({page, context}) => {
+  await account(context)
+  const cat = await (await write(context,'categories','POST','{"name":"Utilities"}')).json()
+  await write(context,'transactions','POST',`{"name":"Meter","categoryId":${cat.id},"transactionDate":"2027-03-20","amount":-10}`)
+  await write(context,'recurring-payments','POST',`{"name":"Service","categoryId":${cat.id},"type":"SUBSCRIPTION","amount":10,"firstDueDate":"2027-03-20"}`)
+  for (const width of [390,1280,320]) {
+    await page.setViewportSize({width,height:900})
+    for (const [path, name, headers, row, cells] of [
+      ['/finance/transactions','Transactions',['Name','Category','Transaction Date','Amount','Actions'],'Meter',5],
+      ['/finance/recurring-bills','Recurring Bills',['Bill Title','Due Date','Amount','Actions'],'Service',4],
+    ] as const) {
+      await page.goto(path)
+      const table = page.getByRole('table',{name,exact:true})
+      await expect(table.getByRole('columnheader')).toHaveText([...headers])
+      await expect(page.locator('main [inert]')).toHaveCount(0)
+      await expect(table.getByRole('cell')).toHaveCount(cells)
+      const action = table.getByRole('button',{name:new RegExp('^Actions: '+row)})
+      await expect(action).toHaveCount(1)
+      await action.focus()
+      await action.press('Enter')
+      await expect(page.getByRole('menuitem',{name:'Edit',exact:true})).toBeVisible()
+      await page.keyboard.press('Escape')
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+  }
+})
+
 test('floating notifications preserve layout, translations and dismissal',async({page,context})=>{
   await account(context)
   for(const [width,language,add,name,saved,close] of [[1280,'en','+ Add category','Name','Saved.','Close'],[390,'es','+ Agregar categoría','Nombre','Guardado.','Cerrar']] as const) {
