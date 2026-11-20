@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InputPassword } from '@/components/ui/InputPassword'
 import { api, ApiError } from '@/lib/api/client'
-import { currentAccount, useAccessNavigation } from '@/lib/auth/client'
+import { announceSessionChange, currentAccount, useAccessNavigation } from '@/lib/auth/client'
 import { safeNext } from '@/lib/auth/types'
 import { registrationErrors, type Credentials } from '@/lib/auth/validation'
 
@@ -28,7 +28,12 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
   const query = '?' + new URLSearchParams({ next: target })
   const mutation = useMutation({
     mutationFn: async ({ action, values }: { action: 'account' | 'guest'; values?: Credentials }) => {
-      if (action === 'guest') { await api.post('guest'); await navigate(target); return }
+      if (action === 'guest') {
+        await api.post('guest')
+        announceSessionChange()
+        await navigate(target)
+        return
+      }
       if (!values) return
       if (register) {
         await api.post('register', { ...values, name: values.name.trim(), email: values.email.trim().toLowerCase() })
@@ -38,7 +43,15 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
           await api.post('login', new URLSearchParams({ email: values.email.trim().toLowerCase(), password: values.password }))
           setConfirming(true)
         }
-        try { await currentAccount() } catch { throw new ApiError(503) }
+        try {
+          await currentAccount()
+        } catch (cause) {
+          if (!(cause instanceof ApiError && cause.status === 401)) throw new ApiError(503)
+          setConfirming(false)
+          setError('Your session expired. Please sign in again.')
+          return
+        }
+        announceSessionChange()
         await navigate(target)
       }
     },

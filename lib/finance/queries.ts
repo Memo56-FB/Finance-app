@@ -5,9 +5,9 @@ import { validId } from '@/lib/api/finance-json'
 import type { ListFilters } from './types'
 
 export const financeKey = (account: string) => ['finance', account] as const
-export function financeQueries(account: string, source = finance) {
+export function financeQueries(account: string, source = finance, enabled = true) {
   const key=financeKey(account)
-  const base={ staleTime: 30_000, retry: false, refetchOnWindowFocus: 'always' as const }
+  const base={ staleTime: 30_000, retry: false, enabled, refetchOnWindowFocus: false, refetchOnReconnect: false }
   return {
     categories: () => queryOptions({ ...base, queryKey: [...key,'categories'], queryFn: ({signal}) => source.categories(signal) }),
     transactions: (filters: ListFilters = {}) => queryOptions({ ...base, queryKey: [...key,'transactions',filters], queryFn: ({signal}) => source.transactions(filters,signal) }),

@@ -344,6 +344,7 @@ test('visible overview observes an automatic payment without sending a financial
   const cat=await(await write(context,'categories','POST','{"name":"Automatic"}')).json()
   await write(context,'recurring-payments','POST',`{"name":"Server payment","categoryId":${cat.id},"type":"SUBSCRIPTION","amount":10,"firstDueDate":"2027-03-20"}`)
   await page.clock.install();await page.goto('/finance');await expect(page.locator('main')).not.toContainText('Server payment')
+  await expect(page.locator('main [inert]')).toHaveCount(0)
   let writes=0;page.on('request',request=>{if(request.url().includes('/api/finance/') && request.method() !== 'GET')writes++})
   expect((await control(context,'job')).status()).toBe(204)
   await page.clock.runFor(60_100);await expect(page.locator('main')).toContainText('Server payment');expect(writes).toBe(0)

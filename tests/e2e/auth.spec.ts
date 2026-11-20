@@ -161,3 +161,37 @@ test('login confirmation retry never resends credentials and logout failure is r
   await page.getByRole('button',{name:'Logout',exact:true}).click()
   await expect(page).toHaveURL('/login')
 })
+
+test('an expired login confirmation offers a fresh explicit login', async ({ page }) => {
+  let logins = 0, checks = 0
+  await page.route('**/api/auth/login', route => { logins++; return route.continue() })
+  await page.route('**/api/auth/me', route => {
+    checks++
+    return checks === 1 ? route.fulfill({status:401}) : route.continue()
+  })
+  await login(page)
+  await expect(page.locator('form').getByRole('alert')).toContainText('Your session expired.')
+  await expect(page.getByRole('button', {name:'Login', exact:true})).toBeEnabled()
+  expect(logins).toBe(1)
+  expect(checks).toBe(1)
+  await page.locator('input[name="password"]').fill('test-password-123')
+  await page.getByRole('button', {name:'Login', exact:true}).click()
+  await expect(page).toHaveURL('/finance')
+  expect(logins).toBe(2)
+})
+
+test('guest tabs follow confirmed sign-in and sign-out in the same browser', async ({ page, context }) => {
+  await page.goto('/login')
+  await page.getByRole('button',{name:'Continue as guest'}).click()
+  await expect(page).toHaveURL('/finance')
+  const other = await context.newPage()
+  await other.goto('/finance/categories')
+  await expect(other.getByText('Log in to save changes.',{exact:true})).toBeVisible()
+  await login(page)
+  await expect(page).toHaveURL('/finance')
+  await expect(other.getByRole('button',{name:'+ Add category', exact:true})).toBeEnabled()
+  await expect(other.getByText('No categories yet.', {exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Logout',exact:true}).click()
+  await expect(page).toHaveURL('/login')
+  await expect(other).toHaveURL(/\/login\?next=/)
+})

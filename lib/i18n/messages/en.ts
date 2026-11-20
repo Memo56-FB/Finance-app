@@ -6,6 +6,7 @@ export const en = {
   "Could not sign out. Please retry.": "Could not sign out. Please retry.",
   "Authentication is unavailable. Please retry.": "Authentication is unavailable. Please retry.",
   "Invalid email or password.": "Invalid email or password.",
+  "Your session expired. Please sign in again.": "Your session expired. Please sign in again.",
   "This email is already registered.": "This email is already registered.",
   "Your security token expired. Please retry.": "Your security token expired. Please retry.",
   "Please review the marked fields.": "Please review the marked fields.",

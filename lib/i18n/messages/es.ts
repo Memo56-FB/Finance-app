@@ -7,6 +7,7 @@ export const es: Messages = {
   "Could not sign out. Please retry.": "No se pudo cerrar la sesión. Inténtalo de nuevo.",
   "Authentication is unavailable. Please retry.": "No se puede comprobar la sesión. Inténtalo de nuevo.",
   "Invalid email or password.": "Correo o contraseña incorrectos.",
+  "Your session expired. Please sign in again.": "Tu sesión venció. Vuelve a iniciar sesión.",
   "This email is already registered.": "Este correo ya está registrado.",
   "Your security token expired. Please retry.": "Tu sesión de seguridad caducó. Inténtalo de nuevo.",
   "Please review the marked fields.": "Revisa los campos indicados.",
