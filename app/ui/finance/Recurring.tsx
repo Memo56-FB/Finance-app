@@ -4,6 +4,7 @@ import { Check, Receipt } from '@phosphor-icons/react/dist/ssr'
 import { RecurringBillsOverview } from '@/app/ui/recurring-bills/RecurringBillsOverview'
 import { Money, useI18n } from '@/lib/i18n/client'
 import { useFinance } from '@/lib/finance/AccountScope'
+import { cents, decimal } from '@/lib/finance/money'
 import { filtersFromURL } from '@/lib/finance/queries'
 import { validMonth } from '@/lib/api/finance-path'
 import type { PaymentSummary, RecurringPayment } from '@/lib/finance/types'
@@ -30,13 +31,17 @@ function PaymentDueDate({row,className}:{row:RecurringPayment;className:string})
   </p>
 }
 function RecurringRow({row}:{row:RecurringPayment}) {
-  const {t}=useI18n()
+  const {t,money}=useI18n()
+  const installmentCents = row.totalInstallments !== null ? cents(row.amount) : 0n
   return <article className="grid grid-cols-[minmax(0,1fr)_auto_44px] gap-x-200 border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_160px_120px_44px] md:items-center">
     <div className="flex items-center gap-200 min-w-0">
       <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-grey-900 text-white"><Receipt size={16} weight="fill"/></span>
       <div className="grid gap-50 min-w-0"><h2 className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</h2>
         <span className="sr-only">{row.categoryName} · {t(row.type === 'SUBSCRIPTION' ? 'Subscription' : 'Installments')} · {t('Paid installments')}: {row.paidInstallments}</span>
-        {row.totalInstallments !== null && <span className="text-preset-5 text-grey-500">{t('Installment')} {installmentNumber(row.firstDueDate,row.month)}/{row.totalInstallments}</span>}
+        {row.totalInstallments !== null && <span className="text-preset-5 text-grey-500 [overflow-wrap:anywhere]">
+          {t('Installment')} {installmentNumber(row.firstDueDate,row.month)}/{row.totalInstallments}
+          {' · '}{t('Paid')}: {money(decimal(installmentCents * BigInt(row.paidInstallments)))} {t('of')} {money(decimal(installmentCents * BigInt(row.totalInstallments)))}
+        </span>}
         <PaymentDueDate row={row} className="flex md:hidden"/>
       </div>
     </div>
