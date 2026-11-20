@@ -87,6 +87,44 @@ test('search publishes the settled value and preserves filters through navigatio
   }
 })
 
+test('zero-spend budgets skip history and keep the exact chart label', async ({page, context}) => {
+  await account(context)
+  const categoryIds: number[] = []
+  for (const name of ['Paper', 'Ink', 'Pens']) {
+    const cat = await (await write(context,'categories','POST',JSON.stringify({name}))).json()
+    categoryIds.push(cat.id)
+    await write(context,'budgets','POST',`{"categoryId":${cat.id},"spendingLimit":100,"color":"#277C78"}`)
+  }
+  await write(context,'transactions','POST',`{"name":"Income only","categoryId":${categoryIds[0]},"transactionDate":"2027-03-20","amount":50}`)
+  let histories = 0
+  const started = Promise.withResolvers<void>(), release = Promise.withResolvers<void>()
+  await page.route('**/api/finance/transactions?*', async route => {
+    if (!new URL(route.request().url()).searchParams.has('categoryId')) return route.continue()
+    histories++
+    const response = await route.fetch()
+    started.resolve()
+    await release.promise
+    await route.fulfill({response}).catch(() => {})
+  })
+  for (const path of ['/finance','/finance/budgets']) {
+    await page.goto(path)
+    await expect(page.locator('[data-chart]')).toContainText('$0.00')
+    await expect(page.locator('[data-chart]')).toContainText('$300.00')
+  }
+  await expect(page.getByText('No recent expenses.',{exact:true})).toHaveCount(3)
+  expect(histories).toBe(0)
+  const expense = await (await write(context,'transactions','POST',`{"name":"Late preview","categoryId":${categoryIds[0]},"transactionDate":"2027-03-20","amount":-10}`)).json()
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  try {
+    await started.promise
+    expect(histories).toBe(1)
+    await write(context,`transactions/${expense.id}`,'DELETE')
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+    await expect(page.getByText('No recent expenses.',{exact:true})).toHaveCount(3)
+  } finally { release.resolve() }
+  await expect(page.getByText('Late preview',{exact:true})).toHaveCount(0)
+})
+
 test('floating notifications preserve layout, translations and dismissal',async({page,context})=>{
   await account(context)
   for(const [width,language,add,name,saved,close] of [[1280,'en','+ Add category','Name','Saved.','Close'],[390,'es','+ Agregar categoría','Nombre','Guardado.','Cerrar']] as const) {

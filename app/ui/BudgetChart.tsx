@@ -28,7 +28,8 @@ export const BudgetChart = ({items}: {items?:Budget[]}) => {
           nameKey="title"
           innerRadius={70}
           outerRadius={105}
-        >
+        />
+        <Pie data={[{ value: 100 }]} dataKey="value" tooltipType="none" fill="#FFF" opacity={0.25} outerRadius={80} innerRadius={70}>
           <Label
             content={({ viewBox }) => {
               if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -57,7 +58,6 @@ export const BudgetChart = ({items}: {items?:Budget[]}) => {
             }}
           />
         </Pie>
-        <Pie data={[{ value: 100 }]} dataKey="value" tooltipType="none" fill="#FFF" opacity={0.25} outerRadius={80} innerRadius={70} />
         <Tooltip formatter={(_value,_name,entry)=>money(entry.payload.exactSpent)} />
       </PieChart>
     </ChartContainer>

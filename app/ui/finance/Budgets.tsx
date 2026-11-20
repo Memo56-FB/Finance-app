@@ -7,7 +7,7 @@ import { SpendingSummary } from '@/app/ui/budgets/SpendingSummary'
 import { useFinance } from '@/lib/finance/AccountScope'
 import { financeKey } from '@/lib/finance/queries'
 import { recentExpenses } from '@/lib/finance/recent-expenses'
-import { moneyRatio } from '@/lib/finance/money'
+import { cents, moneyRatio } from '@/lib/finance/money'
 import { validMonth } from '@/lib/api/finance-path'
 import { Money, useI18n } from '@/lib/i18n/client'
 import type { Budget } from '@/lib/finance/types'
@@ -20,10 +20,31 @@ export function MonthControl({effective,onMonthChange}:{effective?:string;onMont
   const currentMonth=effective ?? new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit'}).format(new Date())
   return <div className="flex"><FormInput label="Month" type="month" value={validMonth(params.get('month') ?? '') ? params.get('month')! : currentMonth} onChange={event => onMonthChange ? onMonthChange(event.target.value) : update('month',event.target.value)}/></div>
 }
+function LatestExpenseRows({budget}:{budget:Budget}) {
+  const { account, phase } = useFinance()
+  const query = useQuery({
+    queryKey: [...financeKey(account), 'budget-expenses', budget.categoryId, budget.month],
+    queryFn: ({ signal }) => recentExpenses(budget.categoryId, budget.month, signal),
+    staleTime: 30_000,
+    gcTime: 0,
+    enabled: phase === 'active',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+  return <>
+    <QueryMessage query={query}/>
+    {query.data && (query.data.length ? <TransactionRows rows={query.data} showCategory/> : <Empty label="No recent expenses."/>)}
+  </>
+}
 function LatestExpenses({budget}:{budget:Budget}) {
-  const {account}=useFinance(),{t}=useI18n()
-  const query=useQuery({queryKey:[...financeKey(account),'budget-expenses',budget.categoryId,budget.month],queryFn:({signal})=>recentExpenses(budget.categoryId,budget.month,signal),staleTime:30_000})
-  return <section className="grid gap-250 rounded-xl bg-beige-100 p-200"><header className="flex flex-wrap justify-between gap-100"><h3 className="text-preset-3">{t('Latest Spending')}</h3><Button variant="tertiary" asChild><Link href={'/finance/transactions?'+new URLSearchParams({category:budget.categoryId})}>{t('See All')}</Link></Button></header><QueryMessage query={query}/>{query.data && (query.data.length ? <TransactionRows rows={query.data} showCategory/> : <Empty label="No recent expenses."/>)}</section>
+  const { t } = useI18n()
+  return <section className="grid gap-250 rounded-xl bg-beige-100 p-200">
+    <header className="flex flex-wrap justify-between gap-100">
+      <h3 className="text-preset-3">{t('Latest Spending')}</h3>
+      <Button variant="tertiary" asChild><Link href={'/finance/transactions?'+new URLSearchParams({category:budget.categoryId})}>{t('See All')}</Link></Button>
+    </header>
+    {cents(budget.spent) === 0n ? <Empty label="No recent expenses."/> : <LatestExpenseRows budget={budget}/>}
+  </section>
 }
 function BudgetCard({budget}:{budget:Budget}) {
   const {t}=useI18n()
