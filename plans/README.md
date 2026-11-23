@@ -40,6 +40,18 @@ Lecturas financieras previstas en una entrada directa con cuenta, a partir de la
 
 La consulta de identidad del servidor está deduplicada por petición. Las lecturas financieras se hidratan con claves por cuenta; los importes e IDs se decodifican con precisión y las escrituras tienen el reintento automático desactivado. El modo invitado usa ejemplos locales. El temporizador de 60 segundos visibles y la actualización al recuperar el foco responden a los pagos que registra Spring. La existencia de dos suscriptores de visibilidad por sí sola no demuestra dos GET idénticos. [Sesión en servidor](../lib/auth/server.ts#L8) · [Claves y señal de lectura](../lib/finance/queries.ts#L7) · [Refresco de cuenta](../lib/finance/AccountScope.tsx#L19) · [Contrato de integración](../docs/financial-integration.md#L29)
 
+## Orden de trabajo
+
+El plan único está en [la propuesta OpenSpec](../openspec/changes/improve-finance-interactions-and-requests/proposal.md). Los criterios de aceptación y las dependencias entre entregas están en [el diseño](../openspec/changes/improve-finance-interactions-and-requests/design.md) y [las tareas](../openspec/changes/improve-finance-interactions-and-requests/tasks.md).
+
+| Entrega | Hallazgos | Dependencia | Estado |
+| --- | --- | --- | --- |
+| Diálogos, reintento y guardado | F1, F2 | Pruebas del fotograma y de la respuesta pendiente primero | Propuesta |
+| Sesión e identidad | F3, confirmación de F7 | Independiente | Propuesta |
+| Formularios por módulo y día del corte | F10, día de F7 | Estabilizar el comportamiento de los diálogos | Propuesta |
+| Búsqueda, precargas, corte y presupuestos | F4, F5, F6 | Pruebas de conteo y aislamiento por cuenta | Propuesta |
+| Presentación de datos y selección accesible | F8, F9 | Conservar las pruebas de importes y maquetación | Propuesta |
+
 ## Seguimiento y límites
 
 - **Cuentas con mucho historial.** Medir GET de vista previa por mes y presupuesto con gasto positivo antes de acordar un contrato agregado con el backend. Un límite arbitrario de páginas perdería movimientos válidos. Las pruebas existentes ya contienen un caso donde los tres gastos están repartidos en tres páginas. [Prueba de historial](../lib/finance/contracts.test.ts#L32)
