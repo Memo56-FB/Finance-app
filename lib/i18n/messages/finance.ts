@@ -1,4 +1,6 @@
 export const financeEn = {
+  'Period for {month}':'Period for {month}','The server returned a different period.':'The server returned a different period.',
+  'Back to current period':'Back to current period','Net balance':'Net balance',
   'Open calendar':'Open calendar','Select month':'Select month',
   'Every month':'Every month','Every {months} months':'Every {months} months',
   'Notifications':'Notifications',
@@ -37,6 +39,8 @@ export const financeEn = {
   'This payment will be recorded for the selected month.':'This payment will be recorded for the selected month.',
 }
 export const financeEs: Record<keyof typeof financeEn,string> = {
+  'Period for {month}':'Corte de {month}','The server returned a different period.':'El servidor devolvió un corte distinto al solicitado.',
+  'Back to current period':'Volver al corte actual','Net balance':'Saldo neto',
   'Open calendar':'Abrir calendario','Select month':'Seleccionar mes',
   'Every month':'Cada mes','Every {months} months':'Cada {months} meses',
   'Notifications':'Notificaciones',

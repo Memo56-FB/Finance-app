@@ -42,6 +42,16 @@ describe('closed finance forwarding', () => {
     }
     expect(financePath(['transactions'], new URLSearchParams('categoryId=9007199254740993'), 'GET').status).toBe(200)
   })
+  it('accepts a single valid month only on monthly reads', () => {
+    const query = new URLSearchParams('month=2027-02')
+    for (const path of ['financial-summary','transactions','budgets','budgets/1','savings-pots','recurring-payments','recurring-payments/1','recurring-payments/summary']) {
+      expect(financePath(path.split('/'), query, 'GET').path).toBe('/api/'+path+'?month=2027-02')
+      expect(financePath(path.split('/'), new URLSearchParams('month=2027-00'), 'GET').status).toBe(400)
+    }
+    for (const [path, method] of [['transactions','POST'],['financial-summary/settings','GET'],['categories','GET'],['savings-pots/1','GET'],['transactions/1','GET']]) {
+      expect(financePath(path.split('/'), query, method).status).toBe(400)
+    }
+  })
   it('rejects anonymous, guest, cross-origin and missing CSRF requests', async () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
     expect((await GET(request('categories','GET',{cookie:''}),context('categories'))).status).toBe(401)

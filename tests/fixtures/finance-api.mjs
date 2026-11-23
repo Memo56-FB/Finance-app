@@ -29,7 +29,8 @@ export function handleFinance(req,res,session,body) {
     const row={id:next(),name,categoryId,categoryName:categoryName(categoryId),transactionDate:today,amount,sourceType,potId,potName:db.pots.find(pot=>pot.id === potId)?.name ?? null,recurringPaymentId,occurrenceId,openingBalance:false,budgetWarnings:[]}
     db.transactions.push(row);return row
   }
-  const selectedMonth=url.searchParams.get('month') || currentMonth
+  const month=url.searchParams.get('month')
+  const selectedMonth=month || currentMonth
   const budgetView=(row,month=selectedMonth)=>{
     const spent=effective().filter(tx=>tx.categoryId === row.categoryId && tx.transactionDate.startsWith(month) && cents(tx.amount)<0n).reduce((sum,tx)=>sum-cents(tx.amount),0n),limit=cents(row.spendingLimit)
     return {...row,categoryName:categoryName(row.categoryId),month,spent:money(spent),available:money(limit-spent),limitReached:spent>=limit,exceededAmount:money(spent>limit?spent-limit:0n)}
@@ -54,7 +55,8 @@ export function handleFinance(req,res,session,body) {
   if(resource === 'financial-summary') {
     if(id === 'settings') {if(method === 'PUT') db.settings={frequency:data.frequency,startDay:Number(data.startDay)};return send(200,db.settings)}
     const start=db.settings.startDay,semi=db.settings.frequency === 'SEMIMONTHLY',day=semi && start<=5 && Number(today.slice(8))>=start+15?start+15:start
-    const periodStart=`2027-03-${String(Math.min(day,31)).padStart(2,'0')}`,periodEnd=semi && day === start?`2027-03-${String(start+14).padStart(2,'0')}`:start === 1?'2027-03-31':`2027-04-${String(start-1).padStart(2,'0')}`
+    const periodStart=month ? month+'-01' : `2027-03-${String(Math.min(day,31)).padStart(2,'0')}`
+    const periodEnd=month ? month+'-'+new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),0)).getUTCDate() : semi && day === start?`2027-03-${String(start+14).padStart(2,'0')}`:start === 1?'2027-03-31':`2027-04-${String(start-1).padStart(2,'0')}`
     const rows=effective().filter(tx=>tx.transactionDate>=periodStart && tx.transactionDate<=periodEnd),income=rows.filter(tx=>cents(tx.amount)>0n).reduce((sum,tx)=>sum+cents(tx.amount),0n),expenses=rows.filter(tx=>cents(tx.amount)<0n).reduce((sum,tx)=>sum-cents(tx.amount),0n)
     return send(200,{periodStart,periodEnd,income:money(income),expenses:money(expenses),currentBalance:money(income-expenses)})
   }
@@ -115,12 +117,16 @@ export function handleFinance(req,res,session,body) {
   if(['transactions','recurring-payments'].includes(resource)) {
     const search=(url.searchParams.get('search') ?? '').toLowerCase(),sort=url.searchParams.get('sort') ?? 'newest',page=Number(url.searchParams.get('page') ?? 0),size=Number(url.searchParams.get('size') ?? 20)
     let rows=resource === 'transactions'?effective().map(txView):active(db.recurring).filter(row=>scheduled(row,selectedMonth) || occurrence(row,selectedMonth)).map(row=>recurringView(row))
+    if(resource === 'transactions' && month)rows=rows.filter(tx=>tx.transactionDate.startsWith(month))
     rows=rows.filter(row=>row.name.toLowerCase().includes(search) && (!url.searchParams.get('categoryId') || row.categoryId === url.searchParams.get('categoryId')))
     const compare=(a,b)=>a<b?-1:a>b?1:0
     rows.sort((a,b)=>{const result=sort.startsWith('name_')?a.name.toLowerCase().localeCompare(b.name.toLowerCase()):sort.startsWith('amount_')?compare(cents(a.amount),cents(b.amount)):compare(a.transactionDate ?? a.dueDate,b.transactionDate ?? b.dueDate);const tie=result || compare(BigInt(a.id),BigInt(b.id));return ['newest','name_desc','amount_desc'].includes(sort)?-tie:tie})
     return send(200,{items:rows.slice(page*size,(page+1)*size),page,size,totalElements:String(rows.length),totalPages:String(Math.ceil(rows.length/size))})
   }
   if(resource === 'budgets')return send(200,{items:active(collection).map(row=>budgetView(row))})
-  if(resource === 'savings-pots')return send(200,{items:active(collection),totalBalance:money(active(collection).reduce((sum,pot)=>sum+cents(pot.balance),0n))})
+  if(resource === 'savings-pots') {
+    const items=active(collection).map(pot=>month ? {...pot,balance:money(effective().filter(tx=>tx.potId === pot.id && tx.transactionDate.slice(0,7)<=month).reduce((sum,tx)=>sum+cents(tx.amount),0n))} : pot)
+    return send(200,{items,totalBalance:money(items.reduce((sum,pot)=>sum+cents(pot.balance),0n))})
+  }
   return send(200,{items:active(collection)})
 }

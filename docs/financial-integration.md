@@ -85,9 +85,17 @@ inside its inclusive dates. It does not carry prior balances or add pot totals.
 Monthly/semimonthly settings accept an anchor day 1–31; Spring handles short months.
 Changing the cut does not rewrite transactions or calendar-month budgets.
 
-Other widgets use the same sources as their sections: newest four transactions,
+By default the other widgets show the newest four transactions,
 active pot total and first four pots, current-month budgets and monthly recurring
-summary. Each widget has independent empty/loading/error recovery. There are no
+summary. Selecting a calendar month adds `month=YYYY-MM` to all five Overview
+reads. The summary covers that whole month, transactions show its newest four
+entries, and pot balances include movements through month end. Budgets and
+recurring payments use the selected month. The selection stays on the Overview.
+Returning to the current period restores the personal cut and default widgets.
+In the monthly view the heading identifies the selected month and its inclusive
+dates. Cards appear once the summary confirms that range. If the API returns
+another period, the user can retry the reads for the selected month.
+Each widget has independent empty/loading/error recovery. There are no
 account-only hardcoded financial cards.
 
 ## Budgets

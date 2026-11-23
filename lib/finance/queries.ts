@@ -12,9 +12,9 @@ export function financeQueries(account: string, source = finance, enabled = true
     categories: () => queryOptions({ ...base, queryKey: [...key,'categories'], queryFn: ({signal}) => source.categories(signal) }),
     transactions: (filters: ListFilters = {}) => queryOptions({ ...base, queryKey: [...key,'transactions',filters], queryFn: ({signal}) => source.transactions(filters,signal) }),
     budgets: (month?: string) => queryOptions({ ...base, queryKey: [...key,'budgets',month ?? 'current'], queryFn: ({signal}) => source.budgets(month,signal) }),
-    pots: () => queryOptions({ ...base, queryKey: [...key,'pots'], queryFn: ({signal}) => source.pots(signal) }),
+    pots: (month?: string) => queryOptions({ ...base, queryKey: [...key,'pots',month ?? 'current'], queryFn: ({signal}) => source.pots(month,signal) }),
     recurring: (filters: ListFilters = {}) => queryOptions({ ...base, queryKey: [...key,'recurring',filters], queryFn: ({signal}) => source.recurring(filters,signal) }),
-    summary: () => queryOptions({ ...base, queryKey: [...key,'summary'], queryFn: ({signal}) => source.summary(signal) }),
+    summary: (month?: string) => queryOptions({ ...base, queryKey: [...key,'summary',month ?? 'current'], queryFn: ({signal}) => source.summary(month,signal) }),
     settings: () => queryOptions({ ...base, queryKey: [...key,'settings'], queryFn: ({signal}) => source.settings(signal) }),
     paymentSummary: (month?: string) => queryOptions({ ...base, queryKey: [...key,'payment-summary',month ?? 'current'], queryFn: ({signal}) => source.paymentSummary(month,signal) }),
   }

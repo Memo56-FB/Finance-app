@@ -14,9 +14,9 @@ export function financialServices(read: ReadFinance = readFinance) {
     categories: (signal?: AbortSignal) => load('categories',v => decode.list(v,decode.financialRow.categories),signal),
     transactions: (filters: ListFilters = {},signal?: AbortSignal) => load('transactions'+query(filters),v => decode.page(v,decode.financialRow.transactions),signal),
     budgets: (month?: string,signal?: AbortSignal) => load('budgets'+query({month}),v => decode.list(v,decode.financialRow.budgets),signal),
-    pots: (signal?: AbortSignal) => load('savings-pots',decode.potList,signal),
+    pots: (month?: string,signal?: AbortSignal) => load('savings-pots'+query({month}),decode.potList,signal),
     recurring: (filters: ListFilters = {},signal?: AbortSignal) => load('recurring-payments'+query(filters),v => decode.page(v,decode.financialRow['recurring-payments']),signal),
-    summary: (signal?: AbortSignal) => load('financial-summary',decode.summary,signal),
+    summary: (month?: string,signal?: AbortSignal) => load('financial-summary'+query({month}),decode.summary,signal),
     settings: (signal?: AbortSignal) => load('financial-summary/settings',decode.settings,signal),
     paymentSummary: (month?: string,signal?: AbortSignal) => load('recurring-payments/summary'+query({month}),decode.paymentSummary,signal),
   }
