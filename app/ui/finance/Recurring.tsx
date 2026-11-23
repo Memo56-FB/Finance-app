@@ -46,7 +46,7 @@ function RecurringRow({row}:{row:RecurringPayment}) {
       </div>
     </div>
     <div role="cell" className="col-start-1 row-start-2 min-w-0 pl-[48px] md:col-start-2 md:row-start-1 md:pl-0"><PaymentDueDate row={row} className="flex"/></div>
-    <p role="cell" className={`col-start-2 row-span-2 row-start-1 self-end text-right md:col-start-3 md:row-span-1 text-preset-4-bold break-all ${row.status === 'PENDING' || row.status === 'VOID' ? 'text-red' : 'text-grey-900'}`}><Money value={row.status === 'PAID' && row.paidAmount !== null ? row.paidAmount : row.amount}/></p>
+    <p role="cell" className={`col-start-2 row-span-2 row-start-1 self-center text-right md:col-start-3 md:row-span-1 text-preset-4-bold break-all ${row.status === 'PENDING' || row.status === 'VOID' ? 'text-red' : 'text-grey-900'}`}><Money value={row.status === 'PAID' && row.paidAmount !== null ? row.paidAmount : row.amount}/></p>
     <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-4 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<RecurringForm record={row}/>} remove={<DeleteForm resource="recurring-payments" id={row.id}/>} extra={['PENDING','VOID'].includes(row.status) ? {label:'Mark paid',content:<PaymentForm record={row}/>} : undefined}/></div>
   </article>
 }
