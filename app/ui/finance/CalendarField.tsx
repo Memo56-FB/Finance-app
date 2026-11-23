@@ -19,11 +19,10 @@ type Props = {
   value: string
   onChange: (value: string) => void
   monthOnly?: boolean
-  applyMonthOnNavigate?: boolean
   error?: string
 }
 
-export function CalendarField({label, value, onChange, monthOnly = false, applyMonthOnNavigate = false, error}: Props) {
+export function CalendarField({label, value, onChange, monthOnly = false, error}: Props) {
   const {t, language} = useI18n()
   const id = useId()
   const [open, setOpen] = useState(false)
@@ -65,10 +64,7 @@ export function CalendarField({label, value, onChange, monthOnly = false, applyM
         <Popover.Portal>
           <Popover.Content aria-label={t(label)} sideOffset={4} collisionPadding={8} align="end"
             className="z-50 max-h-[var(--radix-popover-content-available-height)] overflow-auto rounded-lg border border-grey-100 bg-white shadow-lg">
-            {page && <Calendar mode="single" selected={selected} month={page} onMonthChange={next => {
-              setPage(next)
-              if (applyMonthOnNavigate) onChange(format(next, pattern))
-            }}
+            {page && <Calendar mode="single" selected={selected} month={page} onMonthChange={setPage}
               onSelect={day => { if (day) accept(day) }} required
               locale={language === 'es' ? es : enUS} captionLayout="dropdown"
               startMonth={parseISO(String(Math.max(1, page.getFullYear() - 100)).padStart(4, '0') + '-01-01')}

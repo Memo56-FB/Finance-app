@@ -39,7 +39,7 @@ export function Overview() {
   const wrongPeriod = month && summary.data && (summary.data.periodStart !== start || summary.data.periodEnd !== end)
   return <><PageHeader title="Overview">{settings.data && <NewDialog title="Configure period" prefix={false}>{<CutForm record={settings.data!}/>}</NewDialog>}</PageHeader>
     <div className="flex flex-wrap items-end gap-150">
-      <CalendarField label="Month" monthOnly applyMonthOnNavigate value={selectedMonth} onChange={setSelectedMonth}/>
+      <CalendarField label="Month" monthOnly value={selectedMonth} onChange={setSelectedMonth}/>
       {month && <Button variant="secondary" onClick={() => setSelectedMonth('')}>{t('Back to current period')}</Button>}
     </div>
     {start && end && <p aria-live="polite" className="text-preset-4 text-grey-500">{periodLabel}: <CalendarDate value={start}/> – <CalendarDate value={end}/></p>}
