@@ -3,6 +3,7 @@ import { CalendarField } from './CalendarField'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { format } from 'date-fns'
 import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
 import { Separator } from '@/components/ui/separator'
 import { InputSearch } from '@/components/ui/InputSearch'
@@ -185,7 +186,7 @@ function TransactionForm({ record }: { record?: Transaction }) {
   const nullable = record?.sourceType === 'POT'
   const [name, setName] = useState(record?.name ?? '')
   const [categoryId, setCategory] = useState(record?.categoryId ?? (nullable ? 'none' : ''))
-  const [date, setDate] = useState(record?.transactionDate ?? '')
+  const [date, setDate] = useState(() => record?.transactionDate ?? format(new Date(), 'yyyy-MM-dd'))
   const [amount, setAmount] = useState(record?.amount.replace(/^-/, '') ?? '')
   const [sign, setSign] = useState(record?.amount.startsWith('-') || !record ? 'expense' : 'income')
   const save = useSave(async () => {
