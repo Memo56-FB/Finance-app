@@ -176,7 +176,7 @@ export function RowActions({name,recordId,edit,remove,extra,contentClassName}:{n
     dialog.setOpen(true)
   }
   return <>
-    <DropdownMenu><DropdownMenuTrigger ref={trigger} aria-label={`${t('Actions')}: ${name} (#${recordId})`} className="flex min-h-[44px] min-w-[44px] items-center justify-center"><DotsThreeOutline size={20} weight="fill"/></DropdownMenuTrigger><DropdownMenuContent className="rounded-lg bg-white px-250 py-150">
+    <DropdownMenu><DropdownMenuTrigger ref={trigger} aria-label={`${t('Actions')}: ${name} (#${recordId})`} className="flex min-h-[44px] min-w-[44px] items-center justify-center"><DotsThreeOutline size={20} weight="fill"/></DropdownMenuTrigger><DropdownMenuContent className="rounded-lg bg-white px-250 py-150" onCloseAutoFocus={event => { if (dialog.open) event.preventDefault() }}>
       <DropdownMenuItem onSelect={() => select('edit')}>{t('Edit')}</DropdownMenuItem><DropdownMenuSeparator/>
       {extra && <><DropdownMenuItem onSelect={() => select('extra')}>{t(extra.label)}</DropdownMenuItem><DropdownMenuSeparator/></>}
       <DropdownMenuItem className="text-red" onSelect={() => select('delete')}>{t('Delete')}</DropdownMenuItem>
