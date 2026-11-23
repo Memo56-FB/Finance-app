@@ -10,6 +10,23 @@ import { budgets } from './budgets/data'
 import type { Budget } from '@/lib/finance/types'
 import { cents, decimal, moneyRatio } from '@/lib/finance/money'
 
+const innerRadius = 70
+// Leave room where the circular opening narrows below its center.
+const labelWidth = innerRadius * 2 - 16
+
+function fitLabel(label: SVGTextElement | null) {
+  if (!label) return
+
+  const fit = () => {
+    const width = label.getBBox().width
+    label.setAttribute('transform', `scale(${width > labelWidth ? labelWidth / width : 1})`)
+  }
+  fit()
+  const observer = new ResizeObserver(fit)
+  observer.observe(label)
+  return () => observer.disconnect()
+}
+
 export const BudgetChart = ({items}: {items?:Budget[]}) => {
   const { money, messages } = useI18n()
   const rows=items ? items.map(item=>({title:item.categoryName,spent:item.spent,ofValue:item.spendingLimit,fill:item.color})) : budgets
@@ -26,33 +43,24 @@ export const BudgetChart = ({items}: {items?:Budget[]}) => {
           data={chart}
           dataKey="chartValue"
           nameKey="title"
-          innerRadius={70}
+          innerRadius={innerRadius}
           outerRadius={105}
         />
-        <Pie data={[{ value: 100 }]} dataKey="value" tooltipType="none" fill="#FFF" opacity={0.25} outerRadius={80} innerRadius={70}>
+        <Pie data={[{ value: 100 }]} dataKey="value" tooltipType="none" fill="#FFF" opacity={0.25} outerRadius={80} innerRadius={innerRadius}>
           <Label
             content={({ viewBox }) => {
               if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                 return (
-                  <text
-                    x={viewBox.cx}
-                    y={viewBox.cy}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    <tspan
-                      x={viewBox.cx}
-                      y={viewBox.cy}
-                      className={money(totalSpent).length > 14 ? 'fill-foreground text-preset-4-bold text-grey-900' : 'fill-foreground text-preset-1 text-grey-900'}
-                    >
+                  <g transform={`translate(${viewBox.cx}, ${viewBox.cy})`} textAnchor="middle" dominantBaseline="middle">
+                    <text ref={fitLabel} className="fill-foreground text-preset-1 text-grey-900">
                       {money(totalSpent)}
-                    </tspan>
-                    <tspan
-                      x={viewBox.cx}
-                      y={(viewBox.cy || 0) + 24}
-                      className="fill-muted-foreground text-preset-5 text-grey-500"
-                    >{' '}<Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" />{' '}</tspan>
-                  </text>
+                    </text>
+                    <g transform="translate(0, 24)">
+                      <text ref={fitLabel} className="fill-muted-foreground text-preset-5 text-grey-500">
+                        <Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" />
+                      </text>
+                    </g>
+                  </g>
                 )
               }
             }}

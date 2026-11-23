@@ -314,6 +314,24 @@ test('zero-spend budgets skip history and keep the exact chart label', async ({p
   await expect(page.getByText('Late preview',{exact:true})).toHaveCount(0)
 })
 
+test('budget chart keeps large amounts inside the ring', async ({page, context}) => {
+  await account(context)
+  const category = await (await write(context,'categories','POST','{"name":"Equipment"}')).json()
+  expect((await write(context,'budgets','POST',`{"categoryId":${category.id},"spendingLimit":450000000.75,"color":"#277C78"}`)).ok()).toBe(true)
+  expect((await write(context,'transactions','POST',`{"categoryId":${category.id},"name":"Equipment purchase","amount":-123456789.25,"transactionDate":"2027-03-20"}`)).ok()).toBe(true)
+
+  await page.setViewportSize({width:390,height:844})
+  for (const path of ['/finance','/finance/budgets']) {
+    await page.goto(path)
+    const chart = page.locator('[data-chart]')
+    for (const amount of ['$123,456,789.25', 'of $450,000,000.75 limit']) {
+      const label = chart.getByText(amount,{exact:true})
+      await expect(label).toBeVisible()
+      await expect.poll(async () => (await label.boundingBox())?.width).toBeLessThan(125)
+    }
+  }
+})
+
 test('financial table headers match each row at compact and desktop widths', async ({page, context}) => {
   await account(context)
   const cat = await (await write(context,'categories','POST','{"name":"Utilities"}')).json()
