@@ -40,9 +40,6 @@ const SidebarItem = ({ href, icon: Icon, active, title }: SidebarItemProps) => {
         {
           'lg:w-0 lg:overflow-hidden transition-all': !isOpen
         },
-        {
-          'lg:w-20': isOpen
-        },
         )}>
         {title}
       </p>
