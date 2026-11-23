@@ -29,7 +29,7 @@ come from Spring. Deletion/payment timestamps are UTC instants.
 
 Queries are scoped to account and filters. SSR uses a fresh QueryClient per request
 and direct no-store backend requests. The browser hydrates those results, refreshes
-after confirmed writes, on focus and every 60 visible seconds, and clears/cancels
+after confirmed writes, and clears/cancels
 private data when leaving a session. No cache persists in localStorage.
 
 Financial SSR reads are 6 for Overview, 2 for Transactions, 1 for Categories,
@@ -40,7 +40,7 @@ The two account searches publish settled text after 300 ms, with obsolete
 GETs cancellable through the gateway. Saving the reporting-cut preference
 uses the confirmed settings response and refreshes just the summary.
 
-Returning to an account tab verifies the session before refreshing private data.
+Account views verify the session on entry, on a session-change notification and after a financial 401.
 Confirmed login, logout and guest transitions notify other tabs without sharing
 credentials or account identifiers. A changed identity discards the previous
 draft and cache. A temporary identity-check failure offers a retry. During login

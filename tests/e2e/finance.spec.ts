@@ -121,10 +121,9 @@ test('a pending category save retains the editor and sends one write', async ({p
 test('retrying categories with the keyboard does not submit a valid edit', async ({page, context}) => {
   await account(context)
   const cat = await (await write(context,'categories','POST','{"name":"Food"}')).json()
-  await write(context,'transactions','POST',`{"categoryId":${cat.id},"amount":-10,"name":"Lunch","transactionDate":"2027-03-20"}`)
-  await page.goto('/finance/transactions')
+  await write(context,'budgets','POST',`{"categoryId":${cat.id},"spendingLimit":100,"color":"#277C78"}`)
+  await page.goto('/finance/budgets')
   const dialog = page.getByRole('dialog')
-  await menu(page, page.getByRole('row').filter({hasText:'Lunch'}),'Edit')
   let reads = 0, writes = 0
   let unavailable = true
   await page.route('**/api/finance/categories', route => {
@@ -134,7 +133,8 @@ test('retrying categories with the keyboard does not submit a valid edit', async
   page.on('request', request => {
     if (request.url().includes('/api/finance/') && request.method() !== 'GET') writes++
   })
-  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await menu(page, page.locator('article').filter({has:page.getByRole('heading',{name:'Food',exact:true})}), 'Edit')
+  await dialog.getByLabel('Maximum Spending',{exact:true}).fill('125')
   const reload = dialog.getByRole('button', {name:'Reload data', exact:true})
   await expect(reload).toBeVisible()
   const previousReads = reads
@@ -142,7 +142,7 @@ test('retrying categories with the keyboard does not submit a valid edit', async
   await reload.focus()
   await page.keyboard.press('Enter')
   await expect(reload).toHaveCount(0)
-  await expect(dialog.getByLabel('Name', {exact:true})).toHaveValue('Lunch')
+  await expect(dialog.getByLabel('Maximum Spending', {exact:true})).toHaveValue('125')
   expect(reads - previousReads).toBe(1)
   expect(writes).toBe(0)
 })
@@ -300,12 +300,15 @@ test('zero-spend budgets skip history and keep the exact chart label', async ({p
   await expect(page.getByText('No recent expenses.',{exact:true})).toHaveCount(3)
   expect(histories).toBe(0)
   const expense = await (await write(context,'transactions','POST',`{"name":"Late preview","categoryId":${categoryIds[0]},"transactionDate":"2027-03-20","amount":-10}`)).json()
-  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await page.reload()
   try {
     await started.promise
     expect(histories).toBe(1)
     await write(context,`transactions/${expense.id}`,'DELETE')
-    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+    const paper = page.locator('article').filter({has:page.getByRole('heading',{name:'Paper',exact:true})})
+    await menu(page,paper,'Edit')
+    await page.getByRole('dialog').getByLabel('Maximum Spending',{exact:true}).fill('110')
+    await save(page)
     await expect(page.getByText('No recent expenses.',{exact:true})).toHaveCount(3)
   } finally { release.resolve() }
   await expect(page.getByText('Late preview',{exact:true})).toHaveCount(0)
@@ -667,15 +670,21 @@ test('lost mutation responses are not replayed and guest mode never calls financ
   expect(requests).toBe(0)
 })
 
-test('visible overview observes an automatic payment without sending a financial mutation',async({page,context})=>{
+test('an idle account waits for a user change before refreshing its data', async ({page,context}) => {
   await account(context)
-  const cat=await(await write(context,'categories','POST','{"name":"Automatic"}')).json()
-  await write(context,'recurring-payments','POST',`{"name":"Server payment","categoryId":${cat.id},"type":"SUBSCRIPTION","amount":10,"firstDueDate":"2027-03-20"}`)
-  await page.clock.install();await page.goto('/finance');await expect(page.locator('main')).not.toContainText('Server payment')
+  await page.clock.install()
+  await page.goto('/finance/categories')
+  await expect(page.getByText('No categories yet.',{exact:true})).toBeVisible()
   await expect(page.locator('main [inert]')).toHaveCount(0)
-  let writes=0;page.on('request',request=>{if(request.url().includes('/api/finance/') && request.method() !== 'GET')writes++})
-  expect((await control(context,'job')).status()).toBe(204)
-  await page.clock.runFor(60_100);await expect(page.locator('main')).toContainText('Server payment');expect(writes).toBe(0)
+  const requests: string[] = []
+  page.on('request', request => {
+    if (request.url().includes('/api/finance/')) requests.push(request.method())
+  })
+  await page.clock.fastForward(180_000)
+  expect(requests).toEqual([])
+  await category(page,'Food')
+  await expect(page.locator('tbody tr')).toContainText('Food')
+  expect(requests).toEqual(['POST','GET'])
 })
 
 test('linked corrections update pot balances, VOID payments and server conflicts',async({page,context})=>{

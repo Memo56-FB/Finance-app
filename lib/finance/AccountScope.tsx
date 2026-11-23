@@ -36,7 +36,7 @@ export function AccountScope({ account, children }: { account: string; children:
     const controller = new AbortController()
     let checking = false
     let checkAgain = false
-    let checkedAfter401 = false
+    let nextExpiryCheck = 0
 
     function stop() {
       access.current = 'leaving'
@@ -75,7 +75,6 @@ export function AccountScope({ account, children }: { account: string; children:
             return
           }
         } while (checkAgain)
-        if (!initial) void client.invalidateQueries({ queryKey: key, refetchType: 'none' })
         access.current = 'active'
         setPhase('active')
         verification.current?.resolve(true)
@@ -91,26 +90,16 @@ export function AccountScope({ account, children }: { account: string; children:
       }
     }
 
-    const visible = () => {
-      if (document.visibilityState !== 'visible') return
-      checkedAfter401 = false
-      void verify()
-    }
     const expired = () => {
-      if (checkedAfter401) return
-      checkedAfter401 = true
+      const now = performance.now()
+      if (now < nextExpiryCheck) return
+      nextExpiryCheck = now + 60_000
       void verify()
     }
-    const refresh = () => {
-      if (access.current === 'active' && document.visibilityState === 'visible') {
-        void client.invalidateQueries({ queryKey: key })
-      }
-    }
-    const timer = window.setInterval(refresh, 60_000)
     const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel(sessionChannel) : null
     if (channel) channel.onmessage = event => {
       if (event.data !== 'changed') return
-      checkedAfter401 = false
+      nextExpiryCheck = 0
       if (checking) checkAgain = true
       else void verify()
     }
@@ -118,15 +107,10 @@ export function AccountScope({ account, children }: { account: string; children:
     retryCheck.current = () => void verify()
     window.addEventListener(leavingSession, leave)
     window.addEventListener('finance-session-expired', expired)
-    document.addEventListener('visibilitychange', visible)
-    window.addEventListener('focus', visible)
     void verify(true)
     return () => {
       stop()
-      window.clearInterval(timer)
       channel?.close()
-      document.removeEventListener('visibilitychange', visible)
-      window.removeEventListener('focus', visible)
       window.removeEventListener(leavingSession, leave)
       window.removeEventListener('finance-session-expired', expired)
     }

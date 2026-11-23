@@ -32,7 +32,7 @@ function LatestExpenseRows({budget}:{budget:Budget}) {
   const query = useQuery({
     queryKey: [...financeKey(account), 'budget-expenses', budget.categoryId, budget.month],
     queryFn: ({ signal }) => recentExpenses(budget.categoryId, budget.month, signal),
-    staleTime: 30_000,
+    staleTime: Infinity,
     gcTime: 0,
     enabled: phase === 'active',
     refetchOnWindowFocus: false,
