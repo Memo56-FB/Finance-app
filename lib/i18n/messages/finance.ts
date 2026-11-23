@@ -1,4 +1,5 @@
 export const financeEn = {
+  'Open calendar':'Open calendar','Select month':'Select month',
   'Every month':'Every month','Every {months} months':'Every {months} months',
   'Notifications':'Notifications',
   'Choose a category to set a spending budget.':'Choose a category to set a spending budget.',
@@ -36,6 +37,7 @@ export const financeEn = {
   'This payment will be recorded for the selected month.':'This payment will be recorded for the selected month.',
 }
 export const financeEs: Record<keyof typeof financeEn,string> = {
+  'Open calendar':'Abrir calendario','Select month':'Seleccionar mes',
   'Every month':'Cada mes','Every {months} months':'Cada {months} meses',
   'Notifications':'Notificaciones',
   'Choose a category to set a spending budget.':'Elige una categoría para establecer un presupuesto de gastos.',

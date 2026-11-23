@@ -1,4 +1,5 @@
 'use client'
+import { CalendarField } from './CalendarField'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -25,7 +26,7 @@ import { TransactionRows, useFinancialURL } from './Transactions'
 export function MonthControl({effective,onMonthChange}:{effective?:string;onMonthChange?:(value:string)=>void}) {
   const {params,update}=useFinancialURL()
   const currentMonth=effective ?? new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit'}).format(new Date())
-  return <div className="flex"><FormInput label="Month" type="month" value={validMonth(params.get('month') ?? '') ? params.get('month')! : currentMonth} onChange={event => onMonthChange ? onMonthChange(event.target.value) : update('month',event.target.value)}/></div>
+  return <div className="flex"><CalendarField label="Month" monthOnly value={validMonth(params.get('month') ?? '') ? params.get('month')! : currentMonth} onChange={value => onMonthChange ? onMonthChange(value) : update('month',value)}/></div>
 }
 function LatestExpenseRows({budget}:{budget:Budget}) {
   const { account, phase } = useFinance()

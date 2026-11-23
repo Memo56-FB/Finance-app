@@ -1,4 +1,5 @@
 'use client'
+import { CalendarField } from './CalendarField'
 
 import { useState } from 'react'
 import { validId } from '@/lib/api/finance-json'
@@ -49,7 +50,7 @@ export function RecurringForm({ record }: { record?: RecurringPayment }) {
       error={error('intervalMonths')}/>}
     <FormInput label="Per payment" money inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} error={error('amount')} required/>
     <AmountHelp/>
-    <FormInput label="First due date" type="date" value={date} onChange={e => setDate(e.target.value)} error={error('firstDueDate')} required/>
+    <CalendarField label="First due date" value={date} onChange={setDate} error={error('firstDueDate')}/>
     {installment && <FormInput label="Number of installments" inputMode="numeric" value={count} onChange={e => setCount(e.target.value)} error={error('totalInstallments')} required/>}
   </SaveForm>
 }

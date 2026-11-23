@@ -1,4 +1,5 @@
 'use client'
+import { CalendarField } from './CalendarField'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -207,7 +208,7 @@ function TransactionForm({ record }: { record?: Transaction }) {
     {record && record.sourceType !== 'MANUAL' && <p className="text-preset-4 text-grey-500">{t('This correction can change a linked pot balance or payment status.')}</p>}
     <FormInput label="Name" value={name} onChange={e => setName(e.target.value)} maxLength={100} error={error('name')} required />
     <CategoryField value={categoryId || (nullable ? 'none' : '')} onChange={setCategory} original={record?.categoryId ? { id: record.categoryId, name: record.categoryName ?? '' } : undefined} nullable={nullable} error={error('categoryId')} />
-    <FormInput label="Transaction Date" type="date" value={date} onChange={e => setDate(e.target.value)} error={error('transactionDate')} required />
+    <CalendarField label="Transaction Date" value={date} onChange={setDate} error={error('transactionDate')} />
     <FormSelect label="Transaction type" value={sign} onChange={setSign} options={[{ value: 'income', label: t('Income') }, { value: 'expense', label: t('Expense') }]} />
     <FormInput label="Amount" money inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} error={error('amount')} required /><AmountHelp />
   </SaveForm>
