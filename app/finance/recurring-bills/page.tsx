@@ -10,7 +10,7 @@ import React from 'react'
 const page = async ({ searchParams }: PageProps) => {
   const params=await searchParams
   const access=await requireAccess('/finance/recurring-bills', params)
-  if(access.kind === 'account') return <FinanceHydration account={access.email} section="recurring" params={params}><LiveRecurring/></FinanceHydration>
+  if(access.kind === 'account') return <FinanceHydration account={access.username} section="recurring" params={params}><LiveRecurring/></FinanceHydration>
   return (
     <>
       <h1 className='text-preset-1 text-grey-900'><Text id="Recurring Bills" /></h1>

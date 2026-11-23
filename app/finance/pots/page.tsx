@@ -11,7 +11,7 @@ import React from 'react'
 const page = async ({ searchParams }: PageProps) => {
   const params=await searchParams
   const access=await requireAccess('/finance/pots', params)
-  if(access.kind === 'account') return <FinanceHydration account={access.email} section="pots" params={params}><LivePots/></FinanceHydration>
+  if(access.kind === 'account') return <FinanceHydration account={access.username} section="pots" params={params}><LivePots/></FinanceHydration>
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>

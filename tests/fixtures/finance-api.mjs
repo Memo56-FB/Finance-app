@@ -7,14 +7,14 @@ const cents=value=>{const [whole,fraction='']=String(value).replace('-','').spli
 const money=value=>{const abs=value<0n?-value:value;return `${value<0n?'-':''}${abs/100n}.${String(abs%100n).padStart(2,'0')}`}
 const encode=value=>stringify(value,(key,item)=>item !== null && numeric.has(key) ? new LosslessNumber(String(item)) : item)
 const decode=body=>parse(body,(key,value)=>isLosslessNumber(value) ? value.value : value)
-function account(email) {
-  if(!accounts.has(email)) accounts.set(email,{next:1n,categories:[],transactions:[],budgets:[],pots:[],recurring:[],occurrences:[],settings:{frequency:'MONTHLY',startDay:1}})
-  return accounts.get(email)
+function account(username) {
+  if(!accounts.has(username)) accounts.set(username,{next:1n,categories:[],transactions:[],budgets:[],pots:[],recurring:[],occurrences:[],settings:{frequency:'MONTHLY',startDay:1}})
+  return accounts.get(username)
 }
 export function handleFinance(req,res,session,body) {
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(data === undefined?'':encode(data))}
-  if(!session?.email)return send(401)
-  const db=account(session.email),url=new URL(req.url,'http://fixture'),[resource,id,action,monthArg]=url.pathname.replace(/^\/api\//,'').split('/'),method=req.method
+  if(!session?.username)return send(401)
+  const db=account(session.username),url=new URL(req.url,'http://fixture'),[resource,id,action,monthArg]=url.pathname.replace(/^\/api\//,'').split('/'),method=req.method
   const next=()=>String(db.next++)
   const problem=(status,field)=>send(status,{status,errors:field?[{field}]:[]})
   if(url.pathname === '/__finance/next-id') {db.next=BigInt(JSON.parse(body).id);return send(204)}

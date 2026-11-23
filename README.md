@@ -60,8 +60,9 @@ FINANCE_APP_ORIGIN must equal the public frontend origin; configure the same
 value as FINANCE_FRONTEND_ORIGIN in Spring. These are server variables. Production
 requires HTTPS and a backend URL reachable from the Next.js host.
 
-The existing /login and /singup forms use the real API. Registration creates
-an account and asks you to log in. Spring's HttpOnly JSESSIONID is the sole
+Registration at /singup takes a display name, username and password. After
+registration, sign in at /login with the username and password. Usernames
+are case-insensitive. Spring's HttpOnly JSESSIONID is the sole
 account session. Next.js transports and verifies it, including session rotation
 and CSRF renewal. Axios attaches CSRF; React Query handles pending operations
 without automatic POST replay or offline credential queues. Authentication
@@ -92,7 +93,7 @@ as required by financeApi. No deployment or backend schema change is included.
 | / | Login | Finance demo | Stored finances |
 | /login, /singup | Public forms | Forms for account access | Finance destination |
 | /finance and its five subpages | Login with safe return URL | Read-only demo | Stored finances |
-| /api/auth/me | 401 | 401 | Backend account email |
+| /api/auth/me | 401 | 401 | Backend account username |
 
 Run pnpm test, pnpm exec tsc --noEmit, pnpm lint and pnpm build for local checks.
 pnpm test:e2e starts an isolated Next instance on port 3100 and a contract fixture

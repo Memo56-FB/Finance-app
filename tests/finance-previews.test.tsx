@@ -14,13 +14,13 @@ import * as services from '@/lib/finance/services'
 
 vi.mock('@/lib/auth/client', async importOriginal => ({
   ...await importOriginal<typeof import('@/lib/auth/client')>(),
-  currentAccount: async () => ({email:'preview@example.test'}),
+  currentAccount: async () => ({username:'preview'}),
 }))
 
 const pot:Pot={id:'1',name:'Holiday',balance:'100.00',targetAmount:'200.00',color:'#123456'}
 async function preview(action:'deposits'|'withdrawals',record=pot) {
   const client=makeQueryClient()
-  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview@example.test"><PotMoneyForm record={record} action={action}/></AccountScope></PreferencesProvider></QueryClientProvider>)
+  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview"><PotMoneyForm record={record} action={action}/></AccountScope></PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   return {...view,client}
 }

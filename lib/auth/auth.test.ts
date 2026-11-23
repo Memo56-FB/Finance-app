@@ -5,7 +5,7 @@ const mock = vi.hoisted(() => ({ cookies: vi.fn() }))
 vi.mock('next/headers', () => mock)
 import { getAccess } from './server'
 import { safeNext } from './types'
-import { registrationErrors } from './validation'
+import { credentialErrors } from './validation'
 import { GET, POST, DELETE } from '@/app/api/auth/[action]/route'
 import { makeQueryClient } from '@/lib/api/QueryProvider'
 
@@ -25,10 +25,17 @@ it('isolates query caches and validates redirects', () => {
   for (const path of ['https://evil.test','//evil.test','/\\evil.test','/login','/%2f%2fevil.test','/finance/../login']) expect(safeNext(path)).toBe('/finance')
   expect(safeNext('/finance/transactions?query=Emma&page=2')).toBe('/finance/transactions?query=Emma&page=2')
 })
+it('accepts normalized usernames and rejects invalid identifiers on both forms', () => {
+  for (const register of [false, true]) {
+    const check = (username: string) => credentialErrors({name:'María', username, password:'test-password'}, register)
+    for (const username of ['a', '  User_01.A-B  ', 'a'.repeat(254)]) expect(check(username)).toEqual([])
+    for (const username of ['', 'a'.repeat(255), 'a@b.com', 'two words', 'maría']) expect(check(username)).toContain('username')
+  }
+})
 it('checks password UTF-8 boundaries without trimming significant spaces', () => {
-  const values = { name: 'María', email: 'maria@example.com', password: 'abcdefgh' }
-  for (const password of ['a'.repeat(72),'é'.repeat(36),'  abcdefgh  ']) expect(registrationErrors({ ...values, password })).toEqual([])
-  for (const password of ['a'.repeat(73),'é'.repeat(37),'abcdefg','        ']) expect(registrationErrors({ ...values, password })).toContain('password')
+  const values = { name: 'María', username: 'maria', password: 'abcdefgh' }
+  for (const password of ['a'.repeat(72),'é'.repeat(36),'  abcdefgh  ']) expect(credentialErrors({ ...values, password }, true)).toEqual([])
+  for (const password of ['a'.repeat(73),'é'.repeat(37),'abcdefg','        ']) expect(credentialErrors({ ...values, password }, true)).toContain('password')
 })
 it('distinguishes anonymous, guest, failed and isolated account lookups', async () => {
   const fetch = vi.spyOn(globalThis, 'fetch')
@@ -42,8 +49,8 @@ it('distinguishes anonymous, guest, failed and isolated account lookups', async 
   expect(await getAccess()).toEqual({ kind: 'anonymous' })
   fetch.mockRejectedValueOnce(new Error('network'))
   expect(await getAccess()).toEqual({ kind: 'unavailable' })
-  fetch.mockResolvedValueOnce(Response.json({ email: 'first@example.com' })).mockResolvedValueOnce(Response.json({ email: 'second@example.com' }))
-  expect(await Promise.all([getAccess(),getAccess()])).toEqual([{kind:'account',email:'first@example.com'},{kind:'account',email:'second@example.com'}])
+  fetch.mockResolvedValueOnce(Response.json({ username: 'first' })).mockResolvedValueOnce(Response.json({ username: 'second' }))
+  expect(await Promise.all([getAccess(),getAccess()])).toEqual([{kind:'account',username:'first'},{kind:'account',username:'second'}])
   fetch.mockResolvedValueOnce(Response.json({ password: 'not an identity' }))
   expect(await getAccess()).toEqual({ kind: 'unavailable' })
 })
@@ -68,7 +75,7 @@ it('creates and removes guest access locally and denies private identity', async
 })
 it('forwards required cookies and preserves rotation, deletion and empty responses', async () => {
   const fetch = vi.spyOn(globalThis,'fetch').mockResolvedValueOnce(new Response(null,{status:204,headers:{'Set-Cookie':'JSESSIONID=new; Path=/; HttpOnly; SameSite=Lax'}}))
-  const response = await POST(request('login','POST',{'X-CSRF-TOKEN':'t','Content-Type':'application/x-www-form-urlencoded', Cookie:'finance-language=es; JSESSIONID=old; unrelated=secret'},'email=a%40b.com&password=secret'),context('login'))
+  const response = await POST(request('login','POST',{'X-CSRF-TOKEN':'t','Content-Type':'application/x-www-form-urlencoded', Cookie:'finance-language=es; JSESSIONID=old; unrelated=secret'},'username=sample&password=secret'),context('login'))
   expect(response.status).toBe(204);expect(await response.text()).toBe('')
   const headers = fetch.mock.calls[0][1]?.headers as Headers
   expect(headers.get('Cookie')).toBe('JSESSIONID=old')
@@ -81,7 +88,7 @@ it('forwards required cookies and preserves rotation, deletion and empty respons
 
 it('bounds incoming credentials and hides upstream infrastructure failures', async () => {
   const fetch = vi.spyOn(globalThis,'fetch')
-  const response = await POST(request('register','POST',{'X-CSRF-TOKEN':'t','Content-Type':'application/json'},JSON.stringify({name:'a',email:'a@b.com',password:'x'.repeat(9000)})),context('register'))
+  const response = await POST(request('register','POST',{'X-CSRF-TOKEN':'t','Content-Type':'application/json'},JSON.stringify({name:'a',username:'sample',password:'x'.repeat(9000)})),context('register'))
   expect(response.status).toBe(400)
   expect(fetch).not.toHaveBeenCalled()
   fetch.mockRejectedValueOnce(new Error('private infrastructure details'))

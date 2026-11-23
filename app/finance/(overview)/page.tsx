@@ -14,7 +14,7 @@ import React from 'react'
 const page = async ({ searchParams }: PageProps) => {
   const params=await searchParams
   const access=await requireAccess('/finance', params)
-  if(access.kind === 'account') return <FinanceHydration account={access.email} section="overview" params={params}><LiveOverview/></FinanceHydration>
+  if(access.kind === 'account') return <FinanceHydration account={access.username} section="overview" params={params}><LiveOverview/></FinanceHydration>
   return (
     <>
       <h1 className='text-preset-1 text-grey-900'><Text id="Overview" /></h1>

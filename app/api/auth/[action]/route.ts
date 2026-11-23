@@ -40,12 +40,12 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
         if (action === 'register') {
           if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') return reply(415)
           const data = JSON.parse(body)
-          if (!data || typeof data !== 'object' || !['name', 'email', 'password'].every(k => typeof data[k] === 'string')) return reply(400)
+          if (!data || typeof data !== 'object' || !['name', 'username', 'password'].every(k => typeof data[k] === 'string')) return reply(400)
           headers.set('Content-Type', 'application/json')
         } else if (action === 'login') {
           if (request.headers.get('content-type')?.split(';')[0] !== 'application/x-www-form-urlencoded') return reply(415)
           const data = new URLSearchParams(body)
-          if (!data.has('email') || !data.has('password')) return reply(400)
+          if (!data.has('username') || !data.has('password')) return reply(400)
           headers.set('Content-Type', 'application/x-www-form-urlencoded')
         }
       } catch { return reply(400) }

@@ -5,5 +5,5 @@ import { Categories, GuestCategories } from '@/app/ui/finance/Categories'
 
 export default async function Page({searchParams}:PageProps) {
   const params=await searchParams,access=await requireAccess('/finance/categories',params)
-  return access.kind === 'account' ? <FinanceHydration account={access.email} section="categories" params={params}><Categories/></FinanceHydration> : <GuestCategories/>
+  return access.kind === 'account' ? <FinanceHydration account={access.username} section="categories" params={params}><Categories/></FinanceHydration> : <GuestCategories/>
 }

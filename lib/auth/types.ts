@@ -1,5 +1,5 @@
-export type Account = { email: string }
-export type Access = { kind: 'anonymous' | 'guest' | 'unavailable' } | { kind: 'account'; email: string }
+export type Account = { username: string }
+export type Access = { kind: 'anonymous' | 'guest' | 'unavailable' } | { kind: 'account'; username: string }
 export type SearchParams = Record<string, string | string[] | undefined>
 export type PageProps = { searchParams: Promise<SearchParams> }
 export const financeRoutes = ['/finance', '/finance/transactions', '/finance/categories', '/finance/budgets', '/finance/pots', '/finance/recurring-bills']

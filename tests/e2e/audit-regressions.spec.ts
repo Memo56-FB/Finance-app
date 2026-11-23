@@ -6,7 +6,10 @@ test.beforeEach(async ({ context }) => { await enterGuest(context) })
 test('account forms keep credentials out of the URL', async ({ page }) => {
   for (const route of ['login', 'singup']) {
     await page.goto(`/${route}`)
-    await page.getByLabel('Email', { exact: true }).fill('audit@example.invalid')
+    const username = page.getByRole('textbox', {name:'Username',exact:true})
+    await expect(username).toHaveAttribute('autocomplete','username')
+    await expect(username).toHaveAttribute('type','text')
+    await username.fill('audit_user')
     const password = page.locator('input[name="password"]')
     await password.fill('audit-dummy-password')
 

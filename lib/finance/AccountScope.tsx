@@ -68,7 +68,7 @@ export function AccountScope({ account, children }: { account: string; children:
           })
           if (controller.signal.aborted) return
           if (checkAgain) continue
-          if (identity?.email !== account) {
+          if (identity?.username !== account) {
             // A fresh server render distinguishes guest mode from an expired session.
             leave()
             void navigate(window.location.pathname + window.location.search)

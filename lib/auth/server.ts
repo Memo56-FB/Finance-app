@@ -15,7 +15,7 @@ export const getAccess = cache(async (): Promise<Access> => {
     if (response.status === 401) return { kind: 'anonymous' }
     if (!response.ok) return { kind: 'unavailable' }
     const data = await response.json()
-    return typeof data?.email === 'string' && data.email ? { kind: 'account', email: data.email } : { kind: 'unavailable' }
+    return typeof data?.username === 'string' && data.username ? { kind: 'account', username: data.username } : { kind: 'unavailable' }
   } catch { return { kind: 'unavailable' } }
 })
 export async function requireAccess(path: string, params: SearchParams) {

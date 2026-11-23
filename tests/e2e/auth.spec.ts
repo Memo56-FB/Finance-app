@@ -2,9 +2,9 @@ import { expect, test, type Page } from '@playwright/test'
 import { baseURL, enterGuest } from './guest'
 const apiURL = 'http://127.0.0.1:3101'
 const routes = ['/finance','/finance/transactions','/finance/categories','/finance/budgets','/finance/pots','/finance/recurring-bills']
-async function login(page: Page, email='first@example.test', password='test-password-123') {
+async function login(page: Page, username='first', password='test-password-123') {
   await page.goto('/login')
-  await page.getByLabel('Email',{exact:true}).fill(email)
+  await page.getByLabel('Username',{exact:true}).fill(username)
   await page.getByLabel('Password',{exact:true}).fill(password)
   await page.getByRole('button',{name:'Login',exact:true}).click()
 }
@@ -25,17 +25,17 @@ test('all finance HTML and RSC entries reject anonymous access', async ({ reques
   await expect(page.getByRole('button',{name:'Logout',exact:true})).toBeVisible()
 })
 test('registration confirms without login; real form login and logout rotate cookies', async ({ page, context }) => {
-  const email = 'new-'+Date.now()+'-'+test.info().workerIndex+'@example.test'
+  const username = 'new-'+Date.now()+'-'+test.info().workerIndex
   await page.goto('/singup')
   await page.getByLabel('Name',{exact:true}).fill('María José')
-  await page.getByLabel('Email',{exact:true}).fill(email)
+  await page.getByLabel('Username',{exact:true}).fill(username)
   await page.getByLabel('Create Password',{exact:true}).fill('  test-password-123  ')
   await page.getByRole('button',{name:'Create Account',exact:true}).click()
   await expect(page.getByRole('status')).toContainText('Account created')
   expect((await context.request.get('/api/auth/me')).status()).toBe(401)
   const before = (await context.cookies()).find(c=>c.name==='JSESSIONID')!.value
   await page.getByRole('link',{name:'Login',exact:true}).first().click()
-  await page.getByLabel('Email',{exact:true}).fill(email.toUpperCase())
+  await page.getByLabel('Username',{exact:true}).fill(username.toUpperCase())
   await page.getByLabel('Password',{exact:true}).fill('  test-password-123  ')
   await page.getByRole('button',{name:'Login',exact:true}).click()
   await expect(page).toHaveURL('/finance')
@@ -52,19 +52,19 @@ test('registration confirms without login; real form login and logout rotate coo
   await expect(page).toHaveURL(/\/login/)
 })
 test('invalid login is local, duplicate registration is a field error, and pending submits are single', async ({ page }) => {
-  await login(page,'first@example.test','wrong-password')
-  await expect(page.locator('p[role="alert"]')).toContainText('Invalid email or password.')
+  await login(page,'first','wrong-password')
+  await expect(page.locator('p[role="alert"]')).toContainText('Invalid username or password.')
   await expect(page).toHaveURL('/login')
   await page.goto('/singup')
   await page.getByLabel('Name',{exact:true}).fill('Example')
-  await page.getByLabel('Email',{exact:true}).fill('first@example.test')
+  await page.getByLabel('Username',{exact:true}).fill('first')
   await page.getByLabel('Create Password',{exact:true}).fill('test-password-123')
   let submissions = 0
   await page.route('**/api/auth/register',async route=> { submissions++;await new Promise(resolve=>setTimeout(resolve,200));await route.continue() })
   await page.getByRole('button',{name:'Create Account',exact:true}).click()
   await expect(page.getByRole('button',{name:'Please wait…',exact:true})).toBeDisabled()
   await expect(page.locator('p[role="alert"]')).toContainText('already registered')
-  await expect(page.getByLabel('Email',{exact:true})).toHaveAttribute('aria-invalid','true')
+  await expect(page.getByLabel('Username',{exact:true})).toHaveAttribute('aria-invalid','true')
   expect(submissions).toBe(1)
   expect(page.url()).not.toContain('password')
 })
@@ -103,11 +103,11 @@ test('guest to account transition and two independent users retain isolated iden
       await enterGuest(context)
       await context.addCookies([{name:'finance-language',value:i===0?'en':'es',url:baseURL}])
       const csrf = await (await context.request.get(baseURL+'/api/auth/csrf')).json()
-      expect((await context.request.post(baseURL+'/api/auth/login',{headers:{Origin:baseURL,[csrf.headerName]:csrf.token},form:{email:i===0?'first@example.test':'second@example.test',password:'test-password-123'}})).status()).toBe(204)
+      expect((await context.request.post(baseURL+'/api/auth/login',{headers:{Origin:baseURL,[csrf.headerName]:csrf.token},form:{username:i===0?'first':'second',password:'test-password-123'}})).status()).toBe(204)
       expect((await context.cookies()).find(c=>c.name==='finance-guest')).toBeUndefined()
     }
     const [a,b]=await Promise.all(contexts.map(async c => (await c.request.get(baseURL+'/api/auth/me')).json()))
-    expect(a.email).toBe('first@example.test');expect(b.email).toBe('second@example.test')
+    expect(a.username).toBe('first');expect(b.username).toBe('second')
     for (const [i,c] of contexts.entries()) {
       const page=await c.newPage();await page.goto(baseURL+'/finance')
       await expect(page.locator('html')).toHaveAttribute('lang',i===0?'en':'es')
@@ -119,7 +119,7 @@ test.describe('without JavaScript', () => {
 test.use({ javaScriptEnabled: false })
 test('mutations reject cross-origin and missing CSRF; public HTML remains available without scripts', async ({ request,page }) => {
   expect((await request.post('/api/auth/guest',{headers:{Origin:'https://evil.test'}})).status()).toBe(403)
-  expect((await request.post('/api/auth/register',{headers:{Origin:baseURL},data:{name:'a',email:'a@b.com',password:'secret'}})).status()).toBe(403)
+  expect((await request.post('/api/auth/register',{headers:{Origin:baseURL},data:{name:'a',username:'sample',password:'secret'}})).status()).toBe(403)
   await page.goto(baseURL+'/login')
   await expect(page.getByRole('heading',{name:'Login',exact:true})).toBeVisible()
   expect(await page.locator('noscript').textContent()).toBe('Enable JavaScript to use these forms.')

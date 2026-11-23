@@ -13,11 +13,11 @@ const today=new Date().toISOString().slice(0,10),month=today.slice(0,7)
 const ids={categories:[],budgets:[],pots:[],recurring:[]}
 let authenticated=false,primaryError
 async function authenticate(target) {
-  const email='finance-smoke-'+randomUUID()+'@example.test',password=randomUUID()
+  const username='finance-smoke-'+randomUUID(),password=randomUUID()
   const token=await(await target.request.get(origin+'/api/auth/csrf')).json()
   const headers={Origin:origin,[token.headerName]:token.token}
-  assert.equal((await target.request.post(origin+'/api/auth/register',{headers,data:{name:'Financial smoke',email,password}})).status(),201)
-  assert.equal((await target.request.post(origin+'/api/auth/login',{headers,form:{email,password}})).status(),204)
+  assert.equal((await target.request.post(origin+'/api/auth/register',{headers,data:{name:'Financial smoke',username,password}})).status(),201)
+  assert.equal((await target.request.post(origin+'/api/auth/login',{headers,form:{username,password}})).status(),204)
 }
 async function request(method,path,data,expected=200,target=context) {
   const headers={Origin:origin,'Content-Type':'application/json'}

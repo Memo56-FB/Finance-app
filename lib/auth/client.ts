@@ -16,8 +16,8 @@ export function announceSessionChange() {
 
 export async function currentAccount(signal?: AbortSignal): Promise<Account> {
   const { data } = await api.get('me', { signal })
-  if (typeof data?.email !== 'string' || !data.email) throw new ApiError(502)
-  return { email: data.email }
+  if (typeof data?.username !== 'string' || !data.username) throw new ApiError(502)
+  return { username: data.username }
 }
 export function useAccessNavigation() {
   const client = useQueryClient()

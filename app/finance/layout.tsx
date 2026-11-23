@@ -25,7 +25,7 @@ const layout = async ({children}: Readonly<{
           <PreferencesBar />
         </div>
         <main className='flex flex-col gap-400 py-300 md:py-400 px-200 md:px-500'>
-          {access.kind === 'account' ? <AccountScope key={access.email} account={access.email}>{children}</AccountScope> : children}
+          {access.kind === 'account' ? <AccountScope key={access.username} account={access.username}>{children}</AccountScope> : children}
         </main>
       </div>
     </div>

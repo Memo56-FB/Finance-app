@@ -13,7 +13,7 @@ import { budgets } from '@/app/ui/budgets/data'
 const page = async ({ searchParams }: PageProps) => {
   const params=await searchParams
   const access=await requireAccess('/finance/budgets', params)
-  if(access.kind === 'account') return <FinanceHydration account={access.email} section="budgets" params={params}><LiveBudgets/></FinanceHydration>
+  if(access.kind === 'account') return <FinanceHydration account={access.username} section="budgets" params={params}><LiveBudgets/></FinanceHydration>
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>

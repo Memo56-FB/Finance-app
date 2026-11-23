@@ -17,7 +17,7 @@ vi.mock('@/lib/auth/client', async importOriginal => ({
 afterEach(()=>{vi.useRealTimers();vi.restoreAllMocks()})
 it('refreshes only its account after verification and removes its timer on unmount', async ()=>{
   vi.useFakeTimers()
-  currentAccount.mockResolvedValue({email:'account-a'})
+  currentAccount.mockResolvedValue({username:'account-a'})
   const client=new QueryClient(),invalidate=vi.spyOn(client,'invalidateQueries').mockResolvedValue()
   const visibility=vi.spyOn(document,'visibilityState','get').mockReturnValue('visible')
   const view=render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="account-a">private</AccountScope></PreferencesProvider></QueryClientProvider>)
@@ -36,14 +36,14 @@ it('refreshes only its account after verification and removes its timer on unmou
 })
 
 it('pauses actions during identity verification, keeps a matching draft and discards a changed identity', async () => {
-  currentAccount.mockReset().mockResolvedValue({email:'account-a'})
+  currentAccount.mockReset().mockResolvedValue({username:'account-a'})
   const client = new QueryClient()
   render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
     <AccountScope account="account-a"><input aria-label="Draft" defaultValue="My draft"/></AccountScope>
   </PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   const field = screen.getByLabelText('Draft')
-  const pending = Promise.withResolvers<{email:string}>()
+  const pending = Promise.withResolvers<{username:string}>()
   currentAccount.mockReturnValueOnce(pending.promise)
   await act(async () => {
     window.dispatchEvent(new Event('focus'))
@@ -51,13 +51,13 @@ it('pauses actions during identity verification, keeps a matching draft and disc
   })
   expect(currentAccount).toHaveBeenCalledTimes(2)
   expect(field.closest('[inert]')).toBeInTheDocument()
-  await act(async () => { pending.resolve({email:'account-a'}) })
+  await act(async () => { pending.resolve({username:'account-a'}) })
   expect(field).toHaveValue('My draft')
   expect(field.closest('[inert]')).toBeNull()
   currentAccount.mockRejectedValueOnce(new ApiError(503))
   await act(async () => { window.dispatchEvent(new Event('focus')) })
   expect(field.closest('[inert]')).toBeInTheDocument()
-  currentAccount.mockResolvedValueOnce({email:'account-b'})
+  currentAccount.mockResolvedValueOnce({username:'account-b'})
   await act(async () => { fireEvent.click(screen.getByRole('button', {name:'Retry session check'})) })
   expect(field).not.toBeInTheDocument()
   expect(navigate).toHaveBeenCalledOnce()

@@ -1,13 +1,13 @@
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
 const origin='http://localhost:3100',upstream='http://127.0.0.1:3101'
 async function account(context:BrowserContext,language='en') {
-  const email=`finance-${Date.now()}-${Math.random()}@example.test`,password='test-password-123'
+  const username=`finance-${Date.now()}-${Math.random()}`,password='test-password-123'
   const token=await (await context.request.get(origin+'/api/auth/csrf')).json()
   const headers={Origin:origin,[token.headerName]:token.token}
-  expect((await context.request.post(origin+'/api/auth/register',{headers,data:{name:'Finance test',email,password}})).status()).toBe(201)
-  expect((await context.request.post(origin+'/api/auth/login',{headers,form:{email,password}})).status()).toBe(204)
+  expect((await context.request.post(origin+'/api/auth/register',{headers,data:{name:'Finance test',username,password}})).status()).toBe(201)
+  expect((await context.request.post(origin+'/api/auth/login',{headers,form:{username,password}})).status()).toBe(204)
   await context.addCookies([{name:'finance-language',value:language,url:origin}])
-  return email
+  return username
 }
 async function write(context:BrowserContext,path:string,method='POST',body?:string) {
   const token=await (await context.request.get(origin+'/api/auth/csrf')).json()

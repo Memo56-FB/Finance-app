@@ -12,12 +12,12 @@ it('uses direct no-store reads and separate hydrated caches for concurrent accou
     return new Response('{"items":[{"id":9007199254740993,"name":"'+owner+'"}]}')
   }))
   cookie.session='a'
-  const a=await FinanceHydration({account:'a@example.test',section:'categories',params:{},children:null})
+  const a=await FinanceHydration({account:'account-a',section:'categories',params:{},children:null})
   cookie.session='b'
-  const b=await FinanceHydration({account:'b@example.test',section:'categories',params:{},children:null})
+  const b=await FinanceHydration({account:'account-b',section:'categories',params:{},children:null})
   const stateA=JSON.stringify((a.props as {state:DehydratedState}).state),stateB=JSON.stringify((b.props as {state:DehydratedState}).state)
-  expect(stateA).toContain('9007199254740993');expect(stateA).toContain('a@example.test');expect(stateA).not.toContain('b@example.test')
-  expect(stateB).toContain('b@example.test');expect(stateB).not.toContain('JSESSIONID=a')
+  expect(stateA).toContain('9007199254740993');expect(stateA).toContain('account-a');expect(stateA).not.toContain('account-b')
+  expect(stateB).toContain('account-b');expect(stateB).not.toContain('JSESSIONID=a')
 })
 
 it.each([
@@ -30,7 +30,7 @@ it.each([
 ] as const)('prefetches only the necessary reads for %s', async (section, expected) => {
   const fetch = vi.fn(async (_url: URL) => new Response(null, {status:503}))
   vi.stubGlobal('fetch', fetch)
-  await FinanceHydration({account:'a@example.test', section, params:{month:'2027-13'}, children:null})
+  await FinanceHydration({account:'account-a', section, params:{month:'2027-13'}, children:null})
   const urls = fetch.mock.calls.map(([url]) => url)
   expect(urls.map(url => url.pathname.slice(5)).sort()).toEqual([...expected].sort())
   expect(urls.every(url => !url.searchParams.has('month'))).toBe(true)
