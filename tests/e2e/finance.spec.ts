@@ -1245,3 +1245,50 @@ test('a budget color is provisional only while its amount stays unchanged', asyn
   await expect(color).toHaveCSS('background-color','rgb(130, 201, 215)')
   await expect(card).toContainText('$75.00')
 })
+
+test('financial pagination shows numbered links on desktop and an indicator on tablet and mobile', async ({page, context}) => {
+  await account(context)
+  await page.goto('/finance/pots')
+  await expect(page.getByText('No pots yet.')).toBeVisible()
+  const pagination = page.getByRole('navigation', {name: 'pagination'})
+  const numbered = pagination.getByRole('link', {name: /^\d+$/})
+  const indicator = pagination.getByRole('status')
+  const next = pagination.getByRole('link', {name: 'Go to next page'})
+  const previous = pagination.getByRole('link', {name: 'Go to previous page'})
+  const first = pagination.getByRole('link', {name: 'Go to first page'})
+  const last = pagination.getByRole('link', {name: 'Go to last page'})
+  const gaps = pagination.getByText('…', {exact: true}).filter({visible: true})
+
+  for (const [section, resource] of [['Transactions', 'transactions'], ['Recurring bills', 'recurring-payments']] as const) {
+    await page.route('**/api/finance/' + resource + '*', route => {
+      const query = new URL(route.request().url()).searchParams
+      return route.fulfill({json: {items: [], totalPages: 120, totalElements: 480, size: 4, page: Number(query.get('page') ?? 0)}})
+    })
+    await page.setViewportSize({width: 1280, height: 900})
+    await page.getByRole('link', {name: section, exact: true}).click()
+    await expect(numbered).toHaveText(['1','2','3','4','120'])
+    await page.evaluate(() => history.pushState(null, '', '?page=100'))
+    await expect(numbered).toHaveText(['1','99','100','101','120'])
+    await expect(numbered.filter({hasText: /^100$/})).toHaveAttribute('aria-current','page')
+    await expect(gaps).toHaveCount(2)
+    for (const width of [768, 390]) {
+      await page.setViewportSize({width, height: 900})
+      await expect(numbered).toHaveCount(0)
+      await expect(pagination.getByRole('link')).toHaveCount(4)
+      await expect(gaps).toHaveCount(0)
+      await expect(indicator).toHaveText('100 of 120')
+    }
+    await next.click()
+    await expect(indicator).toHaveText('101 of 120')
+    await previous.click()
+    await expect(indicator).toHaveText('100 of 120')
+    await last.click()
+    await expect(indicator).toHaveText('120 of 120')
+    await expect(next).toHaveAttribute('aria-disabled','true')
+    await expect(last).toHaveAttribute('aria-disabled','true')
+    await first.click()
+    await expect(indicator).toHaveText('1 of 120')
+    await expect(previous).toHaveAttribute('aria-disabled','true')
+    await expect(first).toHaveAttribute('aria-disabled','true')
+  }
+})

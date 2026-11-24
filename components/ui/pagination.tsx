@@ -1,11 +1,11 @@
 'use client'
 
-import { Text, useI18n } from '@/lib/i18n/client'
+import { useI18n } from '@/lib/i18n/client'
+import type { Messages } from '@/lib/i18n'
 import * as React from "react"
-import { MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { CaretLeft, CaretRight } from "@phosphor-icons/react"
+import { CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from "@phosphor-icons/react"
 import Link from "next/link"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => { const { t } = useI18n(); return (
@@ -52,6 +52,7 @@ const PaginationLink = ({
   isActive,
   disabled,
   href,
+  onClick,
   ...props
 }: PaginationLinkProps) => (
   <Link
@@ -60,64 +61,84 @@ const PaginationLink = ({
     aria-disabled={disabled || undefined}
     tabIndex={disabled ? -1 : props.tabIndex}
     className={cn(
-      'px-200 flex items-center h-10 py-100 bg-white text-grey-900 rounded-lg transition-colors border border-beige-500',
-      isActive ? 'text-white bg-grey-900' : 'hover:text-white hover:bg-beige-500',
+      'flex min-h-10 min-w-11 items-center justify-center rounded-lg border border-beige-500 px-200 py-100 transition-colors',
+      isActive ? 'bg-grey-900 text-white' : 'bg-white text-grey-900 hover:bg-beige-500 hover:text-white',
       disabled && 'pointer-events-none cursor-not-allowed opacity-50',
       className
     )}
     {...props}
+    onClick={event => {
+      if (disabled) event.preventDefault()
+      else onClick?.(event)
+    }}
   />
 )
 PaginationLink.displayName = "PaginationLink"
 
-const PaginationPrevious = ({
-  className,
-  disabled,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => { const { t } = useI18n(); return (
-  <PaginationLink
-    aria-label={t("Go to previous page")}
-    disabled={disabled}
-    className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
-    {...props}
-  >
-    <CaretLeft className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
-    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block"><Text id="Prev" /></span>
-  </PaginationLink>
-) }
-PaginationPrevious.displayName = "PaginationPrevious"
+function pageWindow(page: number, total: number) {
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)
+  const start = Math.max(2, Math.min(page - 1, total - 3))
+  return [1, start, start + 1, start + 2, total]
+}
 
-const PaginationNext = ({
-  className,
-  disabled,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => { const { t } = useI18n(); return (
-  <PaginationLink
-    aria-label={t("Go to next page")}
-    disabled={disabled}
-    className={cn("px-200 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
-    {...props}
-  >
-    <span className="text-grey-900 group-hover:text-white transition-colors hidden md:block"><Text id="Next" /></span>
-    <CaretRight className="h-4 w-4 text-grey-500 group-hover:text-white transition-colors" weight="fill" />
+function PaginationArrow({ icon: Icon, label, className, ...props }: PaginationLinkProps & {
+  icon: typeof CaretLeft
+  label: keyof Messages
+}) {
+  const { t } = useI18n()
+  return <PaginationLink {...props} aria-label={t(label)} className={cn('group max-lg:min-h-11', className)}>
+    <Icon aria-hidden="true" size={16} weight="fill" className="text-grey-500 transition-colors group-hover:text-white" />
   </PaginationLink>
-) }
-PaginationNext.displayName = "PaginationNext"
+}
 
-const PaginationEllipsis = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
-  <span
-    aria-hidden
-    className={cn("px-150 py-100 gap-200 flex bg-white border border-beige-500 text-preset-4 rounded-lg items-center h-10 hover:bg-beige-500 group transition-colors", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4 group-hover:text-white" />
-    <span className="sr-only"><Text id="More pages" /></span>
-  </span>
-)
-PaginationEllipsis.displayName = "PaginationEllipsis"
+function PaginationPrevious(props: PaginationLinkProps) {
+  return <PaginationArrow {...props} icon={CaretLeft} label="Go to previous page" />
+}
+
+function PaginationNext(props: PaginationLinkProps) {
+  return <PaginationArrow {...props} icon={CaretRight} label="Go to next page" />
+}
+
+function PaginationEllipsis({ className, ...props }: React.ComponentProps<'span'>) {
+  return <span {...props} aria-hidden="true" className={cn('px-1 text-preset-5 text-grey-500', className)}>…</span>
+}
+
+function PaginationControls({ page, total, link, className }: {
+  page: number
+  total: number
+  link: (page: number) => PaginationLinkProps
+  className?: string
+}) {
+  const { t } = useI18n()
+  const pages = pageWindow(page, total)
+  return <Pagination className={className}>
+    <PaginationContent className="flex-wrap justify-center gap-0.5 sm:gap-1">
+      <PaginationItem>
+        <PaginationArrow {...link(1)} icon={CaretDoubleLeft} label="Go to first page" disabled={page === 1} />
+      </PaginationItem>
+      <PaginationItem>
+        <PaginationPrevious {...link(Math.max(1, page - 1))} disabled={page === 1} />
+      </PaginationItem>
+      <PaginationItem className="px-1 text-center text-preset-5 lg:hidden">
+        <span role="status">{t('{page} of {total}').replace('{page}', String(page)).replace('{total}', String(total))}</span>
+      </PaginationItem>
+      {pages.map((number, index) => <React.Fragment key={number}>
+        {index > 0 && number - pages[index - 1] > 1 && <PaginationItem className="hidden lg:list-item">
+          <PaginationEllipsis />
+        </PaginationItem>}
+        <PaginationItem className="hidden lg:list-item">
+          <PaginationLink {...link(number)} isActive={number === page}>{number}</PaginationLink>
+        </PaginationItem>
+      </React.Fragment>)}
+      <PaginationItem>
+        <PaginationNext {...link(Math.min(total, page + 1))} disabled={page === total} />
+      </PaginationItem>
+      <PaginationItem>
+        <PaginationArrow {...link(total)} icon={CaretDoubleRight} label="Go to last page" disabled={page === total} />
+      </PaginationItem>
+    </PaginationContent>
+  </Pagination>
+}
 
 export {
   Pagination,
@@ -125,6 +146,7 @@ export {
   PaginationEllipsis,
   PaginationItem,
   PaginationLink,
+  PaginationControls,
   PaginationNext,
   PaginationPrevious,
 }

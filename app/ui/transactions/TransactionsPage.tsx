@@ -9,14 +9,7 @@ import type { TransactionFilters, TransactionSort } from '@/app/ui/transactions/
 import { InputSearch } from '@/components/ui/InputSearch'
 import { ResponsiveSelect } from '@/components/ui/ResponsiveSelect'
 import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
+import { PaginationControls } from '@/components/ui/pagination'
 import React, { Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -93,32 +86,7 @@ const TransactionsPage = () => {
         </div>
         <TransactionTableDesktop transactions={visibleTransactions} />
         <TransactionsTableMobile transactions={visibleTransactions} />
-        <Pagination className='pt-300'>
-          <PaginationContent className='w-full justify-center'>
-            <PaginationItem className='justify-self-start mr-auto'>
-              <PaginationPrevious
-                href={pageHref(page - 1)}
-                disabled={page <= 1}
-              />
-            </PaginationItem>
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-              <PaginationItem key={pageNumber}>
-                <PaginationLink
-                  href={pageHref(pageNumber)}
-                  isActive={pageNumber === page}
-                >
-                  {pageNumber}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem className='ml-auto'>
-              <PaginationNext
-                href={pageHref(page + 1)}
-                disabled={page >= pageCount}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        <PaginationControls className='pt-300' page={page} total={pageCount} link={number => ({ href: pageHref(number) })}/>
       </section>
     </>
   )

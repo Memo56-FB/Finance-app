@@ -8,7 +8,7 @@ import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
 import { Separator } from '@/components/ui/separator'
 import { InputSearch } from '@/components/ui/InputSearch'
 import { ResponsiveSelect } from '@/components/ui/ResponsiveSelect'
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { PaginationControls } from '@/components/ui/pagination'
 import { CalendarDate, Money, useI18n } from '@/lib/i18n/client'
 import { useFinance } from '@/lib/finance/AccountScope'
 import { filtersFromURL } from '@/lib/finance/queries'
@@ -138,20 +138,15 @@ export function PagedNavigation({data,applyFilter}:{data:{page:number;totalPages
   const page=Math.min(data.page+1,pages)
   useEffect(()=>{if(data.page+1 > pages)update('page',String(pages))},[data.page,pages,update])
   const href=(value:number) => { const next=new URLSearchParams(params);next.set('page',String(value));return '?'+next }
-  const visible=[1,page-1,page,page+1,pages].filter((value,index,all)=>value >= 1 && value <= pages && all.indexOf(value) === index).sort((a,b)=>a-b)
-  const link = (value: number, disabled = false) => ({
+  const link = (value: number) => ({
     href: href(value),
     prefetch: false as const,
     onNavigate(event: { preventDefault(): void }) {
       event.preventDefault()
-      if (!disabled) applyFilter('page', String(value))
+      applyFilter('page', String(value))
     },
   })
-  return <Pagination><PaginationContent className="w-full flex-wrap">
-    <PaginationItem className="mr-auto"><PaginationPrevious {...link(page-1, page <= 1)} disabled={page <= 1}/></PaginationItem>
-    {visible.map(value=><PaginationItem key={value}><PaginationLink {...link(value)} isActive={value === page}>{value}</PaginationLink></PaginationItem>)}
-    <PaginationItem className="ml-auto"><PaginationNext {...link(page+1, page >= pages)} disabled={page >= pages}/></PaginationItem>
-  </PaginationContent></Pagination>
+  return <PaginationControls page={page} total={pages} link={link}/>
 }
 function Origin({row}:{row:Transaction}) {
   const {t}=useI18n()
