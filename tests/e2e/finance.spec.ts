@@ -371,9 +371,17 @@ test('floating notifications preserve layout, translations and dismissal',async(
     await save(page)
     const notice=page.locator('.Toastify__toast').filter({hasText:saved})
     await expect(notice).toBeVisible()
-    await expect(page.locator('.Toastify__toast-container')).toHaveCSS('position','fixed')
+    const container = page.locator('.Toastify__toast-container')
+    await expect(container).toHaveCSS('position','fixed')
     expect((await heading.boundingBox())!.y).toBe(before.y)
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    if (width === 1280) {
+      await expect(container).toHaveCSS('bottom','16px')
+      await expect(container).toHaveCSS('right','16px')
+      await page.setViewportSize({width: 768, height: 900})
+      await expect(container).toHaveCSS('top','16px')
+      await expect(container).toHaveCSS('left','16px')
+    }
     await notice.getByRole('button',{name:close,exact:true}).click()
     await expect(notice).toBeHidden()
   }
