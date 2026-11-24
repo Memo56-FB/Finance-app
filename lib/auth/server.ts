@@ -2,6 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { sessionTag } from './session-tag'
 import { upstream } from '@/lib/api/upstream'
 import { destination, safeNext, type Access, type SearchParams } from './types'
 
@@ -15,7 +16,7 @@ export const getAccess = cache(async (): Promise<Access> => {
     if (response.status === 401) return { kind: 'anonymous' }
     if (!response.ok) return { kind: 'unavailable' }
     const data = await response.json()
-    return typeof data?.username === 'string' && data.username ? { kind: 'account', username: data.username } : { kind: 'unavailable' }
+    return typeof data?.username === 'string' && data.username ? { kind: 'account', username: data.username, sessionTag: sessionTag(session) } : { kind: 'unavailable' }
   } catch { return { kind: 'unavailable' } }
 })
 export async function requireAccess(path: string, params: SearchParams) {

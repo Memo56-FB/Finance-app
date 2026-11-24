@@ -8,6 +8,11 @@ export class ApiError extends Error {
 export const api = axios.create({ baseURL: '/api/auth', withCredentials: true, timeout: 15_000 })
 type Csrf = { token: string; headerName: string }
 let csrf: Promise<Csrf> | undefined
+let financeSessionTag: string | undefined
+export function bindFinanceSession(tag?: string) {
+  financeSessionTag = tag
+  return () => { if (financeSessionTag === tag) financeSessionTag = undefined }
+}
 export function clearCsrf() { csrf = undefined }
 api.interceptors.request.use(async config => {
   if (['post', 'put', 'delete'].includes(config.method ?? '') && (config.baseURL === '/api/finance' || ['login', 'register', 'logout'].includes(config.url ?? ''))) {
@@ -39,7 +44,11 @@ export async function financeRequest<T>(config: AxiosRequestConfig): Promise<T> 
 export function financeResponse<T>(config:AxiosRequestConfig) {
   return api.request<T>({
     ...config, baseURL: '/api/finance',
-    headers: { 'Content-Type': 'application/json', ...config.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(financeSessionTag ? { 'x-finance-session': financeSessionTag } : {}),
+      ...config.headers,
+    },
     transformRequest: [data => data === undefined ? undefined : stringifyFinance(data)],
     transformResponse: [data => {
       if (typeof data !== 'string') return data

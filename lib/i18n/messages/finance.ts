@@ -1,4 +1,5 @@
 export const financeEn = {
+  'Dismiss review':'Dismiss review','Pending confirmation':'Pending confirmation','Verify':'Verify','Review draft':'Review draft','Pending changes':'Pending changes','Another change for this record is pending.':'Another change for this record is pending.',
   'Period for {month}':'Period for {month}','The server returned a different period.':'The server returned a different period.',
   'Back to current period':'Back to current period','Net balance':'Net balance',
   'Open calendar':'Open calendar','Select month':'Select month',
@@ -39,6 +40,7 @@ export const financeEn = {
   'This payment will be recorded for the selected month.':'This payment will be recorded for the selected month.',
 }
 export const financeEs: Record<keyof typeof financeEn,string> = {
+  'Dismiss review':'Cerrar revisión','Pending confirmation':'Pendiente de confirmar','Verify':'Verificar','Review draft':'Revisar borrador','Pending changes':'Cambios pendientes','Another change for this record is pending.':'Ya hay un cambio pendiente para este registro.',
   'Period for {month}':'Corte de {month}','The server returned a different period.':'El servidor devolvió un corte distinto al solicitado.',
   'Back to current period':'Volver al corte actual','Net balance':'Saldo neto',
   'Open calendar':'Abrir calendario','Select month':'Seleccionar mes',

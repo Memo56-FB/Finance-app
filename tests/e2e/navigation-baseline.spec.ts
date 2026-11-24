@@ -34,3 +34,17 @@ test('transactions navigation baseline', async ({ page }) => {
   await page.goBack()
   await expect(page.getByRole('link', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page')
 })
+
+test('guest switches among all sections with the API unavailable', async ({page}) => {
+  await page.goto('/finance')
+  await expect(page.getByRole('button', {name:'Logout'})).toBeEnabled()
+  let reads = 0
+  await page.route(/\/api\/(auth\/me|finance\/)/, route => { reads++; return route.abort() })
+  for (const section of ['Transactions', 'Categories', 'Budgets', 'Pots', 'Recurring bills', 'Overview']) {
+    const link = page.getByRole('link', {name:section, exact:true})
+    await link.click()
+    await expect(link).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByRole('heading', {name:section === 'Recurring bills' ? 'Recurring Bills' : section, exact:true})).toBeFocused()
+  }
+  expect(reads).toBe(0)
+})

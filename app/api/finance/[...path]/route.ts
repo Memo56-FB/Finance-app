@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { appOrigin, upstreamPath } from '@/lib/api/upstream'
+import { matchesSession } from '@/lib/auth/session-tag'
 import { financePath } from '@/lib/api/finance-path'
 import { bodyText } from '@/lib/api/request'
 
@@ -12,7 +13,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
   const target = financePath(path, request.nextUrl.searchParams, request.method)
   if (target.status !== 200) return reply(target.status)
   const session = request.cookies.get('JSESSIONID')?.value
-  if (!session || request.cookies.get('finance-guest')?.value === '1') return reply(401)
+  if (!session || !matchesSession(request, session) || request.cookies.get('finance-guest')?.value === '1') return reply(401)
   try {
     const headers = new Headers({ Cookie: 'JSESSIONID=' + encodeURIComponent(session) })
     let body: string | undefined

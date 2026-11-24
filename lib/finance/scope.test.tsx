@@ -60,3 +60,27 @@ it('pauses actions during identity verification, keeps a matching draft and disc
   expect(field).not.toBeInTheDocument()
   expect(navigate).toHaveBeenCalledOnce()
 })
+
+it('keeps cached content on a routine failure and conceals it on a session signal', async () => {
+  currentAccount.mockReset().mockResolvedValue({username:'account-a'})
+  const client = new QueryClient()
+  render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
+    <AccountScope account="account-a"><p>Cached private content</p></AccountScope>
+  </PreferencesProvider></QueryClientProvider>)
+  await act(async () => {})
+  const content = screen.getByText('Cached private content')
+  const delayed = Promise.withResolvers<{username:string}>()
+  currentAccount.mockReturnValueOnce(delayed.promise)
+  await act(async () => {
+    window.dispatchEvent(new Event('finance-navigation'))
+    window.dispatchEvent(new Event('finance-navigation'))
+  })
+  expect(currentAccount).toHaveBeenCalledTimes(2)
+  expect(content.closest('[inert]')).toBeNull()
+  await act(async () => { delayed.reject(new ApiError(503)) })
+  await screen.findByRole('button', {name:'Retry session check'})
+  expect(content.closest('[inert]')).toBeNull()
+  currentAccount.mockRejectedValueOnce(new ApiError(503))
+  await act(async () => { announceSessionChange() })
+  expect(content.closest('[inert]')).toHaveClass('hidden')
+})

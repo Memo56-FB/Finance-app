@@ -50,7 +50,7 @@ it('distinguishes anonymous, guest, failed and isolated account lookups', async 
   fetch.mockRejectedValueOnce(new Error('network'))
   expect(await getAccess()).toEqual({ kind: 'unavailable' })
   fetch.mockResolvedValueOnce(Response.json({ username: 'first' })).mockResolvedValueOnce(Response.json({ username: 'second' }))
-  expect(await Promise.all([getAccess(),getAccess()])).toEqual([{kind:'account',username:'first'},{kind:'account',username:'second'}])
+  expect(await Promise.all([getAccess(),getAccess()])).toEqual([{kind:'account',username:'first',sessionTag:expect.any(String)},{kind:'account',username:'second',sessionTag:expect.any(String)}])
   fetch.mockResolvedValueOnce(Response.json({ password: 'not an identity' }))
   expect(await getAccess()).toEqual({ kind: 'unavailable' })
 })

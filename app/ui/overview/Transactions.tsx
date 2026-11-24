@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import clsx from 'clsx'
 import React from 'react'
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { cents, type MoneyValue } from '@/lib/finance/money'
 import type { Transaction } from '@/lib/finance/types'
 

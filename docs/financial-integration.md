@@ -29,30 +29,40 @@ does not change them. Blank month selection requests the server's current month;
 explicit selection uses `YYYY-MM`. Reporting cuts, due dates and business dates
 come from Spring. Deletion/payment timestamps are UTC instants.
 
-Queries are scoped to account and filters. SSR uses a fresh QueryClient per request
-and direct no-store backend requests. The browser hydrates those results, refreshes
-after confirmed writes, and clears/cancels
-private data when leaving a session. No cache persists in localStorage.
+Queries are scoped to account and filters. The initial authorized HTML/RSC
+entry uses a fresh QueryClient and streams its in-flight no-store reads. The
+browser shares those requests with the destination views. Its memory cache
+retains the default view keys through idle periods. Historical months, search
+results and additional pages can expire while inactive.
 
-Financial SSR reads are 6 for Overview, 2 for Transactions, 1 for Categories,
-1 for Budgets, 1 for Pots and 2 for Recurring Bills. Session verification is
-separate. The transaction category filter is hydrated on entry. Budget and
-recurring editors load categories on first open and reuse a fresh cached list.
-The two account searches publish settled text after 300 ms, with obsolete
-GETs cancellable through the gateway. Saving the reporting-cut preference
-uses the confirmed settings response and refreshes just the summary.
+Overview starts the categories lookup and shares the default transaction page
+with Transactions. Budget and recurring editors reuse any cached categories,
+or fetch them on first open. Searches publish settled text after 300 ms.
+Navigation updates the URL, active menu link and heading while the destination
+data loads or refreshes. A failed read keeps any available data for the same
+query and offers a read-only retry of that query.
 
-Account views verify the session on entry, on a session-change notification and after a financial 401.
-Confirmed login, logout and guest transitions notify other tabs without sharing
-credentials or account identifiers. A changed identity discards the previous
-draft and cache. A temporary identity-check failure offers a retry. During login
-confirmation this retry checks the session only. A confirmed expiration makes a
-new explicit login available.
+Internal transitions share a background identity check. A routine temporary
+failure keeps the previously verified copy available for reading. Confirming
+identity enables reads and saves again. A session change or 401 conceals private
+content until checked. Account changes discard the old cache, drafts and
+notices. The finance gateway binds browser requests to the verified session
+cookie while Spring continues authorizing each request.
 
-An expired session returns to the authorized guest or login view. A 403 permits an explicit retry with fresh CSRF. A 400 marks known
-fields; 404 requests a reload; 409 preserves the form and explains the conflict.
-Uncertain network outcomes require reading server state before deciding to repeat.
-Deposits and withdrawals are not idempotent. No mutation is automatically replayed.
+Valid submissions enter a shared pending state and release the editor. A
+category rename, a budget color change, or a pot name or color change can appear
+provisionally. Spring confirms all financial values. Confirmed operations
+invalidate the affected finance queries. Reporting-cut changes refresh only
+the active period summary. Pot deletion exposes the original Spring undo
+deadline even after navigating away.
+
+A rejected save offers its draft and field errors for review. A 403 can be
+retried explicitly with fresh CSRF. A missing record or conflict can be
+reviewed against current data. After a lost response, Verify issues only GETs.
+Deposits and withdrawals process each request as a new movement. Refreshing or
+reopening the tab reads confirmed state without resending a pending operation.
+Pending operations and recovered drafts live in the open tab.
+
 Empty account data never falls back to guest fixtures. Guest examples remain local
 and read-only without a permanent demonstration banner.
 

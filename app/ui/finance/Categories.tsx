@@ -4,18 +4,17 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { ControlledLabel, useI18n } from '@/lib/i18n/client'
 import { useFinance } from '@/lib/finance/AccountScope'
-import { useState } from 'react'
 import { saveRecord } from '@/lib/finance/services'
 import type { Category } from '@/lib/finance/types'
-import { FormInput, SaveForm, useSave } from './common'
+import { FormInput, SaveForm, useDraftField, useSave } from './common'
 import { nameValid, useFieldError, validate } from './form-fields'
 import { DeleteForm } from './DeleteForm'
-import { Empty, NewDialog, PageHeader, panel, QueryMessage, RowActions } from './common'
+import { Empty, NewDialog, PageHeader, panel, QueryMessage, RowActions, usePendingEdit } from './common'
 
 export function Categories() {
   const {queries}=useFinance(),query=useQuery(queries.categories()),{t}=useI18n()
   return <><PageHeader title="Categories"><NewDialog title="Add category">{<CategoryForm/>}</NewDialog></PageHeader><section className={panel}><QueryMessage query={query}/>
-    {query.data && (query.data.items.length ? <table className="w-full text-left text-preset-4"><thead className="border-b border-grey-100 text-grey-500"><tr><th className="py-150">{t('Name')}</th><th className="w-12"><span className="sr-only">{t('Actions')}</span></th></tr></thead><tbody>{query.data.items.map(category=><tr key={category.id} className="border-b border-grey-100 last:border-none"><td className="py-200 break-words [overflow-wrap:anywhere]">{category.name}</td><td><RowActions name={category.name} recordId={category.id} edit={<CategoryForm record={category}/>} remove={<DeleteForm resource="categories" id={category.id}/>}/></td></tr>)}</tbody></table> : <Empty label="No categories yet."/>)}
+    {query.data && (query.data.items.length ? <table className="w-full text-left text-preset-4"><thead className="border-b border-grey-100 text-grey-500"><tr><th className="py-150">{t('Name')}</th><th className="w-12"><span className="sr-only">{t('Actions')}</span></th></tr></thead><tbody>{query.data.items.map(category=><tr key={category.id} className="border-b border-grey-100 last:border-none"><td className="py-200 break-words [overflow-wrap:anywhere]"><CategoryName category={category}/></td><td><RowActions name={category.name} recordId={category.id} edit={<CategoryForm record={category}/>} remove={<DeleteForm resource="categories" id={category.id} name={category.name}/>}/></td></tr>)}</tbody></table> : <Empty label="No categories yet."/>)}
   </section></>
 }
 export function GuestCategories() {
@@ -24,8 +23,18 @@ export function GuestCategories() {
 }
 
 function CategoryForm({ record }: { record?: Category }) {
-  const [name, setName] = useState(record?.name ?? '')
-  const save = useSave(async () => { validate({ name: nameValid(name) }); return saveRecord('categories', { name: name.trim() }, record?.id) })
+  const [name, setName] = useDraftField('name', record?.name ?? '')
+  const save = useSave(() => { validate({ name: nameValid(name) }); return signal => saveRecord('categories', { name: name.trim() }, record?.id, signal) }, {
+    resource: 'categories', id: record?.id, label: record ? 'Edit category' : 'Add category',
+    name: name.trim(), draft: { name }, editor: <CategoryForm record={record} />,
+    optimistic: record ? { name: name.trim() } : undefined,
+  })
   const error = useFieldError(save.error)
   return <SaveForm save={save}><FormInput label="Name" value={name} onChange={event => setName(event.target.value)} maxLength={100} error={error('name')} required /></SaveForm>
+}
+
+function CategoryName({ category }: { category: Category }) {
+  const pending = usePendingEdit('categories', category.id)
+  const { t } = useI18n()
+  return <>{pending?.name ?? category.name}{pending && <small className="ml-2">{t('Pending confirmation')}</small>}</>
 }

@@ -1,27 +1,26 @@
 'use client'
 import { CalendarField } from './CalendarField'
 
-import { useState } from 'react'
 import { validId } from '@/lib/api/finance-json'
 import { calendarDate } from '@/lib/finance/contracts'
 import { validAmount } from '@/lib/finance/money'
 import { payRecurring, saveRecord } from '@/lib/finance/services'
 import type { RecurringPayment } from '@/lib/finance/types'
 import { Money, useI18n } from '@/lib/i18n/client'
-import { FormInput, FormSelect, SaveForm, useSave } from './common'
+import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { AmountHelp, CategoryField, nameValid, useFieldError, validate } from './form-fields'
 
 export function RecurringForm({ record }: { record?: RecurringPayment }) {
   const { t, recurringFrequency } = useI18n()
-  const [name, setName] = useState(record?.name ?? '')
-  const [categoryId, setCategory] = useState(record?.categoryId ?? '')
-  const [amount, setAmount] = useState(record?.amount ?? '')
-  const [type, setType] = useState<string>(record?.type ?? 'SUBSCRIPTION')
-  const [date, setDate] = useState(record?.firstDueDate ?? '')
-  const [count, setCount] = useState(String(record?.totalInstallments ?? ''))
-  const [interval, setInterval] = useState(String(record?.intervalMonths ?? 1))
+  const [name, setName] = useDraftField('name', record?.name ?? '')
+  const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? '')
+  const [amount, setAmount] = useDraftField('amount', record?.amount ?? '')
+  const [type, setType] = useDraftField('type', record?.type ?? 'SUBSCRIPTION')
+  const [date, setDate] = useDraftField('firstDueDate', record?.firstDueDate ?? '')
+  const [count, setCount] = useDraftField('totalInstallments', String(record?.totalInstallments ?? ''))
+  const [interval, setInterval] = useDraftField('intervalMonths', String(record?.intervalMonths ?? 1))
   const installment = type === 'INSTALLMENT'
-  const save = useSave(async () => {
+  const save = useSave(() => {
     validate({
       name: nameValid(name),
       categoryId: validId(categoryId),
@@ -30,12 +29,16 @@ export function RecurringForm({ record }: { record?: RecurringPayment }) {
       totalInstallments: !installment || /^[1-9]\d*$/.test(count) && BigInt(count) <= 2147483647n,
       intervalMonths: installment || /^(?:[1-9]|1[0-2])$/.test(interval),
     })
-    return saveRecord('recurring-payments', {
+    return signal => saveRecord('recurring-payments', {
       name: name.trim(), categoryId, amount, type,
       firstDueDate: date,
       intervalMonths: installment ? 1 : interval,
       ...(installment ? { totalInstallments: count } : {}),
-    }, record?.id)
+    }, record?.id, signal)
+  }, {
+    resource: 'recurring-payments', id: record?.id, label: record ? 'Edit recurring payment' : 'Add recurring payment',
+    name: name.trim(), draft: { name, categoryId, amount, type, firstDueDate: date, totalInstallments: count, intervalMonths: interval },
+    editor: <RecurringForm record={record} />,
   })
   const error = useFieldError(save.error)
   return <SaveForm save={save}>
@@ -56,6 +59,8 @@ export function RecurringForm({ record }: { record?: RecurringPayment }) {
 }
 
 export function PaymentForm({ record }: { record: RecurringPayment }) {
-  const { t } = useI18n(), save = useSave(() => payRecurring(record.id, record.month))
+  const { t } = useI18n(), save = useSave(() => signal => payRecurring(record.id, record.month, signal), {
+    resource: 'recurring-payments', id: record.id, label: 'Mark paid', name: record.name, editor: <PaymentForm record={record} />,
+  })
   return <SaveForm save={save} submitLabel="Confirm payment"><p className="text-preset-4">{t('This payment will be recorded for the selected month.')}</p><p>{record.month}: <Money value={record.amount} /></p></SaveForm>
 }

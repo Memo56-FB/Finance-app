@@ -14,8 +14,8 @@ export function announceSessionChange() {
   channel.close()
 }
 
-export async function currentAccount(signal?: AbortSignal): Promise<Account> {
-  const { data } = await api.get('me', { signal })
+export async function currentAccount(signal?: AbortSignal, sessionTag?: string): Promise<Account> {
+  const { data } = await api.get('me', { signal, headers: sessionTag ? { 'x-finance-session': sessionTag } : undefined })
   if (typeof data?.username !== 'string' || !data.username) throw new ApiError(502)
   return { username: data.username }
 }

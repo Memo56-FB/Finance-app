@@ -90,10 +90,11 @@ selector on the right; the icon has a localized native tooltip and accessible na
 with no permanent demo-data banner. Logout calls Spring; guest exit works with the API offline.
 Both preserve the independent language preference.
 
-The root redirects temporarily according to access. Each finance page checks access
-on the server, including RSC requests. Return URLs are limited to known finance
-routes and retain filters. Public forms retain server-rendered HTML; JavaScript
-is needed to submit. Finance is noindex, nofollow; public metadata remains
+The root redirects according to access. Direct finance entries, reloads and RSC
+requests verify the session on the server. In an open finance tab, the six
+destinations follow browser history and open while identity and financial reads
+run in the background. Return URLs are limited to known finance routes and retain
+filters. Public forms retain server-rendered HTML and use JavaScript for submission. Finance is noindex, nofollow; public metadata remains
 available. This does not promise search indexing of protected pages.
 
 Before public deployment, configure login/registration rate limits at the ingress
@@ -124,8 +125,10 @@ production database.
 All six finance pages use the existing Spring session. Browser requests go through
 `/api/finance/*`, a closed same-origin route list; server rendering reads Spring
 directly with `no-store`. Axios shares one CSRF interceptor for POST, PUT and DELETE.
-Financial errors preserve forms; writes have no automatic retries or offline queue.
-After a lost response, reload server data before deciding whether to submit again.
+Validated saves close their editor and show a status across Finance. Rejected
+saves offer the original draft for correction. For a lost response, Verify
+refreshes financial reads so the user can review the server state. Writes have
+no automatic retries or offline queue.
 
 The backend must include the optional transaction `categoryId` filter, applied before
 pagination and counting. Deploy that compatible extension before this frontend.
@@ -139,8 +142,9 @@ normalized ratios while labels keep the exact values. TypeScript targets ES2020
 for native bigint arithmetic. Display remains `$` with no assigned currency.
 
 Queries use account-specific keys, request-local SSR caches and no persistent
-browser cache. Account views verify the session on entry and reuse financial
-data until a confirmed change invalidates it.
+browser cache. Default views retain data in memory until the session ends.
+Overview prefetches categories and shares the first unfiltered transactions
+page with Transactions. Other filters and periods load on demand.
 Changing the reporting cut updates its settings from the response and requests
 only the period summary. Transaction and recurring searches wait 300 ms for
 typing to settle. Budget history loads only for cards with confirmed spending.

@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { handleFinance } from './finance-api.mjs'
 const sessions = new Map()
+const heldReads = new Map()
 const users = new Map([['first', 'test-password-123'], ['second', 'test-password-123']])
 const server = createServer(async (req,res) => {
   const action = req.url
@@ -14,6 +15,17 @@ const server = createServer(async (req,res) => {
   function cookie(value, expired = false) { res.setHeader('Set-Cookie', 'JSESSIONID=' + value + '; Path=/; HttpOnly; SameSite=Lax' + (expired ? '; Max-Age=0' : '')) }
   if (action === '/__health') return send(200,{ok:true})
   if (action === '/__expire') { sessions.delete(id); return send(204) }
+  if (session?.username && action === '/__hold-categories') {
+    const held = Promise.withResolvers()
+    heldReads.set(id, held)
+    return send(204)
+  }
+  if (session?.username && action === '/__release-categories') {
+    heldReads.get(id)?.resolve()
+    heldReads.delete(id)
+    return send(204)
+  }
+  if (req.method === 'GET' && action === '/api/categories') await heldReads.get(id)?.promise
   if (id === 'unavailable') return send(503)
   if (action === '/api/auth/csrf' && req.method === 'GET') {
     if (!session) {

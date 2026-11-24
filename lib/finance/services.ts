@@ -22,15 +22,15 @@ export function financialServices(read: ReadFinance = readFinance) {
   }
 }
 export const finance = financialServices()
-export async function saveRecord<R extends decode.Resource>(resource: R, body: unknown, id?: string) {
-  return decode.financialRow[resource](await financeRequest({ url: resource+(id ? '/'+id : ''), method: id ? 'PUT' : 'POST', data: body }))
+export async function saveRecord<R extends decode.Resource>(resource: R, body: unknown, id?: string, signal?: AbortSignal) {
+  return decode.financialRow[resource](await financeRequest({ url: resource+(id ? '/'+id : ''), method: id ? 'PUT' : 'POST', data: body, signal }))
 }
 export async function getRecord<R extends decode.Resource>(resource: R, id: string) { return decode.financialRow[resource](await readFinance(resource+'/'+id)) }
-export async function deleteRecord(resource: decode.Resource, id: string) {
-  const result=await financeResponse({ url: resource+'/'+id, method: 'DELETE' })
+export async function deleteRecord(resource: decode.Resource, id: string, signal?: AbortSignal) {
+  const result=await financeResponse({ url: resource+'/'+id, method: 'DELETE', signal })
   return resource === 'savings-pots' ? {...decode.deletion(result.data),serverTime:typeof result.headers.date === 'string' ? result.headers.date : undefined} : undefined
 }
-export async function movePot(id: string, action: 'deposits' | 'withdrawals', amount: string) { return decode.financialRow['savings-pots'](await financeRequest({url:`savings-pots/${id}/${action}`,method:'POST',data:{amount}})) }
-export async function restorePot(id: string) { return decode.financialRow['savings-pots'](await financeRequest({url:`savings-pots/${id}/restore`,method:'POST'})) }
-export async function payRecurring(id: string, month: string) { return decode.recorded(await financeRequest({url:`recurring-payments/${id}/payments/${month}`,method:'PUT'})) }
-export async function saveSettings(body: unknown) { return decode.settings(await financeRequest({url:'financial-summary/settings',method:'PUT',data:body})) }
+export async function movePot(id: string, action: 'deposits' | 'withdrawals', amount: string, signal?: AbortSignal) { return decode.financialRow['savings-pots'](await financeRequest({url:`savings-pots/${id}/${action}`,method:'POST',data:{amount},signal})) }
+export async function restorePot(id: string, signal?: AbortSignal) { return decode.financialRow['savings-pots'](await financeRequest({url:`savings-pots/${id}/restore`,method:'POST',signal})) }
+export async function payRecurring(id: string, month: string, signal?: AbortSignal) { return decode.recorded(await financeRequest({url:`recurring-payments/${id}/payments/${month}`,method:'PUT',signal})) }
+export async function saveSettings(body: unknown, signal?: AbortSignal) { return decode.settings(await financeRequest({url:'financial-summary/settings',method:'PUT',data:body,signal})) }

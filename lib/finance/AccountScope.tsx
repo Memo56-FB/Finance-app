@@ -1,41 +1,49 @@
 'use client'
 
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { ApiError } from '@/lib/api/client'
+import { ApiError, bindFinanceSession } from '@/lib/api/client'
 import { currentAccount, leavingSession, sessionChannel, useAccessNavigation } from '@/lib/auth/client'
 import { Button } from '@/components/ui/button'
 import { Money, Text } from '@/lib/i18n/client'
 import { financeKey, financeQueries } from './queries'
 import type { BudgetWarning } from './types'
 
-type Phase = 'checking' | 'active' | 'unavailable' | 'leaving'
+type Phase = 'checking' | 'active' | 'read-only' | 'unavailable' | 'leaving'
 type Notice = { warnings: BudgetWarning[] }
 type AccountSession = {
   account: string
   phase: Phase
   canAct: () => boolean
+  concealed: boolean
+  operationSignal: () => AbortSignal | undefined
   whenVerified: () => Promise<boolean>
   retry: () => void
   notify: (notice: Notice) => void
 }
 const AccountContext = createContext<AccountSession | null>(null)
 
-export function AccountScope({ account, children }: { account: string; children: React.ReactNode }) {
+export function AccountScope({ account, sessionTag, children }: { account: string; sessionTag?: string; children: React.ReactNode }) {
   const client = useQueryClient()
   const navigate = useAccessNavigation()
   const [phase, setPhase] = useState<Phase>('checking')
   const access = useRef<Phase>('checking')
   const verification = useRef<ReturnType<typeof Promise.withResolvers<boolean>> | null>(null)
   const retryCheck = useRef<() => void>(() => {})
+  const operationController = useRef<AbortController | null>(null)
   const canAct = () => access.current === 'active'
+
+  useLayoutEffect(() => bindFinanceSession(sessionTag), [sessionTag])
+  const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
     const key = financeKey(account)
     const controller = new AbortController()
+    operationController.current = controller
     let checking = false
     let checkAgain = false
+    let mustHide = false
     let nextExpiryCheck = 0
 
     function stop() {
@@ -52,17 +60,26 @@ export function AccountScope({ account, children }: { account: string; children:
       setPhase('leaving')
     }
 
-    async function verify(initial = false) {
-      if (controller.signal.aborted || checking) return
+    async function verify(mode: 'initial' | 'routine' | 'sensitive') {
+      if (controller.signal.aborted) return
+      if (mode === 'sensitive') {
+        mustHide = true
+        toast.dismiss()
+        setHidden(true)
+        access.current = 'checking'
+        setPhase('checking')
+        verification.current ??= Promise.withResolvers<boolean>()
+        void client.cancelQueries({ queryKey: key })
+        if (checking) checkAgain = true
+      }
+      if (checking) return
+      const canKeepCache = mode === 'routine' && !mustHide
       checking = true
-      access.current = 'checking'
-      if (!initial) setPhase('checking')
       verification.current ??= Promise.withResolvers<boolean>()
       try {
-        await client.cancelQueries({ queryKey: key })
         do {
           checkAgain = false
-          const identity = await currentAccount(controller.signal).catch(error => {
+          const identity = await currentAccount(controller.signal, sessionTag).catch(error => {
             if (error instanceof ApiError && error.status === 401) return null
             throw error
           })
@@ -75,15 +92,20 @@ export function AccountScope({ account, children }: { account: string; children:
             return
           }
         } while (checkAgain)
+        mustHide = false
+        setHidden(false)
         access.current = 'active'
         setPhase('active')
         verification.current?.resolve(true)
         verification.current = null
       } catch {
         if (!controller.signal.aborted) {
-          access.current = 'unavailable'
-          setPhase('unavailable')
-          if (checkAgain) queueMicrotask(() => void verify())
+          if (checkAgain) queueMicrotask(() => void verify('sensitive'))
+          else {
+            access.current = canKeepCache && !mustHide ? 'read-only' : 'unavailable'
+            if (access.current === 'unavailable') setHidden(true)
+            setPhase(access.current)
+          }
         }
       } finally {
         checking = false
@@ -94,32 +116,35 @@ export function AccountScope({ account, children }: { account: string; children:
       const now = performance.now()
       if (now < nextExpiryCheck) return
       nextExpiryCheck = now + 60_000
-      void verify()
+      void verify('sensitive')
     }
+    const navigation = () => { if (access.current === 'active') void verify('routine') }
     const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel(sessionChannel) : null
     if (channel) channel.onmessage = event => {
       if (event.data !== 'changed') return
       nextExpiryCheck = 0
-      if (checking) checkAgain = true
-      else void verify()
+      void verify('sensitive')
     }
 
-    retryCheck.current = () => void verify()
+    retryCheck.current = () => void verify(access.current === 'read-only' ? 'routine' : 'sensitive')
+    window.addEventListener('finance-navigation', navigation)
     window.addEventListener(leavingSession, leave)
     window.addEventListener('finance-session-expired', expired)
-    void verify(true)
+    void verify('initial')
     return () => {
       stop()
       channel?.close()
+      window.removeEventListener('finance-navigation', navigation)
       window.removeEventListener(leavingSession, leave)
       window.removeEventListener('finance-session-expired', expired)
     }
-  }, [account, client, navigate])
+  }, [account, sessionTag, client, navigate])
 
   if (phase === 'leaving') return null
   return <AccountContext.Provider value={{
-    account, phase, canAct,
-    whenVerified: () => verification.current?.promise ?? Promise.resolve(canAct()),
+    account, phase, canAct, concealed: hidden,
+    operationSignal: () => operationController.current?.signal,
+    whenVerified: () => canAct() ? Promise.resolve(true) : (verification.current?.promise ?? Promise.resolve(false)),
     retry: () => retryCheck.current(),
     notify: ({ warnings }) => {
       if (!canAct()) return
@@ -130,19 +155,21 @@ export function AccountScope({ account, children }: { account: string; children:
       )}</div>, { type: warnings.length ? 'warning' : 'success' })
     },
   }}>
-    {phase === 'unavailable' && <SessionRetry />}
-    <div className="contents" inert={phase !== 'active'}>{children}</div>
+    <SessionRetry />
+    <div className={hidden ? 'hidden' : 'contents'} inert={phase === 'checking' || hidden}>{children}</div>
   </AccountContext.Provider>
 }
 
 export function SessionRetry() {
   const session = useContext(AccountContext)
-  if (session?.phase !== 'unavailable') return null
+  if (session?.phase !== 'unavailable' && session?.phase !== 'read-only') return null
   return <div className="grid gap-100">
     <p role="alert"><Text id="Authentication is unavailable. Please retry."/></p>
     <Button type="button" variant="secondary" onClick={session.retry}><Text id="Retry session check"/></Button>
   </div>
 }
+
+export function useAccountSession() { return useContext(AccountContext) }
 
 export function useFinance() {
   const context = useContext(AccountContext)

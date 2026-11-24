@@ -78,7 +78,7 @@ const TransactionsPage = () => {
 
   return (
     <>
-      <h1 className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>
+      <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>
       <section className='bg-white mt-400 px-250 py-300 rounded-xl grid gap-300'>
         <div className='flex gap-300 items-center justify-between mb-300'>
           <InputSearch aria-label={t("Search transactions")} type='text' placeholder={t("Search transaction")} value={query} onChange={handleQueryChange} />
@@ -126,7 +126,7 @@ const TransactionsPage = () => {
 
 export default function Page() {
   return (
-    <Suspense fallback={<h1 className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>}>
+    <Suspense fallback={<h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>}>
       <TransactionsPage />
     </Suspense>
   )

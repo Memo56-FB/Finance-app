@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/Progress"
 import { Separator } from "@/components/ui/separator"
 import { EditDeleteDropdown } from "./EditDeleteDropdown"
 import { Fragment } from 'react'
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { TransactionsCardTable } from '../transactions/TransactionsCardTable'
 
 import type { Budget } from './data'

@@ -1,5 +1,5 @@
 'use client'
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { endOfMonth, format, parseISO } from 'date-fns'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -10,25 +10,35 @@ import { RecurringBills } from '@/app/ui/overview/RecurringBills'
 import { SummaryCard, SummaryCardCurrentBalance } from '@/app/ui/overview/SummaryCard'
 import { useFinance } from '@/lib/finance/AccountScope'
 import { CalendarDate, Money, useI18n } from '@/lib/i18n/client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { saveSettings } from '@/lib/finance/services'
 import type { CutSettings } from '@/lib/finance/types'
-import { FormInput, FormSelect, SaveForm, useSave } from './common'
+import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { useFieldError, validate } from './form-fields'
 import { CalendarField } from './CalendarField'
 import { NewDialog, PageHeader, panel, QueryMessage } from './common'
 import type { Label } from './common'
+import { financeQueries, recentTransactionFilters } from '@/lib/finance/queries'
 
 function SectionLink({title,href}:{title:Label;href:string}) { const {t}=useI18n();return <header className="flex justify-between gap-100"><h2 className="text-preset-2">{t(title)}</h2><Button variant="tertiary" asChild><Link href={href}>{t('See Details')}</Link></Button></header> }
 export function Overview() {
-  const {queries, refresh} = useFinance()
+  const { account, phase, queries, refresh } = useFinance()
+  const client = useQueryClient()
+  useEffect(() => {
+    if (phase !== 'active') return
+    const options = financeQueries(account)
+    const categories = options.categories()
+    const transactions = options.transactions(recentTransactionFilters)
+    if (!client.getQueryState(categories.queryKey)) void client.prefetchQuery(categories)
+    if (!client.getQueryState(transactions.queryKey)) void client.prefetchQuery(transactions)
+  }, [account, client, phase])
   const {t, language} = useI18n()
   const [selectedMonth, setSelectedMonth] = useState('')
   const month = selectedMonth || undefined
   const summary = useQuery(queries.summary(month))
   const settings = useQuery(queries.settings())
   const pots = useQuery(queries.pots(month))
-  const transactions = useQuery(queries.transactions({sort:'newest', size:4, page:0, month}))
+  const transactions = useQuery(queries.transactions({ ...recentTransactionFilters, month }))
   const budgets = useQuery(queries.budgets(month))
   const recurring = useQuery(queries.paymentSummary(month))
   const start = month ? month + '-01' : summary.data?.periodStart
@@ -72,15 +82,16 @@ function CutForm({ record }: { record: CutSettings }) {
   const { t } = useI18n()
   const { queries } = useFinance()
   const client = useQueryClient()
-  const [frequency, setFrequency] = useState<string>(record.frequency)
-  const [day, setDay] = useState(String(record.startDay))
-  const save = useSave(async () => {
+  const [frequency, setFrequency] = useDraftField('frequency', record.frequency)
+  const [day, setDay] = useDraftField('startDay', String(record.startDay))
+  const save = useSave(() => {
     const startDay = Number(day)
     validate({ startDay: /^\d+$/.test(day) && startDay >= 1 && startDay <= 31 })
-    return saveSettings({ frequency, startDay })
+    return signal => saveSettings({ frequency, startDay }, signal)
   }, {
+    resource: 'settings', id: 'settings', label: 'Configure period',
+    draft: { frequency, startDay: day }, editor: <CutForm record={record} />,
     onConfirmed: settings => client.setQueryData(queries.settings().queryKey, settings),
-    refreshAfterSave: () => client.invalidateQueries({ queryKey: queries.summary().queryKey, exact: true }),
   })
   const error = useFieldError(save.error)
   return <SaveForm save={save}>

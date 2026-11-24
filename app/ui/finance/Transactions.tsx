@@ -1,6 +1,6 @@
 'use client'
 import { CalendarField } from './CalendarField'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -18,7 +18,7 @@ import { calendarDate } from '@/lib/finance/contracts'
 import { categoryOptions } from '@/lib/finance/categories'
 import { validAmount } from '@/lib/finance/money'
 import { saveRecord } from '@/lib/finance/services'
-import { FormInput, FormSelect, SaveForm, useSave } from './common'
+import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { AmountHelp, CategoryField, nameValid, useFieldError, validate } from './form-fields'
 import { DeleteForm } from './DeleteForm'
 import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
@@ -48,8 +48,8 @@ export function useFinancialURL() {
 export function useFinancialSearch() {
   const { params, update } = useFinancialURL()
   const urlQuery = params.get('query') ?? ''
-  const [draft, setDraft] = useState({ source: urlQuery, text: urlQuery })
-  if (draft.source !== urlQuery) setDraft({ source: urlQuery, text: urlQuery })
+  const [draft, setDraft] = useState<{ source: string; text: string } | null>(null)
+  if (draft && draft.source !== urlQuery) setDraft(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const pending = useRef<string | undefined>(undefined)
   const composing = useRef(false)
@@ -62,8 +62,7 @@ export function useFinancialSearch() {
     }
     function restore() {
       cancelSearch()
-      const text = new URLSearchParams(window.location.search).get('query') ?? ''
-      setDraft({ source: text, text })
+      startTransition(() => setDraft(null))
     }
     function followLink(event: MouseEvent) {
       if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
@@ -89,7 +88,10 @@ export function useFinancialSearch() {
     const source = window.location.href
     timer.current = setTimeout(() => {
       pending.current = undefined
-      if (window.location.href === source) update('query', text)
+      startTransition(() => {
+        if (window.location.href === source) update('query', text)
+        setDraft(current => current?.text === text ? null : current)
+      })
     }, 300)
   }
 
@@ -99,10 +101,13 @@ export function useFinancialSearch() {
       clearTimeout(timer.current)
       const search = composing.current ? undefined : pending.current
       if (!composing.current) pending.current = undefined
-      update(key, value, search, key === 'page')
+      startTransition(() => {
+        update(key, value, search, key === 'page')
+        if (search !== undefined) setDraft(current => current?.text === search ? null : current)
+      })
     },
     input: {
-      value: draft.text,
+      value: draft?.text ?? urlQuery,
       onChange: (event: React.ChangeEvent<HTMLInputElement>) => enter(event.target.value),
       onCompositionStart: () => {
         composing.current = true
@@ -170,7 +175,7 @@ export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Tr
       <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-grey-500 break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
       <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-grey-500 md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
       <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p></div>
-      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id}/>}/></div>
+      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id} name={row.name} linked={row.sourceType}/>}/></div>
     </article>)}</div>
   </div>
 }
@@ -184,24 +189,28 @@ export function Transactions() {
 function TransactionForm({ record }: { record?: Transaction }) {
   const { t } = useI18n()
   const nullable = record?.sourceType === 'POT'
-  const [name, setName] = useState(record?.name ?? '')
-  const [categoryId, setCategory] = useState(record?.categoryId ?? (nullable ? 'none' : ''))
-  const [date, setDate] = useState(() => record?.transactionDate ?? format(new Date(), 'yyyy-MM-dd'))
-  const [amount, setAmount] = useState(record?.amount.replace(/^-/, '') ?? '')
-  const [sign, setSign] = useState(record?.amount.startsWith('-') || !record ? 'expense' : 'income')
-  const save = useSave(async () => {
+  const [name, setName] = useDraftField('name', record?.name ?? '')
+  const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? (nullable ? 'none' : ''))
+  const [date, setDate] = useDraftField('transactionDate', () => record?.transactionDate ?? format(new Date(), 'yyyy-MM-dd'))
+  const [amount, setAmount] = useDraftField('amount', record?.amount.replace(/^-/, '') ?? '')
+  const [sign, setSign] = useDraftField('sign', record?.amount.startsWith('-') || !record ? 'expense' : 'income')
+  const save = useSave(() => {
     validate({
       name: nameValid(name),
       categoryId: validId(categoryId) || nullable && categoryId === 'none',
       transactionDate: calendarDate(date),
       amount: validAmount(amount),
     })
-    return saveRecord('transactions', {
+    return signal => saveRecord('transactions', {
       name: name.trim(),
       categoryId: categoryId === 'none' ? null : categoryId,
       transactionDate: date,
       amount: (sign === 'expense' ? '-' : '') + amount,
-    }, record?.id)
+    }, record?.id, signal)
+  }, {
+    resource: 'transactions', id: record?.id, linked: record?.sourceType ?? 'MANUAL',
+    label: record ? 'Edit transaction' : 'Add transaction', name: name.trim(),
+    draft: { name, categoryId, transactionDate: date, amount, sign }, editor: <TransactionForm record={record} />,
   })
   const error = useFieldError(save.error)
   return <SaveForm save={save}>

@@ -5,7 +5,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { BudgetChart } from "@/app/ui/BudgetChart"
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { budgets } from '../budgets/data'
 import type { Budget } from '@/lib/finance/types'
 import { safeColor } from '@/lib/finance/colors'

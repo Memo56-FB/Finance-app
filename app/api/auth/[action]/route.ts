@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { matchesSession } from '@/lib/auth/session-tag'
 import { bodyText } from '@/lib/api/request'
 import { appOrigin, upstream } from '@/lib/api/upstream'
 
@@ -29,6 +30,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
     if (action === 'me' && request.cookies.get('finance-guest')?.value === '1') return reply(401)
     const headers = new Headers()
     const session = request.cookies.get('JSESSIONID')?.value
+    if (action === 'me' && !matchesSession(request, session)) return reply(401)
     if (session) headers.set('Cookie', 'JSESSIONID=' + encodeURIComponent(session))
     let body: string | undefined
     let remember = false

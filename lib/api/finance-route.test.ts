@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET, POST, PUT, DELETE } from '@/app/api/finance/[...path]/route'
+import { sessionTag } from '@/lib/auth/session-tag'
 import { financePath } from './finance-path'
 
 afterEach(() => vi.unstubAllGlobals())
-function request(path: string, method = 'GET', options: { cookie?: string; origin?: string; token?: string; body?: string; signal?: AbortSignal } = {}) {
+function request(path: string, method = 'GET', options: { cookie?: string; origin?: string; token?: string; tag?: string; body?: string; signal?: AbortSignal } = {}) {
   const headers: Record<string, string> = { Cookie: options.cookie ?? 'JSESSIONID=test', Origin: options.origin ?? 'http://localhost:3000', 'Content-Type': 'application/json' }
+  if (options.tag) headers['x-finance-session'] = options.tag
   if (options.token) headers['X-CSRF-TOKEN'] = options.token
   return new NextRequest('http://localhost:3000/api/finance/' + path, { method, headers, signal: options.signal, ...(options.body ? { body: options.body } : {}) })
 }
@@ -58,6 +60,14 @@ describe('closed finance forwarding', () => {
     expect((await GET(request('categories','GET',{cookie:'JSESSIONID=test; finance-guest=1'}),context('categories'))).status).toBe(401)
     expect((await POST(request('categories','POST',{token:'t',origin:'https://evil.test'}),context('categories'))).status).toBe(403)
     expect((await DELETE(request('categories/1','DELETE'),context('categories/1'))).status).toBe(403)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it('rejects a read or write from a tab bound to a previous session', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const options = { cookie: 'JSESSIONID=other', tag: sessionTag('previous'), token: 'fresh', body: '{}' }
+    expect((await GET(request('categories', 'GET', { ...options, body: undefined }), context('categories'))).status).toBe(401)
+    expect((await POST(request('categories', 'POST', options), context('categories'))).status).toBe(401)
     expect(fetch).not.toHaveBeenCalled()
   })
   it('forwards exact raw JSON and session without unrelated cookies', async () => {

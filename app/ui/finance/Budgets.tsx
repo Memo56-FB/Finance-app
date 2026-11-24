@@ -1,6 +1,6 @@
 'use client'
 import { CalendarField } from './CalendarField'
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/Progress'
@@ -12,15 +12,14 @@ import { cents, moneyRatio } from '@/lib/finance/money'
 import { validMonth } from '@/lib/api/finance-path'
 import { Money, useI18n } from '@/lib/i18n/client'
 import type { Budget } from '@/lib/finance/types'
-import { useState } from 'react'
 import { validId } from '@/lib/api/finance-json'
 import { colorHex } from '@/lib/finance/colors'
 import { validAmount } from '@/lib/finance/money'
 import { saveRecord } from '@/lib/finance/services'
-import { SaveForm, useSave } from './common'
+import { SaveForm, useDraftField, useSave } from './common'
 import { AmountHelp, CategoryField, ColorField, useFieldError, validate } from './form-fields'
 import { DeleteForm } from './DeleteForm'
-import { Empty, financeDialog, FormInput, NewDialog, PageHeader, panel, QueryMessage, RowActions } from './common'
+import { Empty, financeDialog, FormInput, NewDialog, PageHeader, panel, QueryMessage, RowActions, usePendingEdit } from './common'
 import { TransactionRows, useFinancialURL } from './Transactions'
 
 export function MonthControl({effective,onMonthChange}:{effective?:string;onMonthChange?:(value:string)=>void}) {
@@ -56,9 +55,10 @@ function LatestExpenses({budget}:{budget:Budget}) {
 }
 function BudgetCard({budget}:{budget:Budget}) {
   const {t}=useI18n()
-  return <article className={`${panel} lg:col-start-2`}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2></div><RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={budget}/>} remove={<DeleteForm resource="budgets" id={budget.id}/>}/></header>
+  const pending = usePendingEdit('budgets', budget.id)
+  return <article className={`${panel} lg:col-start-2`}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:pending?.color ?? budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2>{pending && <small>{t('Pending confirmation')}</small>}</div><RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={budget}/>} remove={<DeleteForm resource="budgets" id={budget.id} name={budget.categoryName}/>}/></header>
     <div className="grid gap-200"><p className="text-preset-4 text-grey-500 break-all">{t('Maximum of')} <Money value={budget.spendingLimit}/></p><Progress aria-label={`${budget.categoryName} ${t('spending')}`} max={100} value={moneyRatio(budget.spent,budget.spendingLimit)} color={budget.color}/>
-    <dl className="grid grid-cols-2 gap-200"><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg" style={{backgroundColor:budget.color}}/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Spent')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.spent}/></dd></div></div><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg bg-beige-100"/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Free')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.available}/></dd></div></div></dl></div>
+    <dl className="grid grid-cols-2 gap-200"><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg" style={{backgroundColor:pending?.color ?? budget.color}}/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Spent')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.spent}/></dd></div></div><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg bg-beige-100"/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Free')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.available}/></dd></div></div></dl></div>
     {budget.limitReached && <p className="text-preset-5 text-red">{t('Budget limit reached.')} {t('Budget exceeded by')} <Money value={budget.exceededAmount}/></p>}<LatestExpenses budget={budget}/>
   </article>
 }
@@ -69,12 +69,16 @@ export function Budgets() {
 
 function BudgetForm({ record }: { record?: Budget }) {
   const { t } = useI18n()
-  const [categoryId, setCategory] = useState(record?.categoryId ?? '')
-  const [limit, setLimit] = useState(record?.spendingLimit ?? '')
-  const [color, setColor] = useState(record?.color ?? colorHex.green)
-  const save = useSave(async () => {
+  const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? '')
+  const [limit, setLimit] = useDraftField('spendingLimit', record?.spendingLimit ?? '')
+  const [color, setColor] = useDraftField('color', record?.color ?? colorHex.green)
+  const save = useSave(() => {
     validate({ categoryId: validId(categoryId), spendingLimit: validAmount(limit), color: /^#[\da-f]{6}$/i.test(color) })
-    return saveRecord('budgets', { categoryId, spendingLimit: limit, color }, record?.id)
+    return signal => saveRecord('budgets', { categoryId, spendingLimit: limit, color }, record?.id, signal)
+  }, {
+    resource: 'budgets', id: record?.id, label: record ? 'Edit' : 'Add Budget',
+    name: record?.categoryName, draft: { categoryId, spendingLimit: limit, color }, editor: <BudgetForm record={record} />,
+    optimistic: record && record.categoryId === categoryId && validAmount(limit) && cents(record.spendingLimit) === cents(limit) ? { color } : undefined,
   })
   const error = useFieldError(save.error)
   return <SaveForm save={save} submitLabel={record ? 'Save Changes' : 'Add Budget'}>

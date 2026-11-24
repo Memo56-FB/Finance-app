@@ -1,6 +1,6 @@
 'use client'
 
-import Link from "next/link"
+import Link from '@/app/ui/finance/FinanceLink'
 import clsx from "clsx"
 import { SidebarItemProps } from "@/types/SidebarItem"
 import { useSidebarStore } from "@/store/sidebarStore"

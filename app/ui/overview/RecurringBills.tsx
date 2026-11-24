@@ -2,7 +2,7 @@ import { ControlledLabel, Money, Text } from '@/lib/i18n/client'
 
 import { Button } from '@/components/ui/button'
 import React from 'react'
-import Link from 'next/link'
+import Link from '@/app/ui/finance/FinanceLink'
 import { recurringBills } from '../recurring-bills/list/data'
 import { calculateRecurringBillsSummary } from '../recurring-bills/list/utils'
 import type { PaymentSummary } from '@/lib/finance/types'

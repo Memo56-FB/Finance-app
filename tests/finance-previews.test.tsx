@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
+import { SaveOperations } from '@/app/ui/finance/common'
 import { PotMoneyForm } from '@/app/ui/finance/PotForms'
 import { makeQueryClient } from '@/lib/api/QueryProvider'
 import { ApiError } from '@/lib/api/client'
@@ -20,7 +21,7 @@ vi.mock('@/lib/auth/client', async importOriginal => ({
 const pot:Pot={id:'1',name:'Holiday',balance:'100.00',targetAmount:'200.00',color:'#123456'}
 async function preview(action:'deposits'|'withdrawals',record=pot) {
   const client=makeQueryClient()
-  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview"><PotMoneyForm record={record} action={action}/></AccountScope></PreferencesProvider></QueryClientProvider>)
+  const view = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="preview"><SaveOperations><PotMoneyForm record={record} action={action}/></SaveOperations></AccountScope></PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   return {...view,client}
 }
@@ -77,7 +78,7 @@ it('keeps reload for an uncertain result without resending the withdrawal',async
     await user.type(screen.getByLabelText('Amount to Withdraw'),'10')
     await user.click(screen.getByRole('button',{name:'Confirm Withdrawal'}))
     expect(await screen.findByRole('alert')).toHaveTextContent('The result is uncertain.')
-    await user.click(screen.getByRole('button',{name:'Reload data'}))
+    await user.click(screen.getByRole('button',{name:'Verify'}))
     expect(refresh).toHaveBeenCalledOnce()
     expect(move).toHaveBeenCalledOnce()
     expect(screen.getByLabelText('Amount to Withdraw')).toHaveValue('10')

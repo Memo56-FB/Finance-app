@@ -195,7 +195,7 @@ for (const language of ['en', 'es']) for (const width of [1280, 390, 320]) {
           if (width >= 768) await expect(page.getByRole('columnheader', { name: language === 'es' ? 'Nombre' : 'Name', exact: true })).toBeVisible()
         }
         if (route === '/finance/budgets' || route === '/finance/pots') {
-          const action = page.locator('main > header button')
+          const action = page.locator('main header').first().locator('button')
           await expect(action).toBeVisible()
           await action.click()
           await expect(page.getByRole('dialog')).toBeVisible()

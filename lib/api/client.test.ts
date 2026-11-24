@@ -44,3 +44,22 @@ it('shares CSRF across financial verbs, preserves raw numbers and maps financial
   api.defaults.adapter=async config => { throw new AxiosError('private','ERR_BAD_REQUEST',config,undefined,{data:{errors:[{field:'nonzeroAmount'},{field:'validInstallmentCount'},{field:'validInterval'},{field:'unknown'}]},status:400,statusText:'',headers:new AxiosHeaders(),config}) }
   await expect(financeRequest({url:'transactions'})).rejects.toMatchObject({status:400,fields:['amount','totalInstallments','intervalMonths']})
 })
+
+it('does not dispatch a financial write cancelled during CSRF preparation', async () => {
+  const prepared = Promise.withResolvers<void>()
+  const requested = Promise.withResolvers<void>()
+  const calls: string[] = []
+  api.defaults.adapter = async config => {
+    calls.push(config.url!)
+    requested.resolve()
+    await prepared.promise
+    return { data:{token:'different-session',headerName:'X-CSRF-TOKEN'}, status:200, statusText:'OK', headers:new AxiosHeaders(), config }
+  }
+  const cancellation = new AbortController()
+  const request = financeRequest({url:'categories', method:'POST', data:{name:'Private draft'}, signal:cancellation.signal})
+  await requested.promise
+  cancellation.abort()
+  prepared.resolve()
+  await expect(request).rejects.toBeInstanceOf(ApiError)
+  expect(calls).toEqual(['csrf'])
+})
