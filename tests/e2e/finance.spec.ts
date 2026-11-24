@@ -296,6 +296,16 @@ test('zero-spend budgets skip history and keep the exact chart label', async ({p
     await expect(page.locator('[data-chart]')).toContainText('$300.00')
   }
   await expect(page.getByText('No recent expenses.',{exact:true})).toHaveCount(3)
+  const cards = page.locator('article').filter({
+    has: page.getByRole('button', { name: /^Actions: (Paper|Ink|Pens)/ }),
+  })
+  const spending = page.locator('article').filter({ has: page.locator('[data-chart]') })
+  const first = (await cards.nth(0).boundingBox())!
+  const second = (await cards.nth(1).boundingBox())!
+  const summary = (await spending.boundingBox())!
+  expect(first.y).toBeCloseTo(summary.y)
+  expect(first.height).toBeLessThan(summary.height)
+  expect(second.y - (first.y + first.height)).toBeCloseTo(24)
   expect(histories).toBe(0)
   const expense = await (await write(context,'transactions','POST',`{"name":"Late preview","categoryId":${categoryIds[0]},"transactionDate":"2027-03-20","amount":-10}`)).json()
   await page.reload()

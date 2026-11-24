@@ -14,7 +14,7 @@ import type { Budget } from './data'
 export const BudgetsCard = ({ title, color, ofValue, spent, latest }: Budget) => {
   const { t, messages } = useI18n()
   return (
-    <article className="bg-white rounded-xl grid gap-250 px-250 py-300 md:p-400 lg:col-start-2">
+    <article className="bg-white rounded-xl grid gap-250 px-250 py-300 md:p-400">
       <header className="flex justify-between items-center">
         <div className="flex gap-200 items-center">
           <span className={`bg-${color} rounded-full h-4 w-4`} />

@@ -56,7 +56,7 @@ function LatestExpenses({budget}:{budget:Budget}) {
 function BudgetCard({budget}:{budget:Budget}) {
   const {t}=useI18n()
   const pending = usePendingEdit('budgets', budget.id)
-  return <article className={`${panel} lg:col-start-2`}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:pending?.color ?? budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2>{pending && <small>{t('Pending confirmation')}</small>}</div><RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={budget}/>} remove={<DeleteForm resource="budgets" id={budget.id} name={budget.categoryName}/>}/></header>
+  return <article className={panel}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:pending?.color ?? budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2>{pending && <small>{t('Pending confirmation')}</small>}</div><RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={budget}/>} remove={<DeleteForm resource="budgets" id={budget.id} name={budget.categoryName}/>}/></header>
     <div className="grid gap-200"><p className="text-preset-4 text-grey-500 break-all">{t('Maximum of')} <Money value={budget.spendingLimit}/></p><Progress aria-label={`${budget.categoryName} ${t('spending')}`} max={100} value={moneyRatio(budget.spent,budget.spendingLimit)} color={budget.color}/>
     <dl className="grid grid-cols-2 gap-200"><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg" style={{backgroundColor:pending?.color ?? budget.color}}/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Spent')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.spent}/></dd></div></div><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg bg-beige-100"/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Free')}</dt><dd className="text-preset-4-bold break-all"><Money value={budget.available}/></dd></div></div></dl></div>
     {budget.limitReached && <p className="text-preset-5 text-red">{t('Budget limit reached.')} {t('Budget exceeded by')} <Money value={budget.exceededAmount}/></p>}<LatestExpenses budget={budget}/>
@@ -64,7 +64,12 @@ function BudgetCard({budget}:{budget:Budget}) {
 }
 export function Budgets() {
   const {queries}=useFinance(),{params}=useFinancialURL(),month=params.get('month') ?? '',query=useQuery(queries.budgets(validMonth(month) ? month : undefined))
-  return <><PageHeader title="Budgets"><NewDialog title="Add New Budget" contentClassName={financeDialog}>{<BudgetForm/>}</NewDialog></PageHeader><MonthControl effective={query.data?.items[0]?.month}/><QueryMessage query={query}/>{query.data && (query.data.items.length ? <section className="grid grid-cols-1 gap-300 lg:grid-cols-2"><SpendingSummary items={query.data.items}/>{query.data.items.map(budget=><BudgetCard key={budget.id} budget={budget}/>)}</section> : <section className={panel}><Empty label="No budgets yet."/></section>)}</>
+  return <><PageHeader title="Budgets"><NewDialog title="Add New Budget" contentClassName={financeDialog}>{<BudgetForm/>}</NewDialog></PageHeader><MonthControl effective={query.data?.items[0]?.month}/><QueryMessage query={query}/>{query.data && (query.data.items.length ? <section className="grid grid-cols-1 items-start gap-300 lg:grid-cols-2">
+    <SpendingSummary items={query.data.items}/>
+    <div className="grid min-w-0 gap-300">
+      {query.data.items.map(budget=><BudgetCard key={budget.id} budget={budget}/>)}
+    </div>
+  </section> : <section className={panel}><Empty label="No budgets yet."/></section>)}</>
 }
 
 function BudgetForm({ record }: { record?: Budget }) {
