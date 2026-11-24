@@ -1,9 +1,11 @@
 # Financial integration
 
-Start Spring with its documented PostgreSQL configuration, copy `.env.example` to
-`.env.local`, set `FINANCE_API_URL` to its reachable origin and
-`FINANCE_APP_ORIGIN` to the exact public Next origin, and run `pnpm dev`.
-Spring's `FINANCE_FRONTEND_ORIGIN` must match. These variables remain server-side.
+For local development, start Spring at `http://localhost:8080` with its documented
+PostgreSQL configuration, copy `.env.example` to `.env.local`, and run `pnpm dev`.
+In Vercel Production, set
+`FINANCE_API_URL=https://finance-api.memofb.dev` and `FINANCE_APP_ORIGIN` to the
+exact public HTTPS origin of Next.js. Spring's `FINANCE_FRONTEND_ORIGIN` must
+allow the frontend origin in use. These variables remain server-side.
 The backend must support `GET /api/transactions?categoryId=<positive ID>` for both
 rows and counts. Its absence cannot be replaced by filtering one client page.
 

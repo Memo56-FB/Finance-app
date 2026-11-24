@@ -54,11 +54,20 @@ a Next.js server runtime because they read request cookies.
 
 ### Account access and guest demo
 
-Copy .env.example to .env.local, start financeApi as described in its README,
-then run pnpm dev. Next.js must reach FINANCE_API_URL (locally port 8080).
-FINANCE_APP_ORIGIN must equal the public frontend origin; configure the same
-value as FINANCE_FRONTEND_ORIGIN in Spring. These are server variables. Production
-requires HTTPS and a backend URL reachable from the Next.js host.
+For local development, copy `.env.example` to `.env.local`, start financeApi on
+`http://localhost:8080` as described in its README, and run `pnpm dev` to serve
+the frontend at `http://localhost:3000`.
+
+In the frontend's Vercel project, add these server-side variables to the
+Production environment, then redeploy.
+
+| Variable | Value |
+| --- | --- |
+| `FINANCE_API_URL` | `https://finance-api.memofb.dev` |
+| `FINANCE_APP_ORIGIN` | The public HTTPS origin of the frontend, without a trailing slash |
+
+Spring's `FINANCE_FRONTEND_ORIGIN` must allow the frontend origin for each
+environment. Auth and financial requests use the Next.js server to reach the API.
 
 Registration at /singup takes a display name, username and password. After
 registration, sign in at /login with the username and password. Usernames
