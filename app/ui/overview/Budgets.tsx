@@ -39,7 +39,7 @@ export function Budgets({items}:{items?:Budget[]}) {
           <BudgetChart items={items}/>
         </div>
         <section className="grid grid-cols-2 auto-rows-min content-start gap-200 md:grid-cols-1 md:pt-250">
-          {rows.map((budget) => (
+          {rows.slice(0, 4).map((budget) => (
             <BudgetChartCard key={budget.id} color={budget.color} title={items ? budget.title : <ControlledLabel value={budget.title}/>} value={<Money value={budget.ofValue} />} />
           ))}
         </section>

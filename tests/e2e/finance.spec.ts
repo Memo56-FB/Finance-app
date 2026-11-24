@@ -1310,3 +1310,24 @@ test('financial pagination shows numbered links on desktop and an indicator on t
     await expect(first).toHaveAttribute('aria-disabled','true')
   }
 })
+
+test('Overview lists four budget categories and keeps the chart total', async ({page, context}) => {
+  await account(context)
+  for (const name of ['Food', 'Home', 'Transport', 'Health', 'Leisure']) {
+    const category = await (await write(context,'categories','POST',JSON.stringify({name}))).json()
+    expect((await write(context,'budgets','POST',JSON.stringify({
+      categoryId: category.id, spendingLimit: 10, color: '#277C78',
+    }))).status()).toBe(201)
+  }
+
+  await page.goto('/finance')
+  const card = page.locator('article').filter({
+    has: page.getByRole('heading', { name: 'Budgets', level: 2, exact: true }),
+  })
+  await expect(card.getByRole('heading', { level: 3 })).toHaveCount(4)
+  await expect(card).toContainText('of $50.00 limit')
+  await card.getByRole('link', { name: 'See Details' }).click()
+  for (const name of ['Food', 'Home', 'Transport', 'Health', 'Leisure']) {
+    await expect(page.getByRole('heading', { name, level: 2, exact: true })).toBeVisible()
+  }
+})
