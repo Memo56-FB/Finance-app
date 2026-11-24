@@ -5,6 +5,7 @@ import { appOrigin, upstream } from '@/lib/api/upstream'
 export const runtime = 'nodejs'
 const methods: Record<string, string[]> = { csrf: ['GET'], me: ['GET'], register: ['POST'], login: ['POST'], logout: ['POST'], guest: ['POST', 'DELETE'] }
 const cacheHeaders = { 'Cache-Control': 'private, no-store' }
+const rememberMaxAge = 30 * 24 * 60 * 60
 function reply(status: number) { return new NextResponse(null, { status, headers: cacheHeaders }) }
 function clearGuest(response: NextResponse, secure: boolean) {
   response.cookies.set('finance-guest', '', { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: 0 })
@@ -30,6 +31,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
     const session = request.cookies.get('JSESSIONID')?.value
     if (session) headers.set('Cookie', 'JSESSIONID=' + encodeURIComponent(session))
     let body: string | undefined
+    let remember = false
     if (mutating) {
       const token = request.headers.get('x-csrf-token')
       if (!token) return reply(403)
@@ -46,6 +48,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
           if (request.headers.get('content-type')?.split(';')[0] !== 'application/x-www-form-urlencoded') return reply(415)
           const data = new URLSearchParams(body)
           if (!data.has('username') || !data.has('password')) return reply(400)
+          remember = data.get('remember-me') === 'true'
           headers.set('Content-Type', 'application/x-www-form-urlencoded')
         }
       } catch { return reply(400) }
@@ -58,7 +61,10 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
     if ((action === 'login' || action === 'logout') && result.status === 204) clearGuest(response, secure)
     // NextResponse.cookies.set rewrites Set-Cookie, so append Spring's cookies last.
     for (const cookie of result.headers.getSetCookie()) {
-      if (cookie.startsWith('JSESSIONID=')) response.headers.append('Set-Cookie', cookie)
+      if (!cookie.startsWith('JSESSIONID=')) continue
+      const persist = remember && result.status === 204 && /^JSESSIONID=[^;]+/.test(cookie) &&
+        !/;\s*(?:Max-Age|Expires)=/i.test(cookie)
+      response.headers.append('Set-Cookie', persist ? `${cookie}; Max-Age=${rememberMaxAge}` : cookie)
     }
     return response
   } catch { return reply(503) }

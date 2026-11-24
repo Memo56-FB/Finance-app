@@ -3,6 +3,7 @@ import { financeEs } from './finance'
 export const es: Messages = {
   ...financeEs,
   "Continue as guest": "Continuar como invitado",
+  "Remember me": "Recordar sesión",
   "Log out": "Cerrar sesión",
   "Could not sign out. Please retry.": "No se pudo cerrar la sesión. Inténtalo de nuevo.",
   "Authentication is unavailable. Please retry.": "No se puede comprobar la sesión. Inténtalo de nuevo.",

@@ -66,8 +66,10 @@ are case-insensitive. Spring's HttpOnly JSESSIONID is the sole
 account session. Next.js transports and verifies it, including session rotation
 and CSRF renewal. Axios attaches CSRF; React Query handles pending operations
 without automatic POST replay or offline credential queues. Authentication
-responses are not publicly cached. Sessions currently disappear when Spring
-restarts.
+responses are not publicly cached. Signed-in sessions stay valid while Spring
+is running, including after periods of inactivity. Selecting **Remember me**
+keeps the browser's session cookie for 30 days. Signing out invalidates the session.
+Spring stores sessions in memory, so a restart requires signing in again.
 
 Finance pages require a verified account or an explicit “Continue as guest”.
 Guests use the current fixtures, never create backend accounts, and do not save

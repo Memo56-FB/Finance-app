@@ -41,6 +41,7 @@ test('registration confirms without login; real form login and logout rotate coo
   await expect(page).toHaveURL('/finance')
   const cookie = (await context.cookies()).find(c=>c.name==='JSESSIONID')!
   expect(cookie.value).not.toBe(before);expect(cookie.httpOnly).toBe(true);expect(cookie.path).toBe('/')
+  expect(cookie.expires).toBe(-1)
   expect(await page.evaluate(()=>document.cookie)).not.toContain('JSESSIONID')
   await expect(page.getByRole('button',{name:'Logout',exact:true})).toHaveAttribute('title','Logout')
   await expect(page.locator('body')).not.toContainText('Demo data · Changes are not saved')
@@ -50,6 +51,35 @@ test('registration confirms without login; real form login and logout rotate coo
   await page.goBack()
   await page.goto('/finance')
   await expect(page).toHaveURL(/\/login/)
+})
+test('remembered sign-in survives reopening the browser and can be signed out', async ({ page, context, browser }) => {
+  await context.addCookies([{name:'finance-language',value:'es',url:baseURL,expires:Date.now() / 1000 + 86400}])
+  await page.goto('/login')
+  const remember = page.getByRole('checkbox', {name:'Recordar sesión'})
+  await expect(remember).not.toBeChecked()
+  await page.getByLabel('Nombre de usuario',{exact:true}).fill('first')
+  await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123')
+  await remember.check()
+  await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click()
+  await expect(page).toHaveURL('/finance')
+
+  const state = await context.storageState()
+  const persistentCookies = state.cookies.filter(cookie => cookie.expires > Date.now() / 1000)
+  const session = persistentCookies.find(cookie => cookie.name === 'JSESSIONID')
+  expect(session).toMatchObject({httpOnly:true,sameSite:'Lax'})
+  expect(session!.expires).toBeGreaterThan(Date.now() / 1000 + 29 * 24 * 60 * 60)
+
+  const reopened = await browser.newContext({storageState:{...state,cookies:persistentCookies}})
+  try {
+    const nextPage = await reopened.newPage()
+    await nextPage.goto(baseURL + '/finance')
+    const logout = nextPage.getByRole('button',{name:'Cerrar sesión',exact:true})
+    await expect(logout).toBeVisible()
+    await logout.click()
+    await expect(nextPage).toHaveURL(baseURL + '/login')
+    expect((await reopened.cookies()).find(cookie => cookie.name === 'JSESSIONID')).toBeUndefined()
+    expect((await context.request.get('/api/auth/me')).status()).toBe(401)
+  } finally { await reopened.close() }
 })
 test('invalid login is local, duplicate registration is a field error, and pending submits are single', async ({ page }) => {
   await login(page,'first','wrong-password')

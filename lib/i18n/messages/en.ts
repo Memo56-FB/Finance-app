@@ -2,6 +2,7 @@ import { financeEn } from './finance'
 export const en = {
   ...financeEn,
   "Continue as guest": "Continue as guest",
+  "Remember me": "Remember me",
   "Log out": "Logout",
   "Could not sign out. Please retry.": "Could not sign out. Please retry.",
   "Authentication is unavailable. Please retry.": "Authentication is unavailable. Please retry.",

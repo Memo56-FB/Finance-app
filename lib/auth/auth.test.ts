@@ -96,3 +96,19 @@ it('bounds incoming credentials and hides upstream infrastructure failures', asy
   expect(failed.status).toBe(503)
   expect(await failed.text()).not.toContain('private')
 })
+
+it('only extends a live session cookie after a successful remembered login', async () => {
+  const session = 'JSESSIONID=new; Path=/; HttpOnly; Secure; SameSite=Lax'
+  const deletion = 'JSESSIONID=; Path=/; Max-Age=0; HttpOnly'
+  const fetch = vi.spyOn(globalThis, 'fetch')
+  const headers = { 'X-CSRF-TOKEN': 't', 'Content-Type': 'application/x-www-form-urlencoded' }
+  const remembered = 'username=sample&password=secret&remember-me=true'
+  fetch.mockResolvedValueOnce(new Response(null, {status:401, headers:{'Set-Cookie':session}}))
+  const failed = await POST(request('login','POST',headers,remembered),context('login'))
+  expect(failed.headers.getSetCookie()).toEqual([session])
+
+  fetch.mockResolvedValueOnce(new Response(null, {status:204, headers:[['Set-Cookie', deletion], ['Set-Cookie', session]]}))
+  const signedIn = await POST(request('login','POST',headers,remembered),context('login'))
+  expect(signedIn.headers.getSetCookie().filter(cookie => cookie.startsWith('JSESSIONID=')))
+    .toEqual([deletion, session + '; Max-Age=2592000'])
+})

@@ -27,7 +27,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
   const target = safeNext(next)
   const query = '?' + new URLSearchParams({ next: target })
   const mutation = useMutation({
-    mutationFn: async ({ action, values }: { action: 'account' | 'guest'; values?: Credentials }) => {
+    mutationFn: async ({ action, values, remember }: { action: 'account' | 'guest'; values?: Credentials; remember: boolean }) => {
       if (action === 'guest') {
         await api.post('guest')
         announceSessionChange()
@@ -40,7 +40,9 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
         setCreated(true)
       } else {
         if (!confirming) {
-          await api.post('login', new URLSearchParams({ username: values.username.trim().toLowerCase(), password: values.password }))
+          const body = new URLSearchParams({ username: values.username.trim().toLowerCase(), password: values.password })
+          if (remember) body.set('remember-me', 'true')
+          await api.post('login', body)
           setConfirming(true)
         }
         try {
@@ -66,7 +68,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
     if (invalid.length) return
     busy.current = true
     try {
-      await mutation.mutateAsync({ action, values })
+      await mutation.mutateAsync({ action, values, remember: data?.has('remember-me') ?? false })
       if (form) (form.elements.namedItem('password') as HTMLInputElement).value = ''
     } catch (cause) {
       const e = cause instanceof ApiError ? cause : new ApiError(0)
@@ -94,6 +96,10 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
             {invalid && <p id={field + '-error'} className="text-preset-5 text-red">{t(fieldMessages[field])}</p>}
           </div>
         })}
+        {!register && !confirming && <label className="inline-flex min-h-11 w-fit cursor-pointer items-center gap-100 text-preset-4 text-grey-900 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+          <input type="checkbox" name="remember-me" value="true" className="h-4 w-4 accent-green" />
+          {t('Remember me')}
+        </label>}
         <Button type="submit">{t(mutation.isPending ? 'Please wait…' : confirming ? 'Retry session check' : register ? 'Create Account' : 'Login')}</Button>
       </fieldset>}
     <Button type="button" variant="secondary" disabled={!ready || mutation.isPending} onClick={() => void run('guest')}>{t('Continue as guest')}</Button>
