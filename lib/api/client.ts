@@ -5,7 +5,8 @@ import { parseFinance, stringifyFinance } from './finance-json'
 export class ApiError extends Error {
   constructor(public status: number, public fields: string[] = []) { super('Request failed') }
 }
-export const api = axios.create({ baseURL: '/api/auth', withCredentials: true, timeout: 15_000 })
+// Allow the gateway's 30-second upstream deadline to return a response after a cold start.
+export const api = axios.create({ baseURL: '/api/auth', withCredentials: true, timeout: 40_000 })
 type Csrf = { token: string; headerName: string }
 let csrf: Promise<Csrf> | undefined
 let financeSessionTag: string | undefined
