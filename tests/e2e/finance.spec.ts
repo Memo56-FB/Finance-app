@@ -1744,3 +1744,24 @@ test('a budget can create its first category without losing its draft', async ({
   await expect(page.getByRole('heading', {name:'New travel category', level:2})).toBeVisible()
   expect(writes).toEqual(['/api/finance/categories', '/api/finance/budgets'])
 })
+
+test('the budget category menu scrolls with the mouse wheel inside the dialog', async ({page, context}) => {
+  await account(context)
+  for (let number = 1; number <= 24; number++) {
+    await write(context, 'categories', 'POST', JSON.stringify({name: 'Category ' + number}))
+  }
+  await page.setViewportSize({width: 1000, height: 600})
+  await page.goto('/finance/budgets')
+  await page.getByRole('button', {name:'+ Add New Budget', exact:true}).click()
+  await page.getByRole('dialog').getByRole('button', {name:'Category', exact:true}).click()
+  const list = page.getByRole('menu')
+  await expect(list.getByRole('menuitemradio')).toHaveCount(24)
+  const bounds = (await list.boundingBox())!
+  await page.mouse.move(bounds.x + 12, bounds.y + 12)
+  await expect.poll(() => list.evaluate(element => element.scrollTop)).toBe(0)
+  await page.mouse.wheel(0, 1000)
+  await expect.poll(() => list.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+  await expect(list.getByRole('menuitem', {name:'Add a category'})).toBeInViewport()
+  await page.mouse.wheel(0, -1000)
+  await expect.poll(() => list.evaluate(element => element.scrollTop)).toBe(0)
+})

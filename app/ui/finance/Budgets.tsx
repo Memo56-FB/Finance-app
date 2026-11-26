@@ -99,14 +99,14 @@ function BudgetCategoryPicker({ options, value, onChange, onAdd, triggerRef, cat
   const selected = options.find(option => option.value === value)
   return <div className="grid min-w-0 gap-50">
     <label htmlFor={id} className="text-preset-5-bold text-grey-500">{t('Category')}</label>
-    <DropdownMenu modal={false}>
+    <DropdownMenu>
       <DropdownMenuTrigger id={id} ref={triggerRef} type="button"
         className="flex h-[45px] w-full items-center justify-between gap-200 rounded-md border border-beige-500 bg-background px-250 text-left text-preset-4 text-grey-900 hover:border-grey-900 focus-visible:ring-2 focus-visible:ring-ring"
         aria-invalid={!!error || undefined} aria-describedby={error ? id + '-error' : undefined}>
         <span className="truncate">{selected?.label ?? t('Category')}</span>
         <CaretDown aria-hidden size={16} weight="fill" className="shrink-0"/>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+      <DropdownMenuContent align="start" className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto overscroll-y-contain"
         onCloseAutoFocus={event => { if (categoryDialogOpen) event.preventDefault() }}>
         {options.length > 0 && <>
           <DropdownMenuRadioGroup value={selected?.value ?? ''} onValueChange={onChange}>
