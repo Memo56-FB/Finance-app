@@ -289,6 +289,7 @@ test('language selector prevents concurrent changes during refresh', async ({ pa
     await selector.click()
     await page.getByRole('option', { name: 'Español', exact: true }).click()
     await expect(selector).toBeDisabled()
+    await expect(selector.locator('[data-slot="skeleton"]')).toBeVisible()
     await expect(selector).toContainText('English')
   } finally {
     releaseRefresh()

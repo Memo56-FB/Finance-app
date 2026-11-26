@@ -18,7 +18,14 @@ async function control(context:BrowserContext,path:string,data?:unknown) {
   return context.request.post(upstream+'/__finance/'+path,{headers:{Cookie:`JSESSIONID=${cookie.value}`},data})
 }
 async function choose(page:Page,label:string,text:string) {await page.getByRole('dialog').getByRole('combobox',{name:label,exact:true}).click();await page.getByRole('option',{name:text,exact:true}).click()}
-async function save(page:Page) {const dialog=page.getByRole('dialog');await dialog.locator('button[type="submit"]').click();await expect(dialog).toBeHidden();await expect(page.getByText(/· (Pending confirmation|Pendiente de confirmar)$/)).toHaveCount(0)}
+async function save(page:Page) {
+  const dialog=page.getByRole('dialog')
+  const response = page.waitForResponse(response => response.url().includes('/api/finance/') &&
+    ['POST', 'PUT', 'DELETE'].includes(response.request().method()))
+  await dialog.locator('button[type="submit"]').click()
+  await expect(dialog).toBeHidden()
+  expect((await response).ok()).toBe(true)
+}
 async function category(page:Page,name:string) {await page.getByRole('button',{name:'+ Add category',exact:true}).click();await page.getByRole('dialog').getByLabel('Name',{exact:true}).fill(name);await save(page)}
 async function menu(page:Page,row:Locator,action:string) {await row.getByRole('button',{name:/^Actions:/}).click();await page.getByRole('menuitem',{name:action,exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible()}
 
@@ -94,7 +101,7 @@ test('a pending category save closes and can be recovered after navigating', asy
   try {
     await expect(dialog).toHaveCount(0)
     await expect(add).toBeFocused()
-    await expect(page.getByText(/My draft · Pending confirmation/)).toBeVisible()
+    await expect(page.getByRole('row').filter({hasText:'My draft'})).toBeVisible()
     await page.getByRole('link', {name:'Transactions', exact:true}).click()
     await expect(page).toHaveURL('/finance/transactions')
     await expect(page.getByRole('heading', {name:'Transactions', exact:true})).toBeFocused()
@@ -821,7 +828,7 @@ test('an idle account waits for a user change before refreshing its data', async
   expect(requests).toEqual([])
   await category(page,'Food')
   await expect(page.locator('tbody tr')).toContainText('Food')
-  expect(requests).toEqual(['POST','GET'])
+  await expect.poll(() => requests).toEqual(['POST','GET'])
 })
 
 test('linked corrections update pot balances, VOID payments and server conflicts',async({page,context})=>{
@@ -1022,6 +1029,7 @@ test('authorized HTML starts streaming while the first financial read is held', 
 test('deposit remains pending across pages and confirms the linked movement once', async ({page, context}) => {
   await account(context)
   const pot = await (await write(context,'savings-pots','POST','{"name":"Travel","targetAmount":100,"color":"#277C78"}')).json()
+  expect((await write(context, `savings-pots/${pot.id}/deposits`, 'POST', '{"amount":100}')).ok()).toBe(true)
   await page.goto('/finance/pots')
   const hold = Promise.withResolvers<void>()
   let writes = 0
@@ -1037,17 +1045,15 @@ test('deposit remains pending across pages and confirms the linked movement once
   await dialog.getByRole('button',{name:'Confirm Addition'}).click()
   try {
     await expect(dialog).toHaveCount(0)
-    await expect(page.getByText(/Travel · Pending confirmation/)).toBeVisible()
-    await expect(card).toContainText('$0.00')
+    await expect(card).toContainText('$125.00')
     await page.getByRole('link',{name:'Overview',exact:true}).click()
     await expect(page.getByRole('heading',{name:'Overview',exact:true})).toBeVisible()
-    await expect(page.getByText(/Travel · Pending confirmation/)).toBeVisible()
+    await expect(page.getByRole('main')).toContainText('$125.00')
     expect(writes).toBe(1)
   } finally { hold.resolve() }
   await expect(page.getByText(/Travel · Pending confirmation/)).toHaveCount(0)
-  await expect(page.getByRole('main')).toContainText('$25.00')
-  const saved = await (await context.request.get(origin + '/api/finance/savings-pots/' + pot.id)).json()
-  expect(saved.balance).toBe(25)
+  await expect(page.getByRole('main')).toContainText('$125.00')
+  await expect.poll(async () => (await (await context.request.get(origin + '/api/finance/savings-pots/' + pot.id)).json()).balance).toBe(125)
   expect(writes).toBe(1)
 })
 
@@ -1071,7 +1077,7 @@ test('out-of-order category edits only undo the rejected projection', async ({pa
   }
   try {
     await rename(first.id, 'Rejected name')
-    await expect(rows.filter({hasText:'Rejected name'})).toContainText('Pending confirmation')
+    await expect(rows.filter({hasText:'Rejected name'})).toBeVisible()
     await expect(rows.filter({hasText:'Duplicate'})).toHaveCount(1)
     await rename(second.id, 'Confirmed name')
     await expect(page.locator('.Toastify__toast').filter({hasText:'Saved.'})).toBeVisible()
@@ -1109,7 +1115,7 @@ test('pot deletion can be undone from another section after confirmation', async
   await expect(page.getByText(/Keep me · Pending confirmation/)).toHaveCount(0)
 })
 
-test('recording a recurring payment keeps its totals confirmed during navigation', async ({page, context}) => {
+test('recording a recurring payment updates the bill during navigation', async ({page, context}) => {
   await account(context)
   const category = await (await write(context,'categories','POST','{"name":"Household"}')).json()
   const bill = await (await write(context,'recurring-payments','POST',
@@ -1127,7 +1133,8 @@ test('recording a recurring payment keeps its totals confirmed during navigation
   await page.getByRole('button',{name:'Confirm payment',exact:true}).click()
   try {
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByText(/Held subscription · Pending confirmation/)).toBeVisible()
+    await expect(row.getByText('Paid', {exact:true})).toBeAttached()
+    await expect(page.locator('article').filter({has:page.getByText('Paid Bills', {exact:true})})).toContainText('$12.00')
     await page.getByRole('link',{name:'Transactions',exact:true}).click()
     await expect(page.getByRole('heading',{name:'Transactions',exact:true})).toBeVisible()
     await expect(page.getByText('Held subscription',{exact:true})).toHaveCount(0)
@@ -1153,7 +1160,7 @@ test('Overview and Transactions share the same in-flight reads', async ({page, c
     await expect.poll(() => reads.length).toBe(2)
     await page.getByRole('link',{name:'Transactions',exact:true}).click()
     await expect(page.getByRole('heading',{name:'Transactions',exact:true})).toBeFocused()
-    await expect(page.getByText('Loading…',{exact:true}).first()).toBeVisible()
+    await expect(page.getByText('Loading…',{exact:true}).first()).toBeAttached()
   } finally { hold.resolve() }
   await expect(page.getByText('Loading…',{exact:true})).toHaveCount(0)
   const urls = reads.map(value => new URL(value,origin))
@@ -1221,7 +1228,7 @@ test('another account never sees a delayed confirmation from the old session', a
   await page.getByRole('dialog').getByRole('button',{name:'Save',exact:true}).click()
   try {
     await saved.promise
-    await expect(page.getByText(/Private previous draft · Pending confirmation/)).toBeVisible()
+    await expect(page.getByRole('row').filter({hasText:'Private previous draft'})).toBeVisible()
     await account(context)
     await page.evaluate(() => {
       const channel = new BroadcastChannel('finance-session')
@@ -1233,6 +1240,37 @@ test('another account never sees a delayed confirmation from the old session', a
   } finally { release.resolve() }
   await expect(page.locator('.Toastify__toast').filter({hasText:'Saved.'})).toHaveCount(0)
   expect((await (await context.request.get(origin + '/api/finance/categories')).json()).items).toHaveLength(0)
+})
+
+test('budget forms offer only unused categories and keep the category being edited', async ({page, context}) => {
+  await account(context)
+  for (const name of ['Travel', 'Groceries']) {
+    const category = await (await write(context, 'categories', 'POST', JSON.stringify({ name }))).json()
+    expect((await write(context, 'budgets', 'POST', JSON.stringify({
+      categoryId: category.id, spendingLimit: 100, color: '#277C78',
+    }))).status()).toBe(201)
+  }
+  await write(context, 'categories', 'POST', '{"name":"Dining"}')
+
+  await page.route(/\/api\/finance\/budgets\?month=2027-02$/, route => route.fulfill({json: {items: []}}))
+  await page.goto('/finance/budgets')
+  await expect(page.getByRole('heading', {name: 'Travel', exact: true, level: 2})).toBeVisible()
+  await page.getByRole('button', {name: 'Open calendar · Month'}).click()
+  const calendar = page.getByRole('dialog', {name: 'Month', exact: true})
+  await calendar.getByRole('combobox', {name: 'Choose the Month'}).selectOption('1')
+  await calendar.getByRole('button', {name: 'Select month'}).click()
+  await expect(page.getByText('No budgets yet.', {exact: true})).toBeVisible()
+  await page.getByRole('button', {name: '+ Add New Budget'}).click()
+  const select = page.getByRole('dialog').getByRole('combobox', {name: 'Category', exact: true})
+  await select.click()
+  await expect(page.getByRole('option')).toHaveText(['Dining'])
+
+  await page.goto('/finance/budgets')
+  const card = page.locator('article').filter({has: page.getByRole('button', {name: /^Actions: Travel \(/})})
+  await menu(page, card, 'Edit')
+  await expect(select).toHaveText('Travel')
+  await select.click()
+  await expect(page.getByRole('option')).toHaveText(['Travel', 'Dining'])
 })
 
 test('select arrows indicate available scroll without receiving pointer events', async ({page, context}) => {
@@ -1255,7 +1293,7 @@ test('select arrows indicate available scroll without receiving pointer events',
   await expect(up).toHaveCSS('pointer-events', 'none')
 })
 
-test('a budget color is provisional only while its amount stays unchanged', async ({page, context}) => {
+test('a budget shows its edited color and amount before confirmation', async ({page, context}) => {
   await account(context)
   const category = await (await write(context,'categories','POST','{"name":"Travel budget"}')).json()
   const budget = await (await write(context,'budgets','POST',
@@ -1276,9 +1314,8 @@ test('a budget color is provisional only while its amount stays unchanged', asyn
   await dialog.getByRole('button',{name:'Save Changes',exact:true}).click()
   try {
     await expect(dialog).toHaveCount(0)
-    await expect(page.getByText(/Travel budget · Pending confirmation/)).toBeVisible()
-    await expect(color).toHaveCSS('background-color','rgb(39, 124, 120)')
-    await expect(card).toContainText('$30.00')
+    await expect(color).toHaveCSS('background-color','rgb(130, 201, 215)')
+    await expect(card).toContainText('$75.00')
   } finally { hold.resolve() }
   await expect(color).toHaveCSS('background-color','rgb(130, 201, 215)')
   await expect(card).toContainText('$75.00')
@@ -1350,4 +1387,307 @@ test('Overview lists four budget categories and keeps the chart total', async ({
   for (const name of ['Food', 'Home', 'Transport', 'Health', 'Leisure']) {
     await expect(page.getByRole('heading', { name, level: 2, exact: true })).toBeVisible()
   }
+})
+
+for (const language of ['en', 'es']) test(`a new budget appears once while the write is held in ${language}`, async ({page, context}) => {
+  await account(context, language)
+  const spanish = language === 'es'
+  if (spanish) {
+    await page.setViewportSize({width: 390, height: 844})
+    await page.emulateMedia({reducedMotion:'reduce'})
+  }
+  await write(context, 'categories', 'POST', '{"name":"Food budget"}')
+  await page.goto('/finance/budgets')
+  await expect(page.getByText(spanish ? 'Aún no hay presupuestos.' : 'No budgets yet.')).toBeVisible()
+  const hold = Promise.withResolvers<void>()
+  let writes = 0
+  await page.route('**/api/finance/budgets', async route => {
+    if (route.request().method() !== 'POST') return route.continue()
+    writes++
+    await hold.promise
+    await route.continue()
+  })
+  const add = page.getByRole('button', {name:spanish ? '+ Agregar presupuesto' : '+ Add New Budget', exact:true})
+  const dialog = page.getByRole('dialog')
+  await add.click()
+  await choose(page, spanish ? 'Categoría' : 'Category', 'Food budget')
+  await dialog.getByLabel(spanish ? 'Gasto máximo' : 'Maximum Spending').fill('500')
+  await dialog.getByRole('button', {name:spanish ? 'Agregar presupuesto' : 'Add Budget', exact:true}).click()
+  const card = page.getByRole('heading', {name:'Food budget', level:2})
+  try {
+    await expect(dialog).toHaveCount(0)
+    await expect(card).toBeVisible()
+    const budgetCard = page.locator('article').filter({has: card})
+    await expect(budgetCard).toContainText('$500.00')
+    await expect(budgetCard.locator('header span').first()).toHaveCSS('background-color', 'rgb(39, 124, 120)')
+    await expect(page.getByText(spanish ? 'de $500.00 de límite' : 'of $500.00 limit', {exact:true})).toBeVisible()
+    await expect(page.getByText(spanish ? 'Aún no hay presupuestos.' : 'No budgets yet.')).toHaveCount(0)
+    await add.click()
+    await expect(dialog.getByText(spanish ? 'No hay categorías disponibles para crear un presupuesto.' : 'No categories available for a budget.')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.getByRole('link', {name:spanish ? 'Resumen' : 'Overview', exact:true}).press('Enter')
+    await expect(page.getByRole('heading', {name:spanish ? 'Resumen' : 'Overview', exact:true})).toBeVisible()
+    await expect(page.getByRole('heading', {name:'Food budget', level:3})).toBeVisible()
+    await page.getByRole('link', {name:spanish ? 'Presupuestos' : 'Budgets', exact:true}).press('Enter')
+    await expect(card).toHaveCount(1)
+  } finally { hold.resolve() }
+  await expect(page.getByRole('button', {name:spanish ? /^Acciones: Food budget/ : /^Actions: Food budget/})).toBeVisible()
+  await expect(card).toHaveCount(1)
+  expect(writes).toBe(1)
+})
+
+test('an uncached finance region uses a skeleton and preserves navigation', async ({page, context}) => {
+  await account(context, 'es')
+  await page.setViewportSize({width: 320, height: 750})
+  await page.emulateMedia({reducedMotion: 'reduce'})
+  await page.goto('/finance/pots')
+  await expect(page.getByText('Aún no hay apartados.')).toBeVisible()
+  const hold = Promise.withResolvers<void>()
+  await page.route('**/api/finance/budgets', async route => {
+    await hold.promise
+    await route.continue()
+  })
+  try {
+    await page.locator('a[href="/finance/budgets"]').first().click()
+    await expect(page.getByRole('heading', {name:'Presupuestos', exact:true})).toBeVisible()
+    const busy = page.locator('main [aria-busy="true"]')
+    await expect(busy.locator('[data-slot="skeleton"]').first()).toBeVisible()
+    await expect(busy.locator('[data-slot="skeleton"]').first()).toHaveCSS('animation-name', 'none')
+    await expect(page.getByRole('status').filter({hasText:'Cargando…'})).toHaveCount(1)
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  } finally { hold.resolve() }
+  await expect(page.getByText('Aún no hay presupuestos.')).toBeVisible()
+  await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0)
+})
+
+test('a sensitive identity check replaces private data with a neutral skeleton', async ({page, context}) => {
+  await account(context)
+  await write(context, 'categories', 'POST', '{"name":"Private travel category"}')
+  await page.goto('/finance/categories')
+  const privateRow = page.getByRole('row').filter({hasText:'Private travel category'})
+  await expect(privateRow).toBeVisible()
+  const hold = Promise.withResolvers<void>()
+  await page.route('**/api/auth/me', async route => {
+    await hold.promise
+    await route.continue()
+  })
+  try {
+    await page.evaluate(() => window.dispatchEvent(new Event('finance-session-expired')))
+    await expect(privateRow).toHaveCount(0)
+    await expect(page.locator('main [data-slot="skeleton"]').first()).toBeVisible()
+  } finally { hold.resolve() }
+  await expect(privateRow).toBeVisible()
+  await expect(page.locator('main [data-slot="skeleton"]')).toHaveCount(0)
+})
+
+test('a budget adopts the canonical result across a racing period read and a failed refresh', async ({page, context}) => {
+  await account(context)
+  await write(context, 'categories', 'POST', '{"name":"Racing budget"}')
+  await page.goto('/finance/budgets')
+  await expect(page.getByText('No budgets yet.')).toBeVisible()
+  const release = Promise.withResolvers<void>()
+  const persisted = Promise.withResolvers<void>()
+  let writes = 0
+  let refreshFails = false
+  await page.route(/\/api\/finance\/budgets(?:\?.*)?$/, async route => {
+    const request = route.request()
+    if (request.method() === 'GET') return refreshFails ? route.fulfill({status:503}) : route.continue()
+    writes++
+    const response = await route.fetch({postData: {...request.postDataJSON(), spendingLimit: 600}})
+    expect(response.status()).toBe(201)
+    persisted.resolve()
+    await release.promise
+    await route.fulfill({response})
+  })
+  await page.getByRole('button', {name:'+ Add New Budget', exact:true}).click()
+  await choose(page, 'Category', 'Racing budget')
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Maximum Spending').fill('500')
+  await dialog.getByRole('button', {name:'Add Budget', exact:true}).click()
+  const heading = page.getByRole('heading', {name:'Racing budget', level:2})
+  const card = page.locator('article').filter({has:heading})
+  try {
+    await expect(card).toContainText('$500.00')
+    await persisted.promise
+    await page.getByLabel('Month', {exact:true}).fill('2027-02')
+    await expect(page).toHaveURL(/month=2027-02/)
+    await expect(card).toContainText('$500.00')
+    await expect(heading).toHaveCount(1)
+    refreshFails = true
+  } finally { release.resolve() }
+  await expect(card).toContainText('$600.00')
+  await expect(heading).toHaveCount(1)
+  const verify = page.getByRole('button', {name:'Verify', exact:true})
+  await expect(verify).toBeVisible()
+  refreshFails = false
+  await verify.click()
+  await expect(verify).toHaveCount(0)
+  await expect(card).toContainText('$600.00')
+  expect(writes).toBe(1)
+})
+
+for (const language of ['en', 'es']) test(`each finance destination exposes its loading structure in ${language}`, async ({page, context}) => {
+  await account(context, language)
+  const spanish = language === 'es'
+  if (spanish) {
+    await page.setViewportSize({width: 390, height: 844})
+    await page.emulateMedia({reducedMotion:'reduce'})
+  }
+  await page.goto('/finance/categories')
+  await expect(page.getByText(spanish ? 'Aún no hay categorías.' : 'No categories yet.')).toBeVisible()
+  const hold = Promise.withResolvers<void>()
+  await page.route('**/api/finance/**', async route => {
+    await hold.promise
+    await route.continue().catch(() => {})
+  })
+  const destinations = [
+    [spanish ? 'Transacciones' : 'Transactions', '/finance/transactions'],
+    [spanish ? 'Presupuestos' : 'Budgets', '/finance/budgets'],
+    [spanish ? 'Apartados' : 'Pots', '/finance/pots'],
+    [spanish ? 'Pagos recurrentes' : 'Recurring Bills', '/finance/recurring-bills'],
+    [spanish ? 'Resumen' : 'Overview', '/finance'],
+  ] as const
+  try {
+    for (const [title, href] of destinations) {
+      await page.locator(`nav a[href="${href}"]`).first().press('Enter')
+      await expect(page).toHaveURL(href)
+      await expect(page.getByRole('heading', {name:title, exact:true, level:1})).toBeVisible()
+      const loading = page.locator('main [aria-busy="true"]')
+      await expect(loading.locator('[data-slot="skeleton"]').first()).toBeVisible()
+      if (href === '/finance/pots') {
+        const actions = loading.locator('.rounded-xl').first().locator(':scope > :last-child > [data-slot="skeleton"]')
+        await expect(actions).toHaveCount(2)
+        await expect(actions.first()).toHaveCSS('height', '53px')
+        await expect(actions.last()).toHaveCSS('height', '53px')
+      }
+    }
+  } finally { hold.resolve() }
+  await expect(page.getByRole('heading', {name:spanish ? 'Saldo actual' : 'Current Balance'})).toBeVisible()
+  await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0)
+
+  await page.goto('/finance/pots')
+  await expect(page.getByText(spanish ? 'Aún no hay apartados.' : 'No pots yet.')).toBeVisible()
+  const categoryHold = Promise.withResolvers<void>()
+  let fail = true
+  await page.route('**/api/finance/categories', async route => {
+    await categoryHold.promise
+    if (fail) await route.fulfill({status:503})
+    else await route.continue()
+  })
+  try {
+    await page.locator('nav a[href="/finance/categories"]').first().press('Enter')
+    await expect(page.locator('main [aria-busy="true"] [data-slot="skeleton"]').first()).toBeVisible()
+  } finally { categoryHold.resolve() }
+  const reload = page.getByRole('button', {name: spanish ? 'Recargar datos' : 'Reload data', exact:true})
+  await expect(reload).toBeVisible()
+  fail = false
+  await reload.click()
+  await expect(page.getByText(spanish ? 'Aún no hay categorías.' : 'No categories yet.')).toBeVisible()
+})
+
+test('an expense appears in its list and calculable totals before confirmation', async ({page, context}) => {
+  await account(context)
+  const { id } = await (await write(context, 'categories', 'POST', '{"name":"Lunch category"}')).json()
+  await write(context, 'budgets', 'POST', JSON.stringify({categoryId:id, spendingLimit:100, color:'#277C78'}))
+  await page.goto('/finance')
+  await expect(page.getByRole('heading', {name:'Expenses', exact:true})).toBeVisible()
+  const hold = Promise.withResolvers<void>()
+  await page.route('**/api/finance/transactions', async route => {
+    if (route.request().method() === 'POST') await hold.promise
+    await route.continue()
+  })
+  await page.getByRole('link', {name:'Transactions', exact:true}).click()
+  await page.getByRole('button', {name:'+ Add transaction', exact:true}).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Name', {exact:true}).fill('Optimistic lunch')
+  await choose(page, 'Category', 'Lunch category')
+  await dialog.getByLabel('Transaction Date', {exact:true}).fill('2027-03-15')
+  await dialog.getByLabel('Amount', {exact:true}).fill('25')
+  await dialog.getByRole('button', {name:'Save', exact:true}).click()
+  try {
+    await expect(page.getByRole('row').filter({hasText:'Optimistic lunch'})).toContainText('-$25.00')
+    await page.getByRole('link', {name:'Overview', exact:true}).click()
+    const expenses = page.locator('article').filter({has:page.getByRole('heading', {name:'Expenses', exact:true})})
+    await expect(expenses).toContainText('$25.00')
+    await expect(page.locator('[data-chart]')).toContainText('$25.00')
+    await expect(page.getByText('Optimistic lunch', {exact:true})).toBeVisible()
+  } finally { hold.resolve() }
+  await expect(page.locator('.Toastify__toast').filter({hasText:'Saved.'})).toBeVisible()
+})
+
+test('a saved cut stays editable while its new summary waits for Spring', async ({page, context}) => {
+  await account(context)
+  await page.goto('/finance')
+  await expect(page.getByText(/Reporting period/)).toBeVisible()
+  const configure = page.getByRole('button', {name:'Configure period', exact:true})
+  const panel = page.getByRole('heading', {name:'Transactions', exact:true, level:2})
+  const hold = Promise.withResolvers<void>()
+  await page.route('**/api/finance/financial-summary/settings', async route => {
+    if (route.request().method() !== 'PUT') return route.continue()
+    await hold.promise
+    await route.fulfill({status:409})
+  })
+  const dialog = page.getByRole('dialog')
+  await configure.click()
+  await dialog.getByLabel('Start day').fill('10')
+  await dialog.getByRole('button', {name:'Save', exact:true}).click()
+  try {
+    await expect(dialog).toBeHidden()
+    await expect(panel).toBeVisible()
+    await expect(page.getByText(/Reporting period/)).toHaveCount(0)
+    await expect(page.locator('main [aria-busy="true"] [data-slot="skeleton"]').first()).toBeVisible()
+    await configure.click()
+    await expect(dialog.getByLabel('Start day')).toHaveValue('10')
+    await page.keyboard.press('Escape')
+  } finally { hold.resolve() }
+  await expect(page.getByText(/Reporting period/)).toBeVisible()
+  await page.getByRole('button', {name:'Review draft', exact:true}).click()
+  await expect(dialog.getByLabel('Start day')).toHaveValue('10')
+})
+
+test('recurring bills reserve the summary and list positions until each response arrives', async ({page, context}) => {
+  await account(context)
+  const {id} = await (await write(context, 'categories', 'POST', '{"name":"Office"}')).json()
+  await write(context, 'recurring-payments', 'POST', JSON.stringify({
+    name: 'Internet', categoryId: id, amount: 20, type: 'SUBSCRIPTION', firstDueDate: '2027-03-01',
+  }))
+  await page.goto('/finance/categories')
+  await expect(page.getByRole('row').filter({hasText:'Office'})).toBeVisible()
+
+  const summary = Promise.withResolvers<void>()
+  const rows = Promise.withResolvers<void>()
+  await page.route(/\/api\/finance\/recurring-payments(?:\/summary)?(?:\?.*)?$/, async route => {
+    const isSummary = new URL(route.request().url()).pathname.endsWith('/summary')
+    await (isSummary ? summary.promise : rows.promise)
+    await route.continue()
+  })
+  try {
+    await page.setViewportSize({width: 1280, height: 900})
+    await page.locator('nav a[href="/finance/recurring-bills"]').press('Enter')
+    const loading = page.locator('main [aria-busy="true"]')
+    const search = page.getByRole('textbox', {name:'Search bills'})
+    await expect(search).toBeVisible()
+    await expect(loading).toHaveCount(2)
+    await expect(loading.first().locator('.bg-grey-900')).toBeVisible()
+    await expect(loading.last().locator('[data-slot="skeleton"]').first()).toBeVisible()
+    const summaryBox = (await loading.first().boundingBox())!
+    const searchBox = (await search.boundingBox())!
+    expect(summaryBox.width).toBe(337)
+    expect(summaryBox.x + summaryBox.width).toBeLessThan(searchBox.x)
+
+    await page.setViewportSize({width: 390, height: 844})
+    const mobileSummary = (await loading.first().boundingBox())!
+    const mobileSearch = (await search.boundingBox())!
+    expect(mobileSummary.y + mobileSummary.height).toBeLessThan(mobileSearch.y)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+
+    summary.resolve()
+    await expect(page.getByText('Total Bills', {exact:true})).toBeVisible()
+    await expect(loading).toHaveCount(1)
+  } finally {
+    summary.resolve()
+    rows.resolve()
+  }
+  await expect(page.getByRole('row').filter({hasText:'Internet'})).toBeVisible()
+  await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0)
 })

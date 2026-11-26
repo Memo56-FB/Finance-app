@@ -1,7 +1,9 @@
 'use client'
+import { FieldSkeleton } from './Loading'
 
 import { useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { validId } from '@/lib/api/finance-json'
 import { ApiError } from '@/lib/api/client'
 import { useFinance } from '@/lib/finance/AccountScope'
 import { categoryOptions } from '@/lib/finance/categories'
@@ -9,7 +11,7 @@ import { colorHex } from '@/lib/finance/colors'
 import { useI18n } from '@/lib/i18n/client'
 import { SelectColorTag } from '@/components/ui/SelectColorTag'
 import { colorTags } from '@/lib/utils'
-import { FormSelect, QueryMessage } from './common'
+import { FormSelect, QueryMessage, useCategoryView } from './common'
 
 export function validate(fields: Record<string, boolean>) {
   const invalid = Object.keys(fields).filter(key => !fields[key])
@@ -28,17 +30,18 @@ export function useFieldError(error: unknown) {
   }
 }
 
-export function CategoryField({ value, onChange, original, error, nullable = false }: { value: string; onChange: (value: string) => void; original?: { id: string; name: string }; error?: string; nullable?: boolean }) {
+export function CategoryField({ value, onChange, original, error, nullable = false, excludedIds }: { value: string; onChange: (value: string) => void; original?: { id: string; name: string }; error?: string; nullable?: boolean; excludedIds?: ReadonlySet<string> }) {
   const { queries } = useFinance()
   const query = useQuery(queries.categories())
   const { t } = useI18n()
-  const options = categoryOptions(query.data?.items ?? [])
+  const categories = useCategoryView(query.data)
+  const options = categoryOptions(categories?.filter(category => validId(category.id)) ?? []).filter(option => !excludedIds?.has(option.value))
   if (original && !options.some(option => option.value === original.id)) options.push({ value: original.id, label: `${original.name} (${t('Inactive category')})` })
   if (nullable) options.unshift({ value: 'none', label: t('No category') })
   return <>
-    <QueryMessage query={query}/>
-    <FormSelect label="Category" value={value} onChange={onChange} options={options} error={error}/>
-    {!query.isPending && !options.length && <p className="text-preset-5">{t('Choose an active category.')}</p>}
+    <QueryMessage query={query} fallback={<FieldSkeleton/>}/>
+    {(!query.isPending || original) && <FormSelect label="Category" value={value} onChange={onChange} options={options} error={error}/>}
+    {query.data && !options.length && <p className="text-preset-5">{t(excludedIds?.size ? 'No categories available for a budget.' : 'Choose an active category.')}</p>}
   </>
 }
 

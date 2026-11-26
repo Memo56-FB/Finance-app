@@ -20,7 +20,8 @@ export function PotForm({ record }: { record?: Pot }) {
   }, {
     resource: 'savings-pots', id: record?.id, label: record ? 'Edit' : 'Add Pot',
     name: name.trim(), draft: { name, targetAmount: target, color }, editor: <PotForm record={record} />,
-    optimistic: record && validAmount(target) && cents(record.targetAmount) === cents(target) ? { name: name.trim(), color } : undefined,
+    intent: { resource: 'savings-pots', action: 'save', before: record,
+      value: { id: record?.id ?? '', name: name.trim(), color, targetAmount: target, balance: record?.balance ?? '0.00' } },
   })
   const error = useFieldError(save.error)
   const { t } = useI18n()
@@ -49,6 +50,7 @@ export function PotMoneyForm({ record, action }: { record: Pot; action: 'deposit
     return signal => movePot(record.id, action, amount, signal)
   }, {
     resource: 'savings-pots', id: record.id, label: action === 'deposits' ? 'Confirm Addition' : 'Confirm Withdrawal',
+    intent: { resource: 'savings-pots', action: 'move', before: record, delta: change },
     name: record.name, draft: { amount }, editor: <PotMoneyForm record={record} action={action} />,
   })
   const error = useFieldError(save.error)

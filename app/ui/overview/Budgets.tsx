@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { BudgetChart } from "@/app/ui/BudgetChart"
 import Link from '@/app/ui/finance/FinanceLink'
 import { budgets } from '../budgets/data'
-import type { Budget } from '@/lib/finance/types'
+import type { BudgetView } from '@/lib/finance/optimistic'
 import { safeColor } from '@/lib/finance/colors'
 
 const BudgetChartCard = ({ color, title, value }: {
@@ -26,7 +26,7 @@ const BudgetChartCard = ({ color, title, value }: {
   )
 }
 
-export function Budgets({items}:{items?:Budget[]}) {
+export function Budgets({items}:{items?:BudgetView[]}) {
   const rows=items ? items.map(item=>({id:item.id,title:item.categoryName,color:item.color,ofValue:item.spendingLimit})) : budgets.map(item=>({...item,id:item.title}))
   return (
     <article className="flex flex-col p-400 bg-white rounded-xl min-w-0">

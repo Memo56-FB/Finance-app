@@ -1,4 +1,5 @@
 'use client'
+import { FieldSkeleton } from './Loading'
 import { CalendarField } from './CalendarField'
 import { Fragment, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -21,7 +22,7 @@ import { saveRecord } from '@/lib/finance/services'
 import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { AmountHelp, CategoryField, nameValid, useFieldError, validate } from './form-fields'
 import { DeleteForm } from './DeleteForm'
-import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
+import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions, useCategoryView, useTransactionView } from './common'
 
 export function useFinancialURL() {
   const current=useSearchParams()
@@ -128,9 +129,10 @@ export function ListToolbar({category=false, search}:{category?:boolean;search:R
   const sort=filtersFromURL(params).sort!
   const sorts=[['newest','Latest'],['oldest','Oldest'],['name_asc','A to Z'],['name_desc','Z to A'],['amount_desc','Highest'],['amount_asc','Lowest']] as const
   const selected=params.get('category') ?? ''
-  const options=[{value:'all',label:t('All categories')},...categoryOptions(categories.data?.items ?? [])]
+  const visibleCategories = useCategoryView(categories.data)
+  const options=[{value:'all',label:t('All categories')},...categoryOptions(visibleCategories?.filter(row => validId(row.id)) ?? [])]
   if(validId(selected) && !options.some(option=>option.value === selected)) options.push({value:selected,label:`${t('Inactive category')} (#${selected})`})
-  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} {...input}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>{category && <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>}</div></div>{category && <QueryMessage query={categories}/>}</>
+  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} {...input}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>{category && (categories.isPending && phase === 'active' ? <QueryMessage query={categories} fallback={<div className="w-12 md:w-32"><FieldSkeleton/></div>}/> : <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>)}</div></div>{category && categories.isError && <QueryMessage query={categories}/>}</>
 }
 export function PagedNavigation({data,applyFilter}:{data:{page:number;totalPages:string};applyFilter:(key:string,value:string)=>void}) {
   const {params,update}=useFinancialURL()
@@ -170,19 +172,23 @@ export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Tr
       <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-grey-500 break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
       <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-grey-500 md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
       <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p></div>
-      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id} name={row.name} linked={row.sourceType}/>}/></div>
+      <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1">{validId(row.id) && <RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id} name={row.name} linked={row.sourceType} before={row}/>}/>}</div>
     </article>)}</div>
   </div>
 }
 export function Transactions() {
   const search = useFinancialSearch()
   const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params),query=useQuery(queries.transactions(filters))
+  const items = useTransactionView(query.data, filters)
   useEffect(()=>{const category=params.get('category');if(category && !validId(category)){const next=new URLSearchParams(params);next.delete('category');next.set('page','1');window.history.replaceState(null,'','?'+next)}},[params])
-  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{<TransactionForm/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query}/>{query.data && <><TransactionRows rows={query.data.items} actions/><PagedNavigation data={query.data} applyFilter={search.applyFilter}/></>}</section></>
+  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{<TransactionForm/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query} fallback={items ? null : undefined}/>{items && <TransactionRows rows={items} actions/>}{query.data && <PagedNavigation data={query.data} applyFilter={search.applyFilter}/>}</section></>
 }
 
 function TransactionForm({ record }: { record?: Transaction }) {
   const { t } = useI18n()
+  const { queries } = useFinance()
+  const categories = useQuery(queries.categories())
+  const categoryRows = useCategoryView(categories.data)
   const nullable = record?.sourceType === 'POT'
   const [name, setName] = useDraftField('name', record?.name ?? '')
   const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? (nullable ? 'none' : ''))
@@ -205,6 +211,13 @@ function TransactionForm({ record }: { record?: Transaction }) {
   }, {
     resource: 'transactions', id: record?.id, linked: record?.sourceType ?? 'MANUAL',
     label: record ? 'Edit transaction' : 'Add transaction', name: name.trim(),
+    intent: { resource: 'transactions', action: 'save', before: record, value: {
+      sourceType: 'MANUAL', potId: null, potName: null, recurringPaymentId: null, occurrenceId: null,
+      openingBalance: false, budgetWarnings: [], ...record, id: record?.id ?? '',
+      name: name.trim(), categoryId: categoryId === 'none' ? null : categoryId,
+      categoryName: categoryRows?.find(category => category.id === categoryId)?.name ?? record?.categoryName ?? null,
+      transactionDate: date, amount: (sign === 'expense' ? '-' : '') + amount,
+    } },
     draft: { name, categoryId, transactionDate: date, amount, sign }, editor: <TransactionForm record={record} />,
   })
   const error = useFieldError(save.error)

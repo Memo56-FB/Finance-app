@@ -1,4 +1,6 @@
 'use client'
+import { validId } from '@/lib/api/finance-json'
+import { RecurringRowsSkeleton, RecurringSummarySkeleton, recurringLayout, recurringListPanel, recurringTableColumns } from './RecurringLoading'
 import { useQuery } from '@tanstack/react-query'
 import { Check, Receipt } from '@phosphor-icons/react/dist/ssr'
 import { RecurringBillsOverview } from '@/app/ui/recurring-bills/RecurringBillsOverview'
@@ -10,7 +12,7 @@ import { validMonth } from '@/lib/api/finance-path'
 import type { PaymentSummary, RecurringPayment } from '@/lib/finance/types'
 import { PaymentForm, RecurringForm } from './RecurringForms'
 import { DeleteForm } from './DeleteForm'
-import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions } from './common'
+import { Empty, financeDialog, NewDialog, PageHeader, QueryMessage, RowActions, usePaymentSummaryView, useRecurringView } from './common'
 import { ListToolbar, PagedNavigation, useFinancialSearch } from './Transactions'
 import { MonthControl } from './Budgets'
 
@@ -34,7 +36,7 @@ function PaymentDueDate({row,className}:{row:RecurringPayment;className:string})
 function RecurringRow({row}:{row:RecurringPayment}) {
   const {t,money}=useI18n()
   const installmentCents = row.totalInstallments !== null ? cents(row.amount) : 0n
-  return <article role="row" className="relative grid grid-cols-[minmax(0,1fr)_auto_44px] gap-x-200 border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_160px_120px_44px] md:items-center">
+  return <article role="row" className={`relative grid grid-cols-[minmax(0,1fr)_auto_44px] gap-x-200 border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0 md:items-center ${recurringTableColumns}`}>
     <div role="cell" className="col-start-1 row-start-1 flex items-center gap-200 min-w-0 pl-[48px] md:pl-0">
       <span aria-hidden="true" className="absolute left-0 top-1/2 grid h-8 w-8 -translate-y-1/2 flex-none place-items-center rounded-full bg-grey-900 text-white md:static md:translate-y-0"><Receipt size={16} weight="fill"/></span>
       <div className="grid gap-50 min-w-0"><h2 className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</h2>
@@ -47,30 +49,37 @@ function RecurringRow({row}:{row:RecurringPayment}) {
     </div>
     <div role="cell" className="col-start-1 row-start-2 min-w-0 pl-[48px] md:col-start-2 md:row-start-1 md:pl-0"><PaymentDueDate row={row} className="flex"/></div>
     <p role="cell" className={`col-start-2 row-span-2 row-start-1 self-center text-right md:col-start-3 md:row-span-1 text-preset-4-bold break-all ${row.status === 'PENDING' || row.status === 'VOID' ? 'text-red' : 'text-grey-900'}`}><Money value={row.status === 'PAID' && row.paidAmount !== null ? row.paidAmount : row.amount}/></p>
-    <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-4 md:row-span-1"><RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<RecurringForm record={row}/>} remove={<DeleteForm resource="recurring-payments" id={row.id} name={row.name}/>} extra={['PENDING','VOID'].includes(row.status) ? {label:'Mark paid',content:<PaymentForm record={row}/>} : undefined}/></div>
+    <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-4 md:row-span-1">{validId(row.id) && <RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<RecurringForm record={row}/>} remove={<DeleteForm resource="recurring-payments" id={row.id} name={row.name} recurring={row}/>} extra={['PENDING','VOID'].includes(row.status) ? {label:'Mark paid',content:<PaymentForm record={row}/>} : undefined}/>}</div>
   </article>
 }
 export function Recurring() {
   const search = useFinancialSearch()
   const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params,true),query=useQuery(queries.recurring(filters))
   const month=params.get('month') ?? '',summary=useQuery(queries.paymentSummary(validMonth(month) ? month : undefined)),{t}=useI18n()
+  const visibleSummary = usePaymentSummaryView(summary.data, validMonth(month) ? month : undefined)
+  const items = useRecurringView(query.data, filters, summary.data?.month)
   return <>
     <PageHeader title="Recurring Bills"><NewDialog title="Add recurring payment" contentClassName={financeDialog}>{<RecurringForm/>}</NewDialog></PageHeader>
-    <MonthControl effective={summary.data?.month} onMonthChange={value => search.applyFilter('month', value)}/><QueryMessage query={summary}/>
-    <section className="grid gap-300 xl:grid-cols-[337px_1fr]">
-      {summary.data && <RecurringBillsOverview summary={summaryView(summary.data)}/>}
-      <section className="bg-white rounded-xl px-250 py-300 grid gap-300 md:px-400 min-w-0"><ListToolbar search={search}/><QueryMessage query={query}/>
-        {query.data && <>
-          {query.data.items.length ? <div role="table" aria-label={t('Recurring Bills')}>
-            <div role="row" className="sr-only md:not-sr-only md:mb-300 md:grid grid-cols-[minmax(0,1fr)_160px_120px_44px] gap-200 border-b border-grey-100 pb-150 text-preset-5 text-grey-500">
+    <MonthControl effective={summary.data?.month} onMonthChange={value => search.applyFilter('month', value)}/>
+    <section className={recurringLayout}>
+      <div className="min-w-0 xl:self-start">
+        <QueryMessage query={summary} fallback={visibleSummary ? null : <RecurringSummarySkeleton/>}/>
+        {visibleSummary && <RecurringBillsOverview summary={summaryView(visibleSummary)}/>}
+      </div>
+      <section className={recurringListPanel}>
+        <ListToolbar search={search}/>
+        <QueryMessage query={query} fallback={items ? null : <RecurringRowsSkeleton/>}/>
+        {items && <>
+          {items.length ? <div role="table" aria-label={t('Recurring Bills')}>
+            <div role="row" className={`sr-only md:not-sr-only md:mb-300 md:grid gap-200 border-b border-grey-100 pb-150 text-preset-5 text-grey-500 ${recurringTableColumns}`}>
               <span role="columnheader">{t('Bill Title')}</span>
               <span role="columnheader">{t('Due Date')}</span>
               <span role="columnheader" className="text-right">{t('Amount')}</span>
               <span role="columnheader" className="sr-only">{t('Actions')}</span>
             </div>
-            <div role="rowgroup" className="grid">{query.data.items.map(row=><RecurringRow key={row.id} row={row}/>)}</div>
+            <div role="rowgroup" className="grid">{items.map(row=><RecurringRow key={row.id} row={row}/>)}</div>
           </div> : <Empty label="No bills found."/>}
-          <PagedNavigation data={query.data} applyFilter={search.applyFilter}/>
+          {query.data && <PagedNavigation data={query.data} applyFilter={search.applyFilter}/>}
         </> }
       </section>
     </section>

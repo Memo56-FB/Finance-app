@@ -1,3 +1,5 @@
+import { Skeleton } from '@/components/ui/skeleton'
+import { LoadingRegion } from '@/app/ui/finance/Loading'
 import { Money, Text } from '@/lib/i18n/client'
 
 import { Button } from '@/components/ui/button'
@@ -24,7 +26,7 @@ const PotMiniCard = ({ color, title, value }: {
   )
 }
 
-export const Pots = ({items,total=850}: {items?:Pot[];total?:MoneyValue}) => {
+export const Pots = ({items,total=850}: {items?:Pot[];total?:MoneyValue | null}) => {
   return (
     <article className='py-300 px-250 md:p-400 grid gap-250 bg-white rounded-xl'>
       <div className='flex flex-wrap justify-between gap-100'>
@@ -36,7 +38,9 @@ export const Pots = ({items,total=850}: {items?:Pot[];total?:MoneyValue}) => {
           <TipJar className='text-green' size={40} />
           <div className='gap-[11px] grid'>
             <h3 className='text-preset-4 text-grey-500'><Text id="Total Saved" /></h3>
-            <p className='text-preset-1 text-grey-900 break-all'><Money value={total} /></p>
+            {total === null
+              ? <LoadingRegion><Skeleton className="h-8 w-28"/></LoadingRegion>
+              : <p className='text-preset-1 text-grey-900 break-all'><Money value={total} /></p>}
           </div>
         </article>
         <section className='grid grid-cols-2 xl:grid-rows-2 gap-200'>

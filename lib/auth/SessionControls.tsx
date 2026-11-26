@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore, useRef } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SignOut } from '@phosphor-icons/react/dist/ssr'
 import { Text, useI18n } from '@/lib/i18n/client'
 import { api } from '@/lib/api/client'
@@ -47,8 +48,8 @@ export function SessionControls({ access }: { access: Access }) {
   })
   return <div className="flex min-w-0 flex-col items-start gap-100 px-200 py-100 md:px-500 text-preset-5">
     <div className="flex items-center gap-200">
-      <button type="button" aria-label={t('Log out')} title={t('Log out')} disabled={!ready || logout.isPending} className="flex h-[45px] w-[45px] shrink-0 items-center justify-center rounded-md text-grey-900 hover:bg-beige-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900 disabled:opacity-50" onClick={() => logout.mutate()}>
-        <SignOut size={24} aria-hidden="true" />
+      <button type="button" aria-label={t('Log out')} title={t('Log out')} aria-busy={logout.isPending} disabled={!ready || logout.isPending} className="flex h-[45px] w-[45px] shrink-0 items-center justify-center rounded-md text-grey-900 hover:bg-beige-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900 disabled:opacity-50" onClick={() => logout.mutate()}>
+        {logout.isPending ? <Skeleton className="size-6"/> : <SignOut size={24} aria-hidden="true" />}
       </button>
       {access.kind === 'guest' && <Link href="/login" className="underline">{t('Login')}</Link>}
     </div>

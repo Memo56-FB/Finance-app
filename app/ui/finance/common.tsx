@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { hashKey, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -14,19 +14,22 @@ import { ApiError } from '@/lib/api/client'
 import { SessionRetry, useFinance, useAccountSession } from '@/lib/finance/AccountScope'
 import { financeKey, recentTransactionFilters } from '@/lib/finance/queries'
 import type { Resource } from '@/lib/finance/contracts'
-import type { Budget, BudgetWarning, Category, List, PotList } from '@/lib/finance/types'
+import type { Budget, BudgetWarning, Category, CutSettings, List, ListFilters, Page, PaymentRecorded, PaymentSummary, Pot, PotList, RecurringPayment, Summary, Transaction } from '@/lib/finance/types'
+import { applyRecord, projectBudgets, projectSummary, recurringForMonth, sortFinancialRows, transactionMatches, transactionRows, type TransactionChange, type BudgetOperation, type SaveIntent } from '@/lib/finance/optimistic'
+import { cents, decimal } from '@/lib/finance/money'
+import { LoadingRegion, RowsSkeleton } from './Loading'
 import { cn } from '@/lib/utils'
 
 export type Label = keyof Messages
 export const panel='grid gap-250 rounded-xl bg-white px-250 py-300 md:p-400 min-w-0'
 export const financeDialog='w-[320px] px-250 py-300 md:w-full grid gap-250'
 export function PageHeader({title,children}:{title:Label;children?:ReactNode}) { const {t}=useI18n();return <header className="flex flex-wrap items-center justify-between gap-200"><h1 tabIndex={-1} className="text-preset-1 text-grey-900">{t(title)}</h1>{children}</header> }
-export function QueryMessage({query}:{query:{isPending:boolean;isError:boolean;isRefetching?:boolean;refetch:() => unknown}}) {
+export function QueryMessage({query, fallback = <RowsSkeleton/>}:{query:{isPending:boolean;isError:boolean;isRefetching?:boolean;data?:unknown;refetch:() => unknown};fallback?:ReactNode}) {
   const {t}=useI18n()
   const session = useAccountSession()
-  if(query.isPending) return <p role="status">{t('Loading…')}</p>
+  if (query.isPending && session?.phase !== 'read-only' && session?.phase !== 'unavailable') return fallback && <LoadingRegion>{fallback}</LoadingRegion>
   if(query.isError) return <div role="alert" className="grid gap-150 text-red"><p>{t('Could not load data. Please retry.')}</p><Button type="button" variant="secondary" disabled={session?.phase !== 'active'} onClick={()=>void query.refetch()}>{t('Reload data')}</Button></div>
-  return query.isRefetching ? <p role="status">{t('Loading…')}</p> : null
+  return null
 }
 export function Empty({label}:{label:Label}) { return <p className="text-preset-4 text-grey-500">{useI18n().t(label)}</p> }
 export function FormInput({label,error,money=false,...props}:ComponentProps<typeof Input> & {label:Label;error?:string;money?:boolean}) {
@@ -62,12 +65,15 @@ type SaveOptions<Result> = {
   name?: string
   draft?: Draft
   editor?: ReactNode
-  optimistic?: { name?: string; color?: string }
+  intent?: SaveIntent
   linked?: 'POT' | 'RECURRING_PAYMENT' | 'MANUAL'
   onConfirmed?: (result: Result, receivedAt: number) => void
 }
 type Operation = Omit<SaveOptions<unknown>, 'onConfirmed'> & {
   sequence: number
+  key: string
+  confirmed?: unknown
+  baselines: ReadonlyMap<string, unknown>
   state: 'pending' | 'rejected' | 'uncertain' | 'refreshing' | 'refresh'
   error?: unknown
 }
@@ -75,6 +81,7 @@ type Operation = Omit<SaveOptions<unknown>, 'onConfirmed'> & {
 const DraftContext = createContext<Operation | null>(null)
 type Operations = {
   operations: Operation[]
+  recordKeys: ReadonlyMap<string, string>
   submit: <Result>(options: SaveOptions<Result>, execute: (signal?: AbortSignal) => Promise<Result>, replace?: number) => boolean
 }
 const OperationsContext = createContext<Operations | null>(null)
@@ -90,12 +97,274 @@ export function useSaveOperation() {
   return operations.submit
 }
 
-export function usePendingEdit(resource: Resource, id: string) {
-  return useContext(OperationsContext)?.operations.find(operation =>
-    operation.state === 'pending' && operation.resource === resource && operation.id === id)?.optimistic
+function useVisibleOperations() {
+  return (useContext(OperationsContext)?.operations ?? []).filter(operation =>
+    operation.intent && (operation.state === 'pending' || operation.state === 'refreshing' || operation.state === 'refresh'))
 }
 
-function affectedQueries(operation: Operation) {
+export function useCategoryView(data: List<Category> | undefined) {
+  const operations = useVisibleOperations()
+  const pendingCreate = operations.find(operation => operation.intent?.resource === 'categories' &&
+    operation.intent.action === 'save' && !operation.id && !operation.confirmed)
+  const base = pendingCreate?.baselines.get(hashKey(['categories'])) as List<Category> | undefined
+  let rows = pendingCreate ? base?.items ?? [] : data?.items
+  for (const operation of operations) {
+    const intent = operation.intent
+    if (intent?.resource !== 'categories') continue
+    if (intent.action === 'delete') {
+      if (rows) rows = applyRecord(rows, intent.id)
+    } else {
+      const value = operation.confirmed as Category | undefined
+      const id = value?.id ?? operation.id ?? operation.key
+      rows = applyRecord(rows ?? [], id, value ?? { ...intent.value, id })
+    }
+  }
+  return rows
+}
+
+function useEditedCategoryNames() {
+  const operations = useVisibleOperations()
+  const names = new Map<string, string>()
+  for (const operation of operations) {
+    const intent = operation.intent
+    if (intent?.resource === 'categories' && intent.action === 'save' && operation.id) {
+      names.set(operation.id, (operation.confirmed as Category | undefined)?.name ?? intent.value.name)
+    }
+  }
+  return names
+}
+
+export function usePotView(data: PotList | undefined, month?: string) {
+  const operations = useVisibleOperations()
+  const pendingCreate = operations.find(operation => operation.intent?.resource === 'savings-pots' &&
+    operation.intent.action === 'save' && !operation.id && !operation.confirmed)
+  const base = pendingCreate?.baselines.get(hashKey(['pots', month ?? 'current'])) as PotList | undefined
+  let rows = pendingCreate ? base?.items ?? [] : data?.items
+  for (const operation of operations) {
+    const intent = operation.intent
+    if (intent?.resource !== 'savings-pots') continue
+    if (intent.action === 'delete') {
+      if (rows) rows = applyRecord(rows, intent.id)
+      continue
+    }
+    const confirmed = operation.confirmed as Pot | undefined
+    const id = confirmed?.id ?? operation.id ?? operation.key
+    const current = rows?.find(row => row.id === id)
+    if (intent.action === 'move' && month) continue
+    const value = intent.action === 'move'
+      ? { ...intent.before, balance: decimal(cents(intent.before.balance) + intent.delta) }
+      : { ...intent.value, id }
+    const result = confirmed && !month ? confirmed : value
+    rows = applyRecord(rows ?? [], id, month && current ? { ...result, balance: current.balance } : result)
+  }
+  const corrections = new Map<string, { balance: bigint; delta: bigint; sequence: number }>()
+  for (const operation of operations) {
+    const intent = operation.intent
+    if (!rows || intent?.resource !== 'transactions' || !intent.before?.potId) continue
+    const before = intent.before
+    const potId = intent.before.potId
+    const monthEnd = month ? month + '-31' : undefined
+    const amount = (row?: Transaction) => row && (!monthEnd || row.transactionDate <= monthEnd) ? cents(row.amount) : 0n
+    const after = intent.action === 'save' ? (operation.confirmed as Transaction | undefined) ?? intent.value : undefined
+    const correction = corrections.get(potId)
+    const base = operation.baselines.get(hashKey(['pots', month ?? 'current'])) as PotList | undefined
+    const original = base?.items.find(row => row.id === potId)
+    if (correction) correction.delta += amount(after) - amount(before)
+    else if (original) corrections.set(potId, { balance: cents(original.balance), delta: amount(after) - amount(before), sequence: operation.sequence })
+  }
+  for (const [potId, correction] of corrections) {
+    const current = rows?.find(row => row.id === potId)
+    if (!rows || !current) continue
+    const directMove = month ? undefined : operations.find(operation =>
+      operation.intent?.resource === 'savings-pots' && operation.intent.action === 'move' && operation.id === potId)
+    const move = directMove?.intent?.resource === 'savings-pots' && directMove.intent.action === 'move'
+      ? directMove.intent : undefined
+    const balance = move && directMove && directMove.sequence < correction.sequence ? cents(move.before.balance) : correction.balance
+    rows = applyRecord(rows, potId, { ...current, balance: decimal(balance + correction.delta + (move?.delta ?? 0n)) })
+  }
+  if (rows === data?.items) return data
+  return rows && {
+    items: rows,
+    totalBalance: pendingCreate && !base ? null : decimal(rows.reduce((sum, row) => sum + cents(row.balance), 0n)),
+  }
+}
+
+export function useSettingsView(data: CutSettings | undefined) {
+  const operation = useVisibleOperations().findLast(entry => entry.intent?.resource === 'settings')
+  return operation?.intent?.resource === 'settings'
+    ? (operation.confirmed as CutSettings | undefined) ?? operation.intent.value
+    : data
+}
+
+export function useBudgetView(data: List<Budget> | undefined, month?: string) {
+  const keys = useContext(OperationsContext)?.recordKeys
+  const changes = useTransactionChanges()
+  const names = useEditedCategoryNames()
+  const operations = useVisibleOperations()
+  const budgetOperations = operations.flatMap((operation): BudgetOperation[] => {
+    if (operation.intent?.resource !== 'budgets' ||
+      !['pending', 'refreshing', 'refresh'].includes(operation.state)) return []
+    return [{ key: operation.key, id: operation.id, intent: operation.intent, confirmed: operation.confirmed as Budget | undefined }]
+  })
+  if (!data && !budgetOperations.length) return undefined
+  const transaction = operations.find(operation => operation.intent?.resource === 'transactions')
+  const base = transaction?.baselines.get(hashKey(['budgets', month ?? 'current'])) as List<Budget> | undefined
+  const budgets = projectBudgets(base?.items ?? data?.items ?? [], budgetOperations, month)
+  return budgets.map(record => {
+    const categoryName = names.get(record.categoryId)
+    const row = categoryName ? { ...record, categoryName } : record
+    const localKey = keys?.get('budgets:' + row.id) ?? row.localKey
+    if (!base || row.spent === null || !changes.length) return localKey ? { ...row, localKey } : row
+    const expense = (transaction?: Transaction) => transaction?.categoryId === row.categoryId &&
+      transaction.transactionDate.startsWith(row.month) && cents(transaction.amount) < 0n ? -cents(transaction.amount) : 0n
+    const spent = changes.reduce((sum, change) => sum + expense(change.after) - expense(change.before), cents(row.spent))
+    const available = cents(row.spendingLimit) - spent
+    return { ...row, localKey, spent: decimal(spent), available: decimal(available),
+      limitReached: row.limitReached, exceededAmount: row.exceededAmount }
+  })
+}
+
+function useTransactionChanges() {
+  return useVisibleOperations().flatMap((operation): TransactionChange[] => {
+    const intent = operation.intent
+    if (intent?.resource === 'recurring-payments' && intent.action === 'pay' && operation.confirmed) {
+      return [{ after: (operation.confirmed as PaymentRecorded).transaction }]
+    }
+    if (intent?.resource !== 'transactions') return []
+    if (intent.action === 'delete') return intent.before ? [{ before: intent.before }] : []
+    const after = (operation.confirmed as Transaction | undefined) ?? {
+      ...intent.value, id: operation.id ?? operation.key,
+    }
+    return [{ before: intent.before, after }]
+  })
+}
+
+export function useTransactionView(data: Page<Transaction> | undefined, filters: ListFilters) {
+  const changes = useTransactionChanges()
+  const operations = useVisibleOperations()
+  const names = useEditedCategoryNames()
+  if (!data && !changes.some(change => change.after && transactionMatches(change.after, filters))) return undefined
+  const hiddenPots = new Set(operations.flatMap(operation =>
+    operation.intent?.resource === 'savings-pots' && operation.intent.action === 'delete' ? [operation.intent.id] : []))
+  const pendingCreate = operations.find(operation => operation.intent?.resource === 'transactions' &&
+    operation.intent.action === 'save' && !operation.id && !operation.confirmed &&
+    transactionMatches(operation.intent.value, filters))
+  const key = hashKey(['transactions', { ...filters, search: filters.search || undefined }])
+  const base = pendingCreate ? pendingCreate.baselines.get(key) as Page<Transaction> | undefined : data
+  const rows = transactionRows(base?.items ?? [], changes, filters, base?.totalPages === '1' || base?.totalPages === '0')
+  return rows.filter(row => !row.potId || !hiddenPots.has(row.potId)).map(row => {
+    const categoryName = row.categoryId && names.get(row.categoryId)
+    return categoryName ? { ...row, categoryName } : row
+  })
+}
+
+export function useRecentExpenseView(data: Transaction[] | undefined, categoryId: string, month: string) {
+  const changes = useTransactionChanges().flatMap(({ before, after }) => {
+    const oldExpense = before && cents(before.amount) < 0n ? before : undefined
+    const newExpense = after && cents(after.amount) < 0n ? after : undefined
+    return oldExpense || newExpense ? [{ before: oldExpense, after: newExpense }] : []
+  })
+  const operations = useVisibleOperations()
+  const filters = { categoryId, month, size: 3 }
+  const pendingCreate = operations.find(operation => operation.intent?.resource === 'transactions' &&
+    operation.intent.action === 'save' && !operation.id && !operation.confirmed &&
+    cents(operation.intent.value.amount) < 0n && transactionMatches(operation.intent.value, filters))
+  const base = pendingCreate ? pendingCreate.baselines.get(hashKey(['budget-expenses', categoryId, month])) as Transaction[] | undefined : data
+  return base || changes.some(change => change.after && transactionMatches(change.after, filters))
+    ? transactionRows(base ?? [], changes, filters, true)
+    : undefined
+}
+
+export function useSummaryView(data: Summary | undefined, month?: string) {
+  const operations = useVisibleOperations()
+  const changes = useTransactionChanges()
+  const transaction = operations.find(operation => operation.intent?.resource === 'transactions' ||
+    (operation.intent?.resource === 'recurring-payments' && operation.intent.action === 'pay'))
+  const base = transaction?.baselines.get(hashKey(['summary', month ?? 'current'])) as Summary | undefined
+  return base && changes.length ? projectSummary(base, changes) : data
+}
+
+export function useRecurringView(data: Page<RecurringPayment> | undefined, filters: ListFilters, currentMonth?: string) {
+  const operations = useVisibleOperations()
+  const names = useEditedCategoryNames()
+  const month = filters.month ?? data?.items[0]?.month ?? currentMonth
+  const pendingCreate = operations.find(operation => operation.intent?.resource === 'recurring-payments' &&
+    operation.intent.action === 'save' && !operation.id && !operation.confirmed && month &&
+    recurringForMonth(operation.intent.value, month).dueDate &&
+    (!filters.search || operation.intent.value.name.toLowerCase().includes(filters.search.toLowerCase())))
+  const key = hashKey(['recurring', { ...filters, search: filters.search || undefined }])
+  const base = pendingCreate ? pendingCreate.baselines.get(key) as Page<RecurringPayment> | undefined : data
+  let rows = base?.items
+  for (const operation of operations) {
+    const intent = operation.intent
+    if (intent?.resource !== 'recurring-payments') continue
+    if (intent.action === 'delete') {
+      if (rows) rows = applyRecord(rows, intent.id)
+    } else if (intent.action === 'pay') {
+      if (intent.before.month !== month || !rows) continue
+      const result = operation.confirmed as PaymentRecorded | undefined
+      rows = rows.map(row => row.id === intent.before.id ? {
+        ...row, status: 'PAID', paidAmount: result ? decimal(-cents(result.transaction.amount)) : intent.before.amount,
+        occurrenceId: result?.occurrenceId ?? row.occurrenceId, paidAt: result?.paidAt ?? row.paidAt,
+        paidInstallments: row.totalInstallments === null ? row.paidInstallments : String(BigInt(intent.before.paidInstallments) + 1n),
+      } : row)
+    } else if (month) {
+      const confirmed = operation.confirmed as RecurringPayment | undefined
+      const id = confirmed?.id ?? operation.id ?? operation.key
+      const old = rows?.find(row => row.id === id)
+      const value = recurringForMonth({ ...(confirmed ?? intent.value), id }, month)
+      const matches = (!filters.search || value.name.toLowerCase().includes(filters.search.toLowerCase())) &&
+        (value.status !== 'NOT_SCHEDULED' || Boolean(old?.occurrenceId))
+      rows = applyRecord(rows ?? [], id, matches ? value : undefined)
+    }
+  }
+  if (rows && rows !== base?.items) {
+    rows = sortFinancialRows(rows, filters.sort, row => row.dueDate ?? '')
+    if (base?.totalPages === '0' || base?.totalPages === '1') rows = rows.slice(0, filters.size ?? 20)
+  }
+  return rows?.map(row => {
+    const categoryName = names.get(row.categoryId)
+    return categoryName ? { ...row, categoryName } : row
+  })
+}
+
+export function usePaymentSummaryView(data: PaymentSummary | undefined, month?: string) {
+  const operations = useVisibleOperations().filter(operation => operation.intent?.resource === 'recurring-payments')
+  const base = operations[0]?.baselines.get(hashKey(['payment-summary', month ?? 'current'])) as PaymentSummary | undefined
+  if (!base) return data
+  let paid = base.paid, pending = base.pending
+  for (const operation of operations) {
+    const { intent } = operation
+    if (intent?.resource !== 'recurring-payments') continue
+    if (intent.action === 'pay') {
+      if (intent.before.month !== base.month || intent.before.status === 'PAID' || !intent.before.dueDate) continue
+      const result = operation.confirmed as PaymentRecorded | undefined
+      const amount = result ? -cents(result.transaction.amount) : cents(intent.before.amount)
+      paid = { count: String(BigInt(paid.count) + 1n), totalAmount: decimal(cents(paid.totalAmount) + amount) }
+      pending = { count: String(BigInt(pending.count) - 1n), totalAmount: decimal(cents(pending.totalAmount) - cents(intent.before.amount)) }
+      continue
+    }
+    const before = intent.before
+    if (before && (before.month !== base.month || before.status === 'PAID')) continue
+    if (intent.action === 'delete' && !before) continue
+    const after = intent.action === 'save'
+      ? recurringForMonth((operation.confirmed as RecurringPayment | undefined) ?? intent.value, base.month)
+      : undefined
+    const wasScheduled = Boolean(before?.dueDate)
+    const isScheduled = Boolean(after?.dueDate) && after?.status !== 'PAID'
+    const count = BigInt(pending.count) + BigInt(Number(isScheduled) - Number(wasScheduled))
+    const amount = cents(pending.totalAmount) + (isScheduled && after ? cents(after.amount) : 0n)
+      - (wasScheduled && before ? cents(before.amount) : 0n)
+    pending = { count: String(count), totalAmount: decimal(amount) }
+  }
+  const total = {
+    count: String(BigInt(paid.count) + BigInt(pending.count)),
+    totalAmount: decimal(cents(paid.totalAmount) + cents(pending.totalAmount)),
+  }
+  return { ...base, paid, pending, total }
+}
+
+function affectedQueries(operation: Pick<Operation, 'resource' | 'linked'>) {
   switch (operation.resource) {
     case 'settings': return ['summary']
     case 'categories': return ['categories', 'transactions', 'budgets', 'recurring', 'budget-expenses']
@@ -108,12 +377,17 @@ function affectedQueries(operation: Operation) {
   }
 }
 
+function showOperation(operation: Operation) {
+  return operation.state !== 'refreshing' && !(operation.state === 'pending' && operation.intent)
+}
+
 export function SaveOperations({ children }: { children: ReactNode }) {
   const { account, canAct, whenVerified, operationSignal, notify, phase, queries, concealed } = useFinance()
   const client = useQueryClient()
   const { t } = useI18n()
   const records = useRef<Operation[]>([])
   const next = useRef(0)
+  const [recordKeys, setRecordKeys] = useState<ReadonlyMap<string, string>>(() => new Map())
   const [operations, setOperations] = useState<Operation[]>([])
   const [verified, setVerified] = useState<number[]>([])
   const [editing, setEditing] = useState<Operation | null>(null)
@@ -126,8 +400,8 @@ export function SaveOperations({ children }: { children: ReactNode }) {
     setOperations(records.current)
   }
 
-  function setResult(operation: Operation, state?: Operation['state'], error?: unknown) {
-    update(list => list.flatMap(item => item.sequence !== operation.sequence ? [item] : state ? [{ ...item, state, error }] : []))
+  function setResult(operation: Operation, state?: Operation['state'], error?: unknown, confirmed?: unknown) {
+    update(list => list.flatMap(item => item.sequence !== operation.sequence ? [item] : state ? [{ ...item, state, error, confirmed: confirmed ?? item.confirmed }] : []))
   }
 
   function filter(operation: Operation) {
@@ -160,12 +434,59 @@ export function SaveOperations({ children }: { children: ReactNode }) {
     }
   }
 
+  const refreshing = useRef(false)
+
+  async function refreshSettled(signal?: AbortSignal) {
+    if (refreshing.current || signal?.aborted || !canAct()) return
+    const overlaps = (operation: Operation, other: Operation) =>
+      affectedQueries(other).some(key => affectedQueries(operation).includes(key))
+    const pending = records.current.filter(operation => operation.state === 'pending')
+    const ready = records.current.filter(operation => operation.state === 'refreshing' &&
+      !pending.some(other => overlaps(operation, other)))
+    if (!ready.length) return
+    refreshing.current = true
+    const match = (query: { queryKey: readonly unknown[] }) => ready.some(operation => filter(operation).predicate(query))
+    let succeeded = false
+    try {
+      await client.cancelQueries({ queryKey: financeKey(account), predicate: match })
+      if (signal?.aborted || !canAct()) return
+      await client.invalidateQueries({ queryKey: financeKey(account), predicate: match }, { throwOnError: true })
+      succeeded = true
+    } catch {
+      // Keep canonical write results visible when a follow-up read fails.
+    } finally {
+      if (!signal?.aborted) {
+        const inFlight = records.current.filter(operation => operation.state === 'pending')
+        const settled = new Set(ready.filter(operation =>
+          !inFlight.some(other => overlaps(operation, other))).map(operation => operation.sequence))
+        update(list => list.flatMap(operation => settled.has(operation.sequence)
+          ? succeeded ? [] : [{ ...operation, state: 'refresh' as const }]
+          : [operation]))
+      }
+      refreshing.current = false
+      if (!signal?.aborted) void refreshSettled(signal)
+    }
+  }
+
   function submit<Result>(options: SaveOptions<Result>, execute: (signal?: AbortSignal) => Promise<Result>, replace?: number) {
     if (!canAct()) return false
+    const intent = options.intent
+    if (intent?.resource === 'budgets' && intent.action === 'save' && records.current.some(entry =>
+      entry.intent?.resource === 'budgets' && entry.intent.action === 'save' &&
+      entry.intent.value.categoryId === intent.value.categoryId &&
+      (entry.state === 'pending' || entry.state === 'uncertain'))) return false
     if (options.id && records.current.some(item => item.resource === options.resource && item.id === options.id &&
       (item.state === 'pending' || item.state === 'uncertain'))) return false
     const signal = operationSignal()
-    const operation: Operation = { ...options, sequence: ++next.current, state: 'pending' }
+    const sequence = ++next.current
+    const keys = affectedQueries(options)
+    const baselines = new Map(client.getQueriesData({
+      queryKey: financeKey(account),
+      predicate: query => keys.some(key => key === query.queryKey[2]),
+    }).map(
+      ([key, data]) => [hashKey(key.slice(2)), data],
+    ))
+    const operation: Operation = { ...options, sequence, baselines, key: `local:${sequence}`, state: 'pending' }
     update(list => [...list.filter(item => item.sequence !== replace), operation])
 
     async function run() {
@@ -176,49 +497,31 @@ export function SaveOperations({ children }: { children: ReactNode }) {
         if (signal?.aborted || !await whenVerified() || !canAct()) return
         const rejected = error instanceof ApiError && [400, 403, 404, 409].includes(error.status)
         setResult(operation, rejected ? 'rejected' : 'uncertain', error)
+        if (rejected && error.status === 409 && operation.intent) void refresh(operation).catch(() => {})
+        void refreshSettled(signal)
         return
       }
       const receivedAt = Date.now()
       if (signal?.aborted || !await whenVerified() || !canAct()) return
-      await client.cancelQueries(filter(operation))
-      if (signal?.aborted || !await whenVerified() || !canAct()) return
-      if (operation.optimistic && result && typeof result === 'object') {
-        if (operation.resource === 'categories' && 'name' in result && typeof result.name === 'string') {
-          const name = result.name
-          client.setQueryData<List<Category>>([...financeKey(account), 'categories'], data =>
-            data && { ...data, items: data.items.map(item => item.id === operation.id ? { ...item, name } : item) })
-        } else if (operation.resource === 'budgets' && 'color' in result && typeof result.color === 'string') {
-          const color = result.color
-          client.setQueriesData<List<Budget>>({ queryKey: [...financeKey(account), 'budgets'] }, data =>
-            data && { ...data, items: data.items.map(item => item.id === operation.id ? { ...item, color: color } : item) })
-        } else if (operation.resource === 'savings-pots' && 'name' in result && typeof result.name === 'string' &&
-          'color' in result && typeof result.color === 'string') {
-          const { name, color } = result
-          client.setQueriesData<PotList>({ queryKey: [...financeKey(account), 'pots'] }, data => data && {
-            ...data, items: data.items.map(item => item.id === operation.id ? { ...item, name, color } : item),
-          })
-        }
+      if (!operation.id && result && typeof result === 'object' && 'id' in result && typeof result.id === 'string') {
+        const recordId = result.id
+        setRecordKeys(keys => new Map(keys).set(operation.resource + ':' + recordId, operation.key))
       }
-      setResult(operation, 'refreshing')
+      setResult(operation, 'refreshing', undefined, result)
       options.onConfirmed?.(result, receivedAt)
       const warnings = result && typeof result === 'object' && 'budgetWarnings' in result
         ? result.budgetWarnings as BudgetWarning[] : []
       notify({ warnings })
-      try {
-        await refresh(operation)
-        if (!signal?.aborted) setResult(operation)
-      } catch {
-        if (!signal?.aborted) setResult(operation, 'refresh')
-      }
+      await refreshSettled(signal)
     }
     mutation.mutate(run)
     return true
   }
 
-  return <OperationsContext.Provider value={{ operations, submit }}>
+  return <OperationsContext.Provider value={{ operations, submit, recordKeys }}>
     {children}
-    {operations.some(operation => operation.state !== 'refreshing') && <section aria-label={t('Pending changes')} className="sticky bottom-0 z-10 grid max-h-[40dvh] gap-100 overflow-auto rounded-lg bg-white p-150">
-      {operations.filter(operation => operation.state !== 'refreshing').map(operation => <div className="flex flex-wrap items-center gap-100" key={operation.sequence}>
+    {operations.some(showOperation) && <section aria-label={t('Pending changes')} className="sticky bottom-0 z-10 grid max-h-[40dvh] gap-100 overflow-auto rounded-lg bg-white p-150">
+      {operations.filter(showOperation).map(operation => <div className="flex flex-wrap items-center gap-100" key={operation.sequence}>
         <p role={operation.state === 'pending' ? 'status' : 'alert'}>
           {t(operation.label)}{operation.name ? ' · ' + operation.name : ''} · {t(operation.state === 'pending' ? 'Pending confirmation' :
             operation.state === 'refresh' ? 'Could not load data. Please retry.' :

@@ -1,4 +1,5 @@
 'use client'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useTransition } from 'react'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
@@ -27,11 +28,11 @@ export function PreferencesBar() {
   return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5">
       <label htmlFor="preference-language" className="sr-only">{locale.t('Language')}</label>
       <Select value={locale.language} disabled={pending} onValueChange={change}>
-        <SelectTrigger id="preference-language" className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900">
+        <SelectTrigger id="preference-language" aria-busy={pending} className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900">
           <SelectValue>
             <span className="flex items-center gap-100">
               <Image src={`/flags/${selected.flag}.svg`} width={24} height={16} alt="" aria-hidden="true" />
-              {selected.label}
+              {selected.label}{pending && <Skeleton className="size-3 rounded-full"/>}
             </span>
           </SelectValue>
         </SelectTrigger>

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { ApiError, bindFinanceSession } from '@/lib/api/client'
 import { currentAccount, leavingSession, sessionChannel, useAccessNavigation } from '@/lib/auth/client'
+import { CardsSkeleton, LoadingRegion } from '@/app/ui/finance/Loading'
 import { Button } from '@/components/ui/button'
 import { Money, Text } from '@/lib/i18n/client'
 import { financeKey, financeQueries } from './queries'
@@ -156,6 +157,7 @@ export function AccountScope({ account, sessionTag, children }: { account: strin
     },
   }}>
     <SessionRetry />
+    {hidden && phase === 'checking' && <LoadingRegion><CardsSkeleton/></LoadingRegion>}
     <div className={hidden ? 'hidden' : 'contents'} inert={phase === 'checking' || hidden}>{children}</div>
   </AccountContext.Provider>
 }

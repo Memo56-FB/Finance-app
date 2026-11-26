@@ -84,3 +84,58 @@ it('keeps cached content on a routine failure and conceals it on a session signa
   await act(async () => { announceSessionChange() })
   expect(content.closest('[inert]')).toHaveClass('hidden')
 })
+
+it('keeps independent local budget operations scoped to the session and rejects a duplicate reservation', async () => {
+  const { SaveOperations, useBudgetView, useSaveOperation } = await import('@/app/ui/finance/common')
+  const first = Promise.withResolvers<never>()
+  const second = Promise.withResolvers<never>()
+  const attempts = vi.fn()
+  currentAccount.mockReset().mockImplementation(async () => ({ username: 'account-a' }))
+
+  function Editor() {
+    const submit = useSaveOperation()
+    const budgets = useBudgetView({ items: [] })
+    function add(categoryId: string) {
+      const request = categoryId === '1' ? first : second
+      submit({
+        resource: 'budgets', label: 'Add Budget',
+        intent: { resource: 'budgets', action: 'save', value: {
+          categoryId, categoryName: 'Budget ' + categoryId, spendingLimit: '25', color: '#ffffff',
+        } },
+      }, () => { attempts(categoryId); return request.promise })
+    }
+    return <>
+      <button onClick={() => add('1')}>First budget</button>
+      <button onClick={() => add('2')}>Second budget</button>
+      <button>Cancel draft</button>
+      {budgets?.map(budget => <span key={budget.id}>{budget.id} {budget.categoryName}</span>)}
+    </>
+  }
+
+  const client = new QueryClient()
+  const { rerender } = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
+    <AccountScope key="account-a" account="account-a"><SaveOperations><Editor/></SaveOperations></AccountScope>
+  </PreferencesProvider></QueryClientProvider>)
+  await act(async () => {})
+  fireEvent.click(screen.getByText('Cancel draft'))
+  expect(attempts).not.toHaveBeenCalled()
+  await act(async () => {
+    fireEvent.click(screen.getByText('First budget'))
+    fireEvent.click(screen.getByText('First budget'))
+    fireEvent.click(screen.getByText('Second budget'))
+  })
+  expect(attempts.mock.calls).toEqual([['1'], ['2']])
+  expect(screen.getByText('local:1 Budget 1')).toBeInTheDocument()
+  expect(screen.getByText('local:2 Budget 2')).toBeInTheDocument()
+  await act(async () => { first.reject(new ApiError(409)) })
+  expect(screen.queryByText('local:1 Budget 1')).toBeNull()
+  expect(screen.getByText('local:2 Budget 2')).toBeInTheDocument()
+
+  currentAccount.mockResolvedValue({ username: 'account-b' })
+  rerender(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
+    <AccountScope key="account-b" account="account-b"><SaveOperations><Editor/></SaveOperations></AccountScope>
+  </PreferencesProvider></QueryClientProvider>)
+  await act(async () => { second.reject(new ApiError(409)) })
+  expect(screen.queryByText('local:2 Budget 2')).toBeNull()
+  expect(screen.queryByText(/conflicts with the saved data/)).toBeNull()
+})

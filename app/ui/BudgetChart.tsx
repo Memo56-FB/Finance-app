@@ -7,7 +7,8 @@ import {
   ChartContainer,
 } from "@/components/ui/chart"
 import { budgets } from './budgets/data'
-import type { Budget } from '@/lib/finance/types'
+import type { BudgetView } from '@/lib/finance/optimistic'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cents, decimal, moneyRatio } from '@/lib/finance/money'
 
 const innerRadius = 70
@@ -27,12 +28,18 @@ function fitLabel(label: SVGTextElement | null) {
   return () => observer.disconnect()
 }
 
-export const BudgetChart = ({items}: {items?:Budget[]}) => {
+export const BudgetChart = ({items}: {items?:BudgetView[]}) => {
   const { money, messages } = useI18n()
   const rows=items ? items.map(item=>({title:item.categoryName,spent:item.spent,ofValue:item.spendingLimit,fill:item.color})) : budgets
-  const totalSpent=decimal(rows.reduce((sum,row)=>sum+cents(row.spent),0n))
   const totalBudget=decimal(rows.reduce((sum,row)=>sum+cents(row.ofValue),0n))
-  const chart=rows.map(row=>({...row,title:items ? row.title : messages[row.title as keyof typeof messages] ?? row.title,chartValue:moneyRatio(row.spent,totalSpent),exactSpent:String(row.spent)}))
+  if (rows.some(row => row.spent === null)) return (
+    <div className="grid min-h-[240px] place-items-center gap-2 py-4 text-center">
+      <Skeleton className="size-36 rounded-full" />
+      <p className="text-preset-5 text-grey-500"><Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" /></p>
+    </div>
+  )
+  const totalSpent=decimal(rows.reduce((sum,row)=>sum+cents(row.spent!),0n))
+  const chart=rows.map(row=>({...row,title:items ? row.title : messages[row.title as keyof typeof messages] ?? row.title,chartValue:moneyRatio(row.spent!,totalSpent),exactSpent:String(row.spent)}))
   return (
     <ChartContainer
       config={{}}

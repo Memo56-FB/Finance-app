@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n/client'
 import type { Messages } from '@/lib/i18n/messages/en'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InputPassword } from '@/components/ui/InputPassword'
@@ -100,9 +101,15 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
           <input type="checkbox" name="remember-me" value="true" className="h-4 w-4 accent-green" />
           {t('Remember me')}
         </label>}
-        <Button type="submit">{t(mutation.isPending ? 'Please wait…' : confirming ? 'Retry session check' : register ? 'Create Account' : 'Login')}</Button>
+        <Button type="submit" aria-busy={mutation.isPending && mutation.variables?.action === 'account'}>
+          {t(confirming ? 'Retry session check' : register ? 'Create Account' : 'Login')}
+          {mutation.isPending && mutation.variables?.action === 'account' && <Skeleton className="ml-2 size-3 rounded-full opacity-70"/>}
+        </Button>
       </fieldset>}
-    <Button type="button" variant="secondary" disabled={!ready || mutation.isPending} onClick={() => void run('guest')}>{t('Continue as guest')}</Button>
+    <Button type="button" variant="secondary" disabled={!ready || mutation.isPending} aria-busy={mutation.isPending && mutation.variables?.action === 'guest'} onClick={() => void run('guest')}>
+      {t('Continue as guest')}
+      {mutation.isPending && mutation.variables?.action === 'guest' && <Skeleton className="ml-2 size-3 rounded-full"/>}
+    </Button>
     <div className="flex flex-wrap gap-100 text-preset-4">
       <p className="text-grey-500">{t(register ? 'Already have an account?' : 'Need to create an account?')}</p>
       <Link aria-disabled={mutation.isPending} onClick={event => { if (mutation.isPending) event.preventDefault() }} className="underline" href={(register ? '/login' : '/singup') + query}>{t(register ? 'Login' : 'Sign Up')}</Link>

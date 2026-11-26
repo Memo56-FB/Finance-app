@@ -1,4 +1,5 @@
 'use client'
+import { AmountsSkeleton, CardsSkeleton, FieldSkeleton, LoadingRegion, RowsSkeleton } from './Loading'
 import Link from '@/app/ui/finance/FinanceLink'
 import { endOfMonth, format, parseISO } from 'date-fns'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -16,7 +17,7 @@ import type { CutSettings } from '@/lib/finance/types'
 import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { useFieldError, validate } from './form-fields'
 import { CalendarField } from './CalendarField'
-import { NewDialog, PageHeader, panel, QueryMessage } from './common'
+import { NewDialog, PageHeader, panel, QueryMessage, useBudgetView, usePotView, useSettingsView, useSummaryView, useTransactionView, usePaymentSummaryView } from './common'
 import type { Label } from './common'
 import { financeQueries, recentTransactionFilters } from '@/lib/finance/queries'
 
@@ -36,42 +37,50 @@ export function Overview() {
   const [selectedMonth, setSelectedMonth] = useState('')
   const month = selectedMonth || undefined
   const summary = useQuery(queries.summary(month))
+  const visibleSummary = useSummaryView(summary.data, month)
   const settings = useQuery(queries.settings())
   const pots = useQuery(queries.pots(month))
+  const visiblePots = usePotView(pots.data, month)
+  const visibleSettings = useSettingsView(settings.data)
+  const awaitingCut = !month && visibleSettings !== settings.data
   const transactions = useQuery(queries.transactions({ ...recentTransactionFilters, month }))
+  const visibleTransactions = useTransactionView(transactions.data, { ...recentTransactionFilters, month })
   const budgets = useQuery(queries.budgets(month))
+  const visibleBudgets = useBudgetView(budgets.data, month)
   const recurring = useQuery(queries.paymentSummary(month))
+  const visibleRecurring = usePaymentSummaryView(recurring.data, month)
   const start = month ? month + '-01' : summary.data?.periodStart
   const end = month ? format(endOfMonth(parseISO(month)), 'yyyy-MM-dd') : summary.data?.periodEnd
   const periodLabel = month
     ? t('Period for {month}').replace('{month}', parseISO(month).toLocaleDateString(language, {month:'long', year:'numeric'}))
     : t('Reporting period')
   const wrongPeriod = month && summary.data && (summary.data.periodStart !== start || summary.data.periodEnd !== end)
-  return <><PageHeader title="Overview">{settings.data && <NewDialog title="Configure period" prefix={false}>{<CutForm record={settings.data!}/>}</NewDialog>}</PageHeader>
+  return <><PageHeader title="Overview">{visibleSettings && <NewDialog title="Configure period" prefix={false}>{<CutForm record={visibleSettings}/>}</NewDialog>}</PageHeader>
     <div className="flex flex-wrap items-end gap-150">
       <CalendarField label="Month" monthOnly value={selectedMonth} onChange={setSelectedMonth}/>
       {month && <Button variant="secondary" onClick={() => setSelectedMonth('')}>{t('Back to current period')}</Button>}
     </div>
-    {start && end && <p aria-live="polite" className="text-preset-4 text-grey-500">{periodLabel}: <CalendarDate value={start}/> – <CalendarDate value={end}/></p>}
-    <QueryMessage query={settings}/><QueryMessage query={summary}/>
+    {start && end && !awaitingCut && <p aria-live="polite" className="text-preset-4 text-grey-500">{periodLabel}: <CalendarDate value={start}/> – <CalendarDate value={end}/></p>}
+    <QueryMessage query={settings} fallback={<FieldSkeleton/>}/><QueryMessage query={summary} fallback={awaitingCut ? null : <AmountsSkeleton/>}/>
+    {awaitingCut && <LoadingRegion><AmountsSkeleton/></LoadingRegion>}
     {wrongPeriod && <div role="alert">
       <p>{t('The server returned a different period.')}</p>
       <Button variant="secondary" onClick={() => void refresh()}>{t('Reload data')}</Button>
     </div>}
-    {(!month || (summary.data && !wrongPeriod)) && <>
-      {summary.data && <section className="grid gap-150 md:gap-300 md:grid-cols-3">
-        <SummaryCardCurrentBalance title={month ? 'Net balance' : 'Current Balance'} value={<Money value={summary.data.currentBalance}/>}/>
-        <SummaryCard title="Income" value={<Money value={summary.data.income}/>}/>
-        <SummaryCard title="Expenses" value={<Money value={summary.data.expenses}/>}/>
+    {!wrongPeriod && <>
+      {visibleSummary && !awaitingCut && <section className="grid gap-150 md:gap-300 md:grid-cols-3">
+        <SummaryCardCurrentBalance title={month ? 'Net balance' : 'Current Balance'} value={<Money value={visibleSummary.currentBalance}/>}/>
+        <SummaryCard title="Income" value={<Money value={visibleSummary.income}/>}/>
+        <SummaryCard title="Expenses" value={<Money value={visibleSummary.expenses}/>}/>
       </section>}
       <section className="grid grid-cols-1 gap-200 xl:gap-0 xl:grid-cols-[auto_auto] xl:gap-x-300">
         <div className="flex flex-col gap-200 min-w-0">
-          <QueryMessage query={pots}/>{pots.data ? <Pots items={pots.data.items} total={pots.data.totalBalance}/> : <article className={panel}><SectionLink title="Pots" href="/finance/pots"/></article>}
-          <QueryMessage query={transactions}/>{transactions.data ? <Transactions items={transactions.data.items}/> : <article className={panel}><SectionLink title="Transactions" href="/finance/transactions"/></article>}
+          <QueryMessage query={pots} fallback={visiblePots ? null : <CardsSkeleton count={1}/>}/>{visiblePots ? <Pots items={visiblePots.items} total={visiblePots.totalBalance}/> : <article className={panel}><SectionLink title="Pots" href="/finance/pots"/></article>}
+          <QueryMessage query={transactions} fallback={visibleTransactions ? null : <div className={panel}><RowsSkeleton/></div>}/>{visibleTransactions ? <Transactions items={visibleTransactions.slice(0,4)}/> : <article className={panel}><SectionLink title="Transactions" href="/finance/transactions"/></article>}
         </div>
         <div className="flex flex-col gap-200 min-w-0">
-          <QueryMessage query={budgets}/>{budgets.data ? <Budgets items={budgets.data.items}/> : <article className={panel}><SectionLink title="Budgets" href="/finance/budgets"/></article>}
-          <QueryMessage query={recurring}/>{recurring.data ? <RecurringBills summary={recurring.data}/> : <article className={panel}><SectionLink title="Recurring Bills" href="/finance/recurring-bills"/></article>}
+          <QueryMessage query={budgets} fallback={visibleBudgets ? null : <CardsSkeleton count={0} chart/>}/>{visibleBudgets ? <Budgets items={visibleBudgets}/> : <article className={panel}><SectionLink title="Budgets" href="/finance/budgets"/></article>}
+          <QueryMessage query={recurring} fallback={<AmountsSkeleton/>}/>{visibleRecurring ? <RecurringBills summary={visibleRecurring}/> : <article className={panel}><SectionLink title="Recurring Bills" href="/finance/recurring-bills"/></article>}
         </div>
       </section>
     </>}
@@ -84,12 +93,13 @@ function CutForm({ record }: { record: CutSettings }) {
   const client = useQueryClient()
   const [frequency, setFrequency] = useDraftField('frequency', record.frequency)
   const [day, setDay] = useDraftField('startDay', String(record.startDay))
-  const save = useSave(() => {
+  const save = useSave<CutSettings>(() => {
     const startDay = Number(day)
     validate({ startDay: /^\d+$/.test(day) && startDay >= 1 && startDay <= 31 })
     return signal => saveSettings({ frequency, startDay }, signal)
   }, {
     resource: 'settings', id: 'settings', label: 'Configure period',
+    intent: { resource: 'settings', action: 'save', value: { frequency: frequency === 'SEMIMONTHLY' ? frequency : 'MONTHLY', startDay: Number(day) } },
     draft: { frequency, startDay: day }, editor: <CutForm record={record} />,
     onConfirmed: settings => client.setQueryData(queries.settings().queryKey, settings),
   })

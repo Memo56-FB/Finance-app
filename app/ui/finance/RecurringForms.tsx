@@ -7,11 +7,16 @@ import { validAmount } from '@/lib/finance/money'
 import { payRecurring, saveRecord } from '@/lib/finance/services'
 import type { RecurringPayment } from '@/lib/finance/types'
 import { Money, useI18n } from '@/lib/i18n/client'
-import { FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
+import { useQuery } from '@tanstack/react-query'
+import { useFinance } from '@/lib/finance/AccountScope'
+import { useCategoryView, FormInput, FormSelect, SaveForm, useDraftField, useSave } from './common'
 import { AmountHelp, CategoryField, nameValid, useFieldError, validate } from './form-fields'
 
 export function RecurringForm({ record }: { record?: RecurringPayment }) {
   const { t, recurringFrequency } = useI18n()
+  const { queries } = useFinance()
+  const categories = useQuery(queries.categories())
+  const categoryRows = useCategoryView(categories.data)
   const [name, setName] = useDraftField('name', record?.name ?? '')
   const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? '')
   const [amount, setAmount] = useDraftField('amount', record?.amount ?? '')
@@ -38,6 +43,15 @@ export function RecurringForm({ record }: { record?: RecurringPayment }) {
   }, {
     resource: 'recurring-payments', id: record?.id, label: record ? 'Edit recurring payment' : 'Add recurring payment',
     name: name.trim(), draft: { name, categoryId, amount, type, firstDueDate: date, totalInstallments: count, intervalMonths: interval },
+    intent: { resource: 'recurring-payments', action: 'save', before: record, value: {
+      month: '', dueDate: null, occurrenceId: null, paidAt: null, paidAmount: null,
+      paidInstallments: '0', status: 'NOT_SCHEDULED', ...record,
+      id: record?.id ?? '', name: name.trim(), categoryId,
+      categoryName: categoryRows?.find(row => row.id === categoryId)?.name ?? record?.categoryName ?? '',
+      amount, type: installment ? 'INSTALLMENT' : 'SUBSCRIPTION', firstDueDate: date,
+      billingDay: Number(date.slice(8)), totalInstallments: installment ? Number(count) : null,
+      intervalMonths: installment ? 1 : Number(interval),
+    } },
     editor: <RecurringForm record={record} />,
   })
   const error = useFieldError(save.error)
@@ -60,6 +74,7 @@ export function RecurringForm({ record }: { record?: RecurringPayment }) {
 
 export function PaymentForm({ record }: { record: RecurringPayment }) {
   const { t } = useI18n(), save = useSave(() => signal => payRecurring(record.id, record.month, signal), {
+    intent: { resource: 'recurring-payments', action: 'pay', before: record },
     resource: 'recurring-payments', id: record.id, label: 'Mark paid', name: record.name, editor: <PaymentForm record={record} />,
   })
   return <SaveForm save={save} submitLabel="Confirm payment"><p className="text-preset-4">{t('This payment will be recorded for the selected month.')}</p><p>{record.month}: <Money value={record.amount} /></p></SaveForm>

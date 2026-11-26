@@ -2,6 +2,9 @@
 
 import { useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
+import { Skeleton } from '@/components/ui/skeleton'
+import { RecurringPageSkeleton } from './RecurringLoading'
+import { AmountsSkeleton, CardsSkeleton, LoadingRegion, RowsSkeleton } from './Loading'
 import { PageHeader, type Label } from './common'
 import { financeRoutes } from '@/lib/auth/types'
 import { Overview as LiveOverview } from '@/app/ui/finance/Overview'
@@ -90,6 +93,14 @@ const titles: Label[] = ['Overview', 'Transactions', 'Categories', 'Budgets', 'P
 const subscribe = () => () => {}
 const guestViews = [GuestOverview, TransactionsPage, GuestCategories, GuestBudgets, GuestPots, GuestRecurring]
 
+function SectionSkeleton({ index }: { index: number }) {
+  if (index === 0) return <div className="grid gap-300"><AmountsSkeleton/><CardsSkeleton chart/><RowsSkeleton/></div>
+  if (index === 3) return <CardsSkeleton chart/>
+  if (index === 4) return <CardsSkeleton showActions/>
+  if (index === 5) return <RecurringPageSkeleton/>
+  return <RowsSkeleton/>
+}
+
 export function FinanceView({ guest }: { guest: boolean }) {
   const pathname = usePathname()
   // Streaming queries can resolve at different times in the HTML and RSC renders.
@@ -109,8 +120,8 @@ export function FinanceView({ guest }: { guest: boolean }) {
   const View = (guest ? guestViews : accountViews)[index]
   return <div className="contents" ref={root}>
     {View && (guest || hydrated ? <View key={pathname} /> : <>
-      <PageHeader title={titles[index]} />
-      <p role="status"><Text id="Loading…" /></p>
+      <PageHeader title={titles[index]}>{index === 5 && <Skeleton className="h-[53px] w-44"/>}</PageHeader>
+      <LoadingRegion><SectionSkeleton index={index}/></LoadingRegion>
     </>)}
   </div>
 }

@@ -10,6 +10,7 @@ import { InputSearch } from '@/components/ui/InputSearch'
 import { ResponsiveSelect } from '@/components/ui/ResponsiveSelect'
 import { Funnel, SortAscending } from '@phosphor-icons/react/dist/ssr'
 import { PaginationControls } from '@/components/ui/pagination'
+import { LoadingRegion, RowsSkeleton } from '@/app/ui/finance/Loading'
 import React, { Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -94,7 +95,7 @@ const TransactionsPage = () => {
 
 export default function Page() {
   return (
-    <Suspense fallback={<h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>}>
+    <Suspense fallback={<><h1 tabIndex={-1} className="text-preset-1 text-grey-900"><Text id="Transactions" /></h1><LoadingRegion><RowsSkeleton/></LoadingRegion></>}>
       <TransactionsPage />
     </Suspense>
   )

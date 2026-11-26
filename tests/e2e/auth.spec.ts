@@ -92,7 +92,9 @@ test('invalid login is local, duplicate registration is a field error, and pendi
   let submissions = 0
   await page.route('**/api/auth/register',async route=> { submissions++;await new Promise(resolve=>setTimeout(resolve,200));await route.continue() })
   await page.getByRole('button',{name:'Create Account',exact:true}).click()
-  await expect(page.getByRole('button',{name:'Please wait…',exact:true})).toBeDisabled()
+  const submit = page.getByRole('button',{name:'Create Account',exact:true})
+  await expect(submit).toBeDisabled()
+  await expect(submit.locator('[data-slot="skeleton"]')).toBeVisible()
   await expect(page.locator('p[role="alert"]')).toContainText('already registered')
   await expect(page.getByLabel('Username',{exact:true})).toHaveAttribute('aria-invalid','true')
   expect(submissions).toBe(1)
@@ -224,4 +226,46 @@ test('guest tabs follow confirmed sign-in and sign-out in the same browser', asy
   await page.getByRole('button',{name:'Logout',exact:true}).click()
   await expect(page).toHaveURL('/login')
   await expect(other).toHaveURL(/\/login\?next=/)
+})
+
+test('sign-in, sign-out and guest access keep their names while busy', async ({page}) => {
+  const loginHold = Promise.withResolvers<void>()
+  await page.route('**/api/auth/login', async route => {
+    await loginHold.promise
+    await route.continue()
+  })
+  await login(page)
+  const signIn = page.getByRole('button', {name:'Login', exact:true})
+  try {
+    await expect(signIn).toBeDisabled()
+    await expect(signIn.locator('[data-slot="skeleton"]')).toBeVisible()
+    await expect(page.getByLabel('Username',{exact:true})).toHaveValue('first')
+  } finally { loginHold.resolve() }
+  await expect(page).toHaveURL('/finance')
+
+  const logoutHold = Promise.withResolvers<void>()
+  await page.route('**/api/auth/logout', async route => {
+    await logoutHold.promise
+    await route.continue()
+  })
+  const logout = page.getByRole('button', {name:'Logout', exact:true})
+  await logout.click()
+  try {
+    await expect(logout).toBeDisabled()
+    await expect(logout.locator('[data-slot="skeleton"]')).toBeVisible()
+  } finally { logoutHold.resolve() }
+  await expect(page).toHaveURL('/login')
+
+  const guestHold = Promise.withResolvers<void>()
+  await page.route('**/api/auth/guest', async route => {
+    await guestHold.promise
+    await route.continue()
+  })
+  const guest = page.getByRole('button', {name:'Continue as guest', exact:true})
+  await guest.click()
+  try {
+    await expect(guest).toBeDisabled()
+    await expect(guest.locator('[data-slot="skeleton"]')).toBeVisible()
+  } finally { guestHold.resolve() }
+  await expect(page).toHaveURL('/finance')
 })
