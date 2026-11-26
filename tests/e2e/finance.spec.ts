@@ -1235,6 +1235,26 @@ test('another account never sees a delayed confirmation from the old session', a
   expect((await (await context.request.get(origin + '/api/finance/categories')).json()).items).toHaveLength(0)
 })
 
+test('select arrows indicate available scroll without receiving pointer events', async ({page, context}) => {
+  await account(context)
+  await page.setViewportSize({width: 1000, height: 500})
+  await page.goto('/finance/budgets')
+  await page.getByRole('button', {name: '+ Add New Budget', exact: true}).click()
+  await page.getByRole('dialog').getByRole('combobox', {name: 'Color Tag', exact: true}).click()
+
+  const list = page.getByRole('listbox')
+  const down = list.locator('div[aria-hidden="true"]').filter({has: page.locator('svg.lucide-chevron-down')})
+  const up = list.locator('div[aria-hidden="true"]').filter({has: page.locator('svg.lucide-chevron-up')})
+  await expect(down).toBeVisible()
+  await expect(down).toHaveCSS('pointer-events', 'none')
+
+  const viewport = list.locator('[data-radix-select-viewport]')
+  await viewport.hover()
+  await page.mouse.wheel(0, 80)
+  await expect(up).toBeVisible()
+  await expect(up).toHaveCSS('pointer-events', 'none')
+})
+
 test('a budget color is provisional only while its amount stays unchanged', async ({page, context}) => {
   await account(context)
   const category = await (await write(context,'categories','POST','{"name":"Travel budget"}')).json()
