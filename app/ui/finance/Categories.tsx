@@ -24,7 +24,7 @@ export function GuestCategories() {
   return <><PageHeader title="Categories"><Button disabled title={t('Log in to save changes.')} className="text-white">+ {t('Add category')}</Button></PageHeader><section className={panel}><table className="w-full text-left text-preset-4"><thead><tr><th className="py-150">{t('Name')}</th><th><span className="sr-only">{t('Actions')}</span></th></tr></thead><tbody>{['Bills','Groceries','General'].map(name=><tr key={name} className="border-t border-grey-100"><td className="py-200"><ControlledLabel value={name}/></td><td className="text-right"><button disabled aria-label={`${t('Actions')}: ${name}`} title={t('Log in to save changes.')} className="min-h-[44px] min-w-[44px]">•••</button></td></tr>)}</tbody></table><Link href="/login" className="text-preset-5 underline">{t('Log in to save changes.')}</Link></section></>
 }
 
-function CategoryForm({ record }: { record?: Category }) {
+export function CategoryForm({ record }: { record?: Category }) {
   const [name, setName] = useDraftField('name', record?.name ?? '')
   const save = useSave(() => { validate({ name: nameValid(name) }); return signal => saveRecord('categories', { name: name.trim() }, record?.id, signal) }, {
     resource: 'categories', id: record?.id, label: record ? 'Edit category' : 'Add category',

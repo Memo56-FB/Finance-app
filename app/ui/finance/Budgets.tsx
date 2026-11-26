@@ -3,6 +3,12 @@ import { CardsSkeleton, FieldSkeleton, LoadingRegion, RowsSkeleton } from './Loa
 import { CalendarField } from './CalendarField'
 import Link from '@/app/ui/finance/FinanceLink'
 import { useQuery } from '@tanstack/react-query'
+import { useId } from 'react'
+import type { ReactNode, RefCallback } from 'react'
+import { CaretDown, Plus } from '@phosphor-icons/react/dist/ssr'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { categoryOptions } from '@/lib/finance/categories'
+import { CategoryForm } from './Categories'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/Progress'
 import { SpendingSummary } from '@/app/ui/budgets/SpendingSummary'
@@ -79,6 +85,46 @@ export function Budgets() {
   </section> : <section className={panel}><Empty label="No budgets yet."/></section>)}</>
 }
 
+function BudgetCategoryPicker({ options, value, onChange, onAdd, triggerRef, categoryDialogOpen, error }: {
+  options: ReturnType<typeof categoryOptions>
+  value: string
+  onChange: (value: string) => void
+  onAdd: () => void
+  triggerRef: RefCallback<HTMLButtonElement>
+  categoryDialogOpen: boolean
+  error?: string
+}) {
+  const id = useId()
+  const { t } = useI18n()
+  const selected = options.find(option => option.value === value)
+  return <div className="grid min-w-0 gap-50">
+    <label htmlFor={id} className="text-preset-5-bold text-grey-500">{t('Category')}</label>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger id={id} ref={triggerRef} type="button"
+        className="flex h-[45px] w-full items-center justify-between gap-200 rounded-md border border-beige-500 bg-background px-250 text-left text-preset-4 text-grey-900 hover:border-grey-900 focus-visible:ring-2 focus-visible:ring-ring"
+        aria-invalid={!!error || undefined} aria-describedby={error ? id + '-error' : undefined}>
+        <span className="truncate">{selected?.label ?? t('Category')}</span>
+        <CaretDown aria-hidden size={16} weight="fill" className="shrink-0"/>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+        onCloseAutoFocus={event => { if (categoryDialogOpen) event.preventDefault() }}>
+        {options.length > 0 && <>
+          <DropdownMenuRadioGroup value={selected?.value ?? ''} onValueChange={onChange}>
+            {options.map(option => <DropdownMenuRadioItem key={option.value} value={option.value} className="break-words [overflow-wrap:anywhere]">{option.label}</DropdownMenuRadioItem>)}
+          </DropdownMenuRadioGroup>
+          <DropdownMenuSeparator/>
+        </>}
+        <DropdownMenuItem asChild onSelect={onAdd}>
+          <button type="button" className="min-h-11 w-full gap-100 text-left">
+            <Plus size={16} aria-hidden/>{t('Add a category')}
+          </button>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+    {error && <p id={id + '-error'} className="text-preset-5 text-red">{error}</p>}
+  </div>
+}
+
 function BudgetForm({ record }: { record?: Budget }) {
   const { t } = useI18n()
   const { queries } = useFinance()
@@ -88,26 +134,43 @@ function BudgetForm({ record }: { record?: Budget }) {
   const visibleBudgets = useBudgetView(budgets.data)
   const usedCategories = new Set(visibleBudgets?.filter(budget => budget.id !== record?.id).map(budget => budget.categoryId))
   const [categoryId, setCategory] = useDraftField('categoryId', record?.categoryId ?? '')
+  const activeCategory = categoryRows?.find(category => category.id === categoryId)
+  const canUseCategory = validId(categoryId) && !usedCategories.has(categoryId) && Boolean(activeCategory || record?.categoryId === categoryId)
   const [limit, setLimit] = useDraftField('spendingLimit', record?.spendingLimit ?? '')
   const [color, setColor] = useDraftField('color', record?.color ?? colorHex.green)
   const save = useSave(() => {
-    validate({ categoryId: !!budgets.data && validId(categoryId) && !usedCategories.has(categoryId), spendingLimit: validAmount(limit), color: /^#[\da-f]{6}$/i.test(color) })
+    validate({ categoryId: !!budgets.data && canUseCategory, spendingLimit: validAmount(limit), color: /^#[\da-f]{6}$/i.test(color) })
     return signal => saveRecord('budgets', { categoryId, spendingLimit: limit, color }, record?.id, signal)
   }, {
     resource: 'budgets', id: record?.id, label: record ? 'Edit' : 'Add Budget',
     name: record?.categoryName, draft: { categoryId, spendingLimit: limit, color }, editor: <BudgetForm record={record} />,
     intent: { resource: 'budgets', action: 'save', before: record, value: {
-      categoryId, categoryName: categoryRows?.find(category => category.id === categoryId)?.name ?? record?.categoryName ?? '',
+      categoryId, categoryName: activeCategory?.name ?? record?.categoryName ?? '',
       spendingLimit: limit, color,
     } },
   })
   const error = useFieldError(save.error)
-  return <SaveForm save={save} submitLabel={record ? 'Save Changes' : 'Add Budget'}>
-    <p className="text-preset-4 text-grey-500">{t('Choose a category to set a spending budget.')}</p>
-    <QueryMessage query={budgets} fallback={<FieldSkeleton/>}/>
-    {budgets.data && <CategoryField value={usedCategories.has(categoryId) ? '' : categoryId} onChange={setCategory} excludedIds={usedCategories} error={error('categoryId')}/>}
-    <FormInput label="Maximum Spending" money inputMode="decimal" placeholder={t('e.g. 2000')} value={limit} onChange={e => setLimit(e.target.value)} error={error('spendingLimit')} required/>
-    <AmountHelp/>
-    <ColorField value={color} onChange={setColor}/>
-  </SaveForm>
+  function renderForm(categoryField: ReactNode) {
+    return <SaveForm save={save} submitLabel={record ? 'Save Changes' : 'Add Budget'}>
+      <p className="text-preset-4 text-grey-500">{t('Choose a category to set a spending budget.')}</p>
+      <QueryMessage query={budgets} fallback={<FieldSkeleton/>}/>
+      {budgets.data && categoryField}
+      <FormInput label="Maximum Spending" money inputMode="decimal" placeholder={t('e.g. 2000')} value={limit} onChange={e => setLimit(e.target.value)} error={error('spendingLimit')} required/>
+      <AmountHelp/>
+      <ColorField value={color} onChange={setColor}/>
+    </SaveForm>
+  }
+
+  if (record) return renderForm(<CategoryField value={canUseCategory ? categoryId : ''} onChange={setCategory}
+    original={{id: record.categoryId, name: record.categoryName}} excludedIds={usedCategories} error={error('categoryId')}/>)
+
+  const options = categoryOptions((categoryRows ?? []).filter(category => validId(category.id)))
+    .filter(option => !usedCategories.has(option.value))
+  return <NewDialog title="Add category" renderTrigger={(open, triggerRef, isOpen) => renderForm(<>
+    <QueryMessage query={categories} fallback={categoryRows ? null : <FieldSkeleton/>}/>
+    {(categoryRows || !categories.isPending) && <BudgetCategoryPicker options={options} value={categoryId}
+      onChange={setCategory} onAdd={open} triggerRef={triggerRef} categoryDialogOpen={isOpen} error={error('categoryId')}/>}
+  </>)}>
+    <CategoryForm/>
+  </NewDialog>
 }

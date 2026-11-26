@@ -17,7 +17,13 @@ async function control(context:BrowserContext,path:string,data?:unknown) {
   const cookie=(await context.cookies()).find(item=>item.name === 'JSESSIONID')!
   return context.request.post(upstream+'/__finance/'+path,{headers:{Cookie:`JSESSIONID=${cookie.value}`},data})
 }
-async function choose(page:Page,label:string,text:string) {await page.getByRole('dialog').getByRole('combobox',{name:label,exact:true}).click();await page.getByRole('option',{name:text,exact:true}).click()}
+async function choose(page:Page, label:string, text:string) {
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('combobox',{name:label,exact:true})
+    .or(dialog.getByRole('button',{name:label,exact:true})).click()
+  await page.getByRole('option',{name:text,exact:true})
+    .or(page.getByRole('menuitemradio',{name:text,exact:true})).click()
+}
 async function save(page:Page) {
   const dialog=page.getByRole('dialog')
   const response = page.waitForResponse(response => response.url().includes('/api/finance/') &&
@@ -1261,9 +1267,9 @@ test('budget forms offer only unused categories and keep the category being edit
   await calendar.getByRole('button', {name: 'Select month'}).click()
   await expect(page.getByText('No budgets yet.', {exact: true})).toBeVisible()
   await page.getByRole('button', {name: '+ Add New Budget'}).click()
+  await page.getByRole('dialog').getByRole('button', {name: 'Category', exact: true}).click()
+  await expect(page.getByRole('menu').locator('[role="menuitemradio"], [role="menuitem"]')).toHaveText(['Dining', 'Add a category'])
   const select = page.getByRole('dialog').getByRole('combobox', {name: 'Category', exact: true})
-  await select.click()
-  await expect(page.getByRole('option')).toHaveText(['Dining'])
 
   await page.goto('/finance/budgets')
   const card = page.locator('article').filter({has: page.getByRole('button', {name: /^Actions: Travel \(/})})
@@ -1423,8 +1429,12 @@ for (const language of ['en', 'es']) test(`a new budget appears once while the w
     await expect(page.getByText(spanish ? 'de $500.00 de límite' : 'of $500.00 limit', {exact:true})).toBeVisible()
     await expect(page.getByText(spanish ? 'Aún no hay presupuestos.' : 'No budgets yet.')).toHaveCount(0)
     await add.click()
-    await expect(dialog.getByText(spanish ? 'No hay categorías disponibles para crear un presupuesto.' : 'No categories available for a budget.')).toBeVisible()
+    await dialog.getByRole('button', {name:spanish ? 'Categoría' : 'Category', exact:true}).click()
+    await expect(page.getByRole('menuitemradio')).toHaveCount(0)
+    await expect(page.getByRole('menuitem')).toHaveText(spanish ? 'Añadir categoría' : 'Add a category')
     await page.keyboard.press('Escape')
+    await expect(page.getByRole('menu')).toHaveCount(0)
+    await dialog.getByRole('button', {name:spanish ? 'Cerrar' : 'Close', exact:true}).click()
     await page.getByRole('link', {name:spanish ? 'Resumen' : 'Overview', exact:true}).press('Enter')
     await expect(page.getByRole('heading', {name:spanish ? 'Resumen' : 'Overview', exact:true})).toBeVisible()
     await expect(page.getByRole('heading', {name:'Food budget', level:3})).toBeVisible()
@@ -1690,4 +1700,47 @@ test('recurring bills reserve the summary and list positions until each response
   }
   await expect(page.getByRole('row').filter({hasText:'Internet'})).toBeVisible()
   await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0)
+})
+
+test('a budget can create its first category without losing its draft', async ({page, context}) => {
+  await account(context)
+  await page.goto('/finance/budgets')
+  await page.getByRole('button', {name:'+ Add New Budget', exact:true}).click()
+  const budget = page.getByRole('dialog', {name:'Add New Budget', exact:true})
+  const categoryPicker = budget.getByRole('button', {name:'Category', exact:true})
+  await expect(categoryPicker).toHaveText('Category')
+  await budget.getByLabel('Maximum Spending').fill('250')
+  const writes: string[] = []
+  page.on('request', request => {
+    if (request.method() === 'POST' && request.url().includes('/api/finance/')) writes.push(new URL(request.url()).pathname)
+  })
+  await budget.getByRole('button', {name:'Add Budget', exact:true}).click()
+  await expect(categoryPicker).toHaveAttribute('aria-invalid', 'true')
+  expect(writes).toEqual([])
+
+  await categoryPicker.press('Enter')
+  const action = page.getByRole('menuitem', {name:'Add a category', exact:true})
+  await expect(action).toBeFocused()
+  await expect(page.getByRole('menuitemradio')).toHaveCount(0)
+  await action.press('Enter')
+  const category = page.getByRole('dialog', {name:'Add category', exact:true})
+  const name = category.getByLabel('Name', {exact:true})
+  await expect(name).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(category).toHaveCount(0)
+  await expect(categoryPicker).toBeFocused()
+
+  await categoryPicker.click()
+  await action.click()
+  await name.fill('New travel category')
+  await category.getByRole('button', {name:'Save', exact:true}).click()
+  await expect(category).toHaveCount(0)
+  await expect(budget.getByLabel('Maximum Spending')).toHaveValue('250')
+  await categoryPicker.click()
+  await expect(page.getByRole('menu').locator('[role="menuitemradio"], [role="menuitem"]'))
+    .toHaveText(['New travel category', 'Add a category'])
+  await page.getByRole('menuitemradio', {name:'New travel category', exact:true}).click()
+  await save(page)
+  await expect(page.getByRole('heading', {name:'New travel category', level:2})).toBeVisible()
+  expect(writes).toEqual(['/api/finance/categories', '/api/finance/budgets'])
 })

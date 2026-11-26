@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react'
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps, ReactNode, RefCallback } from 'react'
 import { hashKey, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -650,14 +650,14 @@ function useEditorDialog() {
 
 const contentWidth = 'max-w-[calc(100%_-_32px)] md:max-w-lg max-h-[90dvh] overflow-y-auto'
 
-export function NewDialog({title,children,buttonLabel,prefix=true,variant,heading,description,contentClassName}:{title:Label;children:ReactNode;buttonLabel?:Label;prefix?:boolean;variant?:ComponentProps<typeof Button>['variant'];heading?:ReactNode;description?:Label;contentClassName?:string}) {
+export function NewDialog({title,children,buttonLabel,prefix=true,variant,heading,description,contentClassName,renderTrigger}:{title:Label;children:ReactNode;buttonLabel?:Label;prefix?:boolean;variant?:ComponentProps<typeof Button>['variant'];heading?:ReactNode;description?:Label;contentClassName?:string;renderTrigger?:(open:() => void, ref:RefCallback<HTMLButtonElement>, isOpen:boolean) => ReactNode}) {
   const dialog = useEditorDialog()
   const concealed = useAccountSession()?.concealed
-  const trigger = useRef<HTMLButtonElement>(null)
+  const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null)
   const { t } = useI18n()
   return <Dialog open={dialog.open} onOpenChange={dialog.setOpen}>
-    <DialogTrigger asChild><Button ref={trigger} variant={variant} className={variant ? '' : 'text-white'}>{prefix ? '+ ' : ''}{t(buttonLabel ?? title)}</Button></DialogTrigger>
-    <DialogContent style={concealed ? { visibility: 'hidden' } : undefined} className={cn(contentWidth, contentClassName)} {...dialog.content} onCloseAutoFocus={event => dialog.finishClose(event, trigger.current)}>
+    {renderTrigger ? renderTrigger(() => dialog.setOpen(true), setTrigger, dialog.open) : <DialogTrigger asChild><Button ref={setTrigger} variant={variant} className={variant ? '' : 'text-white'}>{prefix ? '+ ' : ''}{t(buttonLabel ?? title)}</Button></DialogTrigger>}
+    <DialogContent style={concealed ? { visibility: 'hidden' } : undefined} className={cn(contentWidth, contentClassName)} {...dialog.content} onCloseAutoFocus={event => dialog.finishClose(event, trigger)}>
       <DialogHeader className={contentClassName ? 'grid justify-start gap-250' : undefined}>
         <DialogTitle className={cn(contentClassName && 'text-start',heading && 'text-start text-preset-2 text-grey-900')}>{heading ?? t(title)}</DialogTitle>
         <DialogDescription className={description ? 'text-start text-preset-4 text-grey-500' : 'sr-only'}>{t(description ?? title)}</DialogDescription>
