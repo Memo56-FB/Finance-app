@@ -30,16 +30,16 @@ export const CreateBudget = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className='flex text-preset-4 text-white'><Text id="+ Add New Budget" /></Button>
+        <Button className='flex text-preset-4 text-ink'><Text id="+ Add New Budget" /></Button>
       </DialogTrigger>
-      <DialogContent className="w-[320px] px-250 py-300 rounded-xl md:w-full grid gap-250">
+      <DialogContent className="w-[320px] px-250 py-300 px-inset md:w-full grid gap-250">
         <DialogHeader className="grid justify-start gap-250">
           <DialogTitle className="text-start"><Text id="Add New Budget" /></DialogTitle>
           <DialogDescription className="text-start"><Text id="Choose a category to set a spending budget. Changes are not saved in this demo." /></DialogDescription>
         </DialogHeader>
         <form method="post" onSubmit={(event) => event.preventDefault()} className="grid gap-200">
           <div className="grid gap-50">
-            <label htmlFor={`${formId}-category`} className="text-preset-5-bold text-grey-500"><Text id="Budget Category" /></label>
+            <label htmlFor={`${formId}-category`} className="text-preset-5-bold text-ink-muted"><Text id="Budget Category" /></label>
             <Select>
               <SelectTrigger id={`${formId}-category`}>
                 <SelectValue placeholder={t("Category")} />
@@ -50,22 +50,22 @@ export const CreateBudget = () => {
             </Select>
           </div>
           <div className="grid gap-50">
-            <label htmlFor={`${formId}-limit`} className="text-preset-5-bold text-grey-500"><Text id="Maximum Spending" /></label>
+            <label htmlFor={`${formId}-limit`} className="text-preset-5-bold text-ink-muted"><Text id="Maximum Spending" /></label>
             <div className="relative">
-              <p className="text-beige-500 absolute left-250 top-[10px] text-preset-4">
+              <p className="text-ink-muted absolute left-250 top-[10px] text-preset-4">
                 <CurrencySymbol />
               </p>
               <Input id={`${formId}-limit`} type="number" min={0} step="0.01" placeholder={t("e.g. 2000")} className="pl-[5rem]" />
             </div>
           </div>
           <div className="grid gap-50">
-            <label htmlFor={`${formId}-theme`} className="text-preset-5-bold text-grey-500"><Text id="Color Tag" /></label>
+            <label htmlFor={`${formId}-theme`} className="text-preset-5-bold text-ink-muted"><Text id="Color Tag" /></label>
             <SelectColorTag
               id={`${formId}-theme`}
               options={colorTags}
             />
           </div>
-          <Button type="submit" disabled className="text-preset-4-bold text-white"><Text id="Add Budget" /></Button>
+          <Button type="submit" disabled className="text-preset-4-bold text-ink"><Text id="Add Budget" /></Button>
         </form>
       </DialogContent>
     </Dialog>

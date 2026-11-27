@@ -55,7 +55,7 @@ function LatestExpenseRows({budget}:{budget:Budget}) {
 }
 function LatestExpenses({budget}:{budget:Budget}) {
   const { t } = useI18n()
-  return <section className="grid gap-250 rounded-xl bg-beige-100 p-200">
+  return <section className="grid gap-250 px-inset bg-background p-200">
     <header className="flex flex-wrap justify-between gap-100">
       <h3 className="text-preset-3">{t('Latest Spending')}</h3>
       <Button variant="tertiary" asChild><Link href={'/finance/transactions?'+new URLSearchParams({category:budget.categoryId})}>{t('See All')}</Link></Button>
@@ -68,9 +68,9 @@ function BudgetCard({budget}:{budget:BudgetView}) {
   const record = validId(budget.id) && budget.spent !== null && budget.available !== null
     ? { ...budget, spent: budget.spent, available: budget.available }
     : undefined
-  return <article className={panel}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2></div>{record && <RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={record}/>} remove={<DeleteForm resource="budgets" id={budget.id} name={budget.categoryName}/>}/>}</header>
-    <div className="grid gap-200"><p className="text-preset-4 text-grey-500 break-all">{t('Maximum of')} <Money value={budget.spendingLimit}/></p>{budget.spent === null ? <Skeleton className="h-2 w-full"/> : <Progress aria-label={`${budget.categoryName} ${t('spending')}`} max={100} value={moneyRatio(budget.spent,budget.spendingLimit)} color={budget.color}/>}
-    <dl className="grid grid-cols-2 gap-200"><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg" style={{backgroundColor:budget.color}}/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Spent')}</dt><dd className="text-preset-4-bold break-all">{budget.spent === null ? <Skeleton className="h-4 w-16"/> : <Money value={budget.spent}/>}</dd></div></div><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-lg bg-beige-100"/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-grey-500">{t('Free')}</dt><dd className="text-preset-4-bold break-all">{budget.available === null ? <Skeleton className="h-4 w-16"/> : <Money value={budget.available}/>}</dd></div></div></dl></div>
+  return <article className={panel}><header className="flex items-center justify-between gap-150"><div className="flex items-center gap-200 min-w-0"><span className="h-4 w-4 shrink-0 rounded-none" style={{backgroundColor:budget.color}}/><h2 className="text-preset-2 break-words [overflow-wrap:anywhere]">{budget.categoryName}</h2></div>{record && <RowActions name={budget.categoryName} recordId={budget.id} contentClassName={financeDialog} edit={<BudgetForm record={record}/>} remove={<DeleteForm resource="budgets" id={budget.id} name={budget.categoryName}/>}/>}</header>
+    <div className="grid gap-200"><p className="text-preset-4 text-ink-muted break-all">{t('Maximum of')} <Money value={budget.spendingLimit}/></p>{budget.spent === null ? <Skeleton className="h-2 w-full"/> : <Progress aria-label={`${budget.categoryName} ${t('spending')}`} max={100} value={moneyRatio(budget.spent,budget.spendingLimit)} color={budget.color}/>}
+    <dl className="grid grid-cols-2 gap-200"><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-none" style={{backgroundColor:budget.color}}/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-ink-muted">{t('Spent')}</dt><dd className="text-preset-4-bold break-all">{budget.spent === null ? <Skeleton className="h-4 w-16"/> : <Money value={budget.spent}/>}</dd></div></div><div className="flex gap-200"><span className="h-full w-1 shrink-0 rounded-none bg-background"/><div className="grid gap-50 min-w-0"><dt className="text-preset-5 text-ink-muted">{t('Free')}</dt><dd className="text-preset-4-bold break-all">{budget.available === null ? <Skeleton className="h-4 w-16"/> : <Money value={budget.available}/>}</dd></div></div></dl></div>
     {budget.limitReached && <p className="text-preset-5 text-red">{t('Budget limit reached.')} {t('Budget exceeded by')} <Money value={budget.exceededAmount}/></p>}{record ? <LatestExpenses budget={record}/> : <LoadingRegion><Skeleton className="h-16 w-full"/></LoadingRegion>}
   </article>
 }
@@ -98,10 +98,10 @@ function BudgetCategoryPicker({ options, value, onChange, onAdd, triggerRef, cat
   const { t } = useI18n()
   const selected = options.find(option => option.value === value)
   return <div className="grid min-w-0 gap-50">
-    <label htmlFor={id} className="text-preset-5-bold text-grey-500">{t('Category')}</label>
+    <label htmlFor={id} className="text-preset-5-bold text-ink-muted">{t('Category')}</label>
     <DropdownMenu>
       <DropdownMenuTrigger id={id} ref={triggerRef} type="button"
-        className="flex h-[45px] w-full items-center justify-between gap-200 rounded-md border border-beige-500 bg-background px-250 text-left text-preset-4 text-grey-900 hover:border-grey-900 focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-[45px] w-full items-center justify-between gap-200 rounded-none border border-line bg-background px-250 text-left text-preset-4 text-ink hover:border-line focus-visible:ring-2 focus-visible:ring-ring"
         aria-invalid={!!error || undefined} aria-describedby={error ? id + '-error' : undefined}>
         <span className="truncate">{selected?.label ?? t('Category')}</span>
         <CaretDown aria-hidden size={16} weight="fill" className="shrink-0"/>
@@ -152,7 +152,7 @@ function BudgetForm({ record }: { record?: Budget }) {
   const error = useFieldError(save.error)
   function renderForm(categoryField: ReactNode) {
     return <SaveForm save={save} submitLabel={record ? 'Save Changes' : 'Add Budget'}>
-      <p className="text-preset-4 text-grey-500">{t('Choose a category to set a spending budget.')}</p>
+      <p className="text-preset-4 text-ink-muted">{t('Choose a category to set a spending budget.')}</p>
       <QueryMessage query={budgets} fallback={<FieldSkeleton/>}/>
       {budgets.data && categoryField}
       <FormInput label="Maximum Spending" money inputMode="decimal" placeholder={t('e.g. 2000')} value={limit} onChange={e => setLimit(e.target.value)} error={error('spendingLimit')} required/>

@@ -19,18 +19,26 @@ const config: Config = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		fontFamily: {
+  			sans: ['var(--font-sans)', 'ui-monospace', 'monospace'],
+  			heading: ['var(--font-heading)', 'ui-monospace', 'monospace'],
+  		},
   		colors: {
-				// My custom colors
-				beige: {
-					500: '#98908B',
-					100: '#F8F4F0',
+				// Pixel art semantic colors (theme ramp changes with data-theme)
+				'theme-1': 'hsl(var(--p1) / <alpha-value>)',
+				'theme-2': 'hsl(var(--p2) / <alpha-value>)',
+				'theme-3': 'hsl(var(--p3) / <alpha-value>)',
+				'theme-4': 'hsl(var(--p4) / <alpha-value>)',
+				panel: 'hsl(var(--panel) / <alpha-value>)',
+				line: 'hsl(var(--line) / <alpha-value>)',
+				ink: {
+					DEFAULT: 'hsl(var(--ink) / <alpha-value>)',
+					muted: 'hsl(var(--ink-muted) / <alpha-value>)',
 				},
-				grey: {
-					100: '#F2F2F2',
-					300: '#B3B3B3',
-					500: '#696868',
-					900: '#201F24',
-				},
+				highlight: 'hsl(var(--gold) / <alpha-value>)',
+				danger: 'hsl(var(--danger) / <alpha-value>)',
+				frame: 'hsl(var(--frame) / <alpha-value>)',
+				// Category colors (unchanged)
 				green: '#277C78',
 				yellow: '#F2CDAC',
 				cyan: '#82C9D7',

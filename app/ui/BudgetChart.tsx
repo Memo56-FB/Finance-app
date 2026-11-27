@@ -34,8 +34,8 @@ export const BudgetChart = ({items}: {items?:BudgetView[]}) => {
   const totalBudget=decimal(rows.reduce((sum,row)=>sum+cents(row.ofValue),0n))
   if (rows.some(row => row.spent === null)) return (
     <div className="grid min-h-[240px] place-items-center gap-2 py-4 text-center">
-      <Skeleton className="size-36 rounded-full" />
-      <p className="text-preset-5 text-grey-500"><Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" /></p>
+      <Skeleton className="size-36" />
+      <p className="text-preset-5 text-ink-muted"><Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" /></p>
     </div>
   )
   const totalSpent=decimal(rows.reduce((sum,row)=>sum+cents(row.spent!),0n))
@@ -52,6 +52,9 @@ export const BudgetChart = ({items}: {items?:BudgetView[]}) => {
           nameKey="title"
           innerRadius={innerRadius}
           outerRadius={105}
+          stroke="hsl(var(--frame))"
+          strokeWidth={4}
+          isAnimationActive={false}
         />
         <Pie data={[{ value: 100 }]} dataKey="value" tooltipType="none" fill="#FFF" opacity={0.25} outerRadius={80} innerRadius={innerRadius}>
           <Label
@@ -59,11 +62,11 @@ export const BudgetChart = ({items}: {items?:BudgetView[]}) => {
               if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                 return (
                   <g transform={`translate(${viewBox.cx}, ${viewBox.cy})`} textAnchor="middle" dominantBaseline="middle">
-                    <text ref={fitLabel} className="fill-foreground text-preset-1 text-grey-900">
+                    <text ref={fitLabel} className="fill-foreground text-preset-1 text-ink">
                       {money(totalSpent)}
                     </text>
                     <g transform="translate(0, 24)">
-                      <text ref={fitLabel} className="fill-muted-foreground text-preset-5 text-grey-500">
+                      <text ref={fitLabel} className="fill-muted-foreground text-preset-5 text-ink-muted">
                         <Text id="of" />{' '}{money(totalBudget)}{' '}<Text id="limit" />
                       </text>
                     </g>

@@ -16,7 +16,7 @@ export const RecurringBillsList = () => {
   }, [searchQuery, sortBy])
 
   return (
-    <section className='bg-white rounded-xl px-250 py-300 grid gap-300 md:px-400'>
+    <section className='bg-card px-inset px-250 py-300 grid gap-300 md:px-400'>
       <RecurringBillsToolbar
         searchQuery={searchQuery}
         sortBy={sortBy}

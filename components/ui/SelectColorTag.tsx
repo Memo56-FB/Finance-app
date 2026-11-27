@@ -35,11 +35,11 @@ export const SelectColorTag = ({
               value={option.value}
             >
               <div className='grid gap-150 grid-cols-[auto_auto] items-center w-full'>
-                <span className='h-3 w-3 rounded-full' style={{ backgroundColor:safeColor(option.value) }} />
+                <span className='h-3 w-3 rounded-none' style={{ backgroundColor:safeColor(option.value) }} />
                 <ControlledLabel value={option.label} />
               </div>
             </SelectItem>
-            <SelectSeparator className='bg-beige-100 w-[87%] mx-auto' />
+            <SelectSeparator className='bg-background w-[87%] mx-auto' />
           </Fragment>
         ))}
       </SelectContent>

@@ -48,7 +48,7 @@ export function SessionControls({ access }: { access: Pick<Access, 'kind'> }) {
   })
   return <div className="flex min-w-0 flex-col items-start gap-100 px-200 py-100 md:px-500 text-preset-5">
     <div className="flex items-center gap-200">
-      <button type="button" aria-label={t('Log out')} title={t('Log out')} aria-busy={logout.isPending} disabled={!ready || logout.isPending} className="flex h-[45px] w-[45px] shrink-0 items-center justify-center rounded-md text-grey-900 hover:bg-beige-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900 disabled:opacity-50" onClick={() => logout.mutate()}>
+      <button type="button" aria-label={t('Log out')} title={t('Log out')} aria-busy={logout.isPending} disabled={!ready || logout.isPending} className="flex h-[45px] w-[45px] shrink-0 items-center justify-center rounded-md text-ink hover:bg-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50" onClick={() => logout.mutate()}>
         {logout.isPending ? <Skeleton className="size-6"/> : <SignOut size={24} aria-hidden="true" />}
       </button>
       {access.kind === 'guest' && <Link href="/login" className="underline">{t('Login')}</Link>}

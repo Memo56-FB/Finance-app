@@ -16,7 +16,7 @@ export const InputSearch:FC<InputPasswordProps> = ({className, type, ...props}) 
         type={type ?? 'text'}
         {...props}
       />
-      <MagnifyingGlass className='absolute right-250 top-150 text-grey-900'  />
+      <MagnifyingGlass className='absolute right-250 top-150 text-ink' aria-hidden='true' />
     </div>
   )
 }

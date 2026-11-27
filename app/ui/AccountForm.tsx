@@ -81,7 +81,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
     }
   }
   return <form method="post" onSubmit={event => { event.preventDefault(); void run('account', event.currentTarget) }}
-    className="bg-white px-250 md:px-400 py-300 gap-300 rounded-xl grid w-full md:max-w-[560px]">
+    className="bg-card px-250 md:px-400 py-300 gap-300 px-inset grid w-full md:max-w-[560px]">
     <h1 className="text-preset-1">{t(register ? 'Sign Up' : 'Login')}</h1>
     <noscript>{t('Enable JavaScript to use these forms.')}</noscript>
     {error && <p role="alert" className="text-preset-5 text-red">{t(error)}</p>}
@@ -92,26 +92,26 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
           const invalid = fields.includes(field)
           const props = { id: field, name: field, required: !confirming, autoComplete: field === 'password' ? register ? 'new-password' : 'current-password' : field, 'aria-invalid': invalid, 'aria-describedby': invalid ? field + '-error' : undefined }
           return <div className="grid gap-50" key={field}>
-            <label htmlFor={field} className="text-preset-5-bold text-grey-500">{t(field === 'username' ? 'Username' : register ? 'Create Password' : 'Password')}</label>
+            <label htmlFor={field} className="text-preset-5-bold text-ink-muted">{t(field === 'username' ? 'Username' : register ? 'Create Password' : 'Password')}</label>
             {field === 'password' ? <InputPassword {...props} /> : <Input {...props} type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} />}
             {invalid && <p id={field + '-error'} className="text-preset-5 text-red">{t(fieldMessages[field])}</p>}
           </div>
         })}
-        {!register && !confirming && <label className="inline-flex min-h-11 w-fit cursor-pointer items-center gap-100 text-preset-4 text-grey-900 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+        {!register && !confirming && <label className="inline-flex min-h-11 w-fit cursor-pointer items-center gap-100 text-preset-4 text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
           <input type="checkbox" name="remember-me" value="true" className="h-4 w-4 accent-green" />
           {t('Remember me')}
         </label>}
         <Button type="submit" aria-busy={mutation.isPending && mutation.variables?.action === 'account'}>
           {t(confirming ? 'Retry session check' : register ? 'Create Account' : 'Login')}
-          {mutation.isPending && mutation.variables?.action === 'account' && <Skeleton className="ml-2 size-3 rounded-full opacity-70"/>}
+          {mutation.isPending && mutation.variables?.action === 'account' && <Skeleton className="ml-2 size-3 rounded-none opacity-70"/>}
         </Button>
       </fieldset>}
     <Button type="button" variant="secondary" disabled={!ready || mutation.isPending} aria-busy={mutation.isPending && mutation.variables?.action === 'guest'} onClick={() => void run('guest')}>
       {t('Continue as guest')}
-      {mutation.isPending && mutation.variables?.action === 'guest' && <Skeleton className="ml-2 size-3 rounded-full"/>}
+      {mutation.isPending && mutation.variables?.action === 'guest' && <Skeleton className="ml-2 size-3 rounded-none"/>}
     </Button>
     <div className="flex flex-wrap gap-100 text-preset-4">
-      <p className="text-grey-500">{t(register ? 'Already have an account?' : 'Need to create an account?')}</p>
+      <p className="text-ink-muted">{t(register ? 'Already have an account?' : 'Need to create an account?')}</p>
       <Link aria-disabled={mutation.isPending} onClick={event => { if (mutation.isPending) event.preventDefault() }} className="underline" href={(register ? '/login' : '/singup') + query}>{t(register ? 'Login' : 'Sign Up')}</Link>
     </div>
   </form>

@@ -19,7 +19,7 @@ export const BillDueDate = ({ bill, className }: BillDueDateProps) => {
       <span
         aria-label={t(isDue ? 'Due soon' : 'Paid')}
         className={cn(
-          'grid h-3 w-3 place-items-center rounded-full bg-green text-[8px] leading-none text-white',
+          'grid h-3 w-3 place-items-center rounded-none bg-green text-[8px] leading-none text-ink',
           isDue && 'bg-red'
         )}
       >

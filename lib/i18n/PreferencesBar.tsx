@@ -1,16 +1,48 @@
 'use client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useTransition } from 'react'
+import { useSyncExternalStore, useTransition } from 'react'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { savePreference } from './cookie'
 import { Text, useI18n } from './client'
+import { defaultTheme, themes, validateTheme, type Theme } from './preferences'
+import type { Messages } from './index'
 
 const languages = {
   en: { label: 'English', flag: 'us' },
   es: { label: 'Español', flag: 'mx' },
+}
+
+const themeLabels: Record<Theme, keyof Messages> = {
+  overworld: 'Overworld',
+  nether: 'Nether',
+  diamond: 'Diamond',
+}
+
+const themeSwatches: Record<Theme, string> = {
+  overworld: 'bg-[#5fbf3a]',
+  nether: 'bg-[#e0452b]',
+  diamond: 'bg-[#2fc8d8]',
+}
+
+function subscribeToTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
+
+function useTheme(): Theme {
+  return useSyncExternalStore(
+    subscribeToTheme,
+    () => validateTheme(document.documentElement.dataset.theme),
+    () => defaultTheme,
+  )
+}
+
+function ThemeSwatch({ theme }: { theme: Theme }) {
+  return <span aria-hidden="true" className={`inline-block size-4 border-2 border-line ${themeSwatches[theme]}`} />
 }
 
 export function PreferencesBar() {
@@ -18,6 +50,7 @@ export function PreferencesBar() {
   const selected = languages[locale.language]
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const theme = useTheme()
   function change(value: string) {
     try {
       savePreference(document, value, location.protocol === 'https:')
@@ -25,10 +58,21 @@ export function PreferencesBar() {
       startTransition(() => router.refresh())
     } catch { toast.error(<Text id="Could not save preferences."/>,{toastId:'preference-error',role:'alert',autoClose:false}) }
   }
+  function changeTheme(value: string) {
+    const previous = document.documentElement.dataset.theme
+    try {
+      savePreference(document, value, location.protocol === 'https:', 'theme')
+      document.documentElement.dataset.theme = validateTheme(value)
+      toast.dismiss('preference-error')
+    } catch {
+      if (previous) document.documentElement.dataset.theme = previous
+      toast.error(<Text id="Could not save preferences."/>,{toastId:'preference-error',role:'alert',autoClose:false})
+    }
+  }
   return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5">
       <label htmlFor="preference-language" className="sr-only">{locale.t('Language')}</label>
       <Select value={locale.language} disabled={pending} onValueChange={change}>
-        <SelectTrigger id="preference-language" aria-busy={pending} className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-900">
+        <SelectTrigger id="preference-language" aria-busy={pending} className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
           <SelectValue>
             <span className="flex items-center gap-100">
               <Image src={`/flags/${selected.flag}.svg`} width={24} height={16} alt="" aria-hidden="true" />
@@ -38,10 +82,31 @@ export function PreferencesBar() {
         </SelectTrigger>
         <SelectContent>
           {Object.entries(languages).map(([value, { label, flag }]) => (
-            <SelectItem key={value} value={value} textValue={label} className="focus:bg-beige-100">
+            <SelectItem key={value} value={value} textValue={label} className="focus:bg-background">
               <span className="flex items-center gap-100">
                 <Image src={`/flags/${flag}.svg`} width={24} height={16} alt="" aria-hidden="true" />
                 {label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <label htmlFor="preference-theme" className="sr-only">{locale.t('Theme')}</label>
+      <Select value={theme} onValueChange={changeTheme}>
+        <SelectTrigger id="preference-theme" className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+          <SelectValue>
+            <span className="flex items-center gap-100">
+              <ThemeSwatch theme={theme} />
+              {locale.t(themeLabels[theme])}
+            </span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {themes.map(value => (
+            <SelectItem key={value} value={value} textValue={locale.t(themeLabels[value])} className="focus:bg-background">
+              <span className="flex items-center gap-100">
+                <ThemeSwatch theme={value} />
+                {locale.t(themeLabels[value])}
               </span>
             </SelectItem>
           ))}

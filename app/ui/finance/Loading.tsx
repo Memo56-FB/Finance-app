@@ -16,7 +16,7 @@ export function FieldSkeleton() {
 export function RowsSkeleton({ count = 4 }: { count?: number }) {
   return <div className="grid gap-200">
     {Array.from({ length: count }, (_, index) => (
-      <div key={index} className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-200 border-b border-grey-100">
+      <div key={index} className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-200 border-b border-line">
         <Skeleton className="h-4 w-3/4 max-w-52" />
         <Skeleton className="h-4 w-14 md:w-24" />
         <Skeleton className="size-6 justify-self-center" />
@@ -31,20 +31,20 @@ export function CardsSkeleton({ count = 2, chart = false, showActions = false }:
   showActions?: boolean
 }) {
   return <div className={`grid items-start gap-300 ${showActions ? 'xl:grid-cols-2' : 'lg:grid-cols-2'}`}>
-    {chart && <div className="grid gap-200 rounded-xl bg-white p-300">
-      <Skeleton className="mx-auto size-40 rounded-full" />
+    {chart && <div className="grid gap-200 px-inset bg-card p-300">
+      <Skeleton className="mx-auto size-40 rounded-none" />
       <RowsSkeleton count={2} />
     </div>}
     <div className={chart ? 'grid gap-300' : 'contents'}>
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="grid gap-300 rounded-xl bg-white p-300">
+        <div key={index} className="grid gap-300 px-inset bg-card p-300">
           <Skeleton className="h-6 w-1/2" />
           <Skeleton className="h-7 w-24" />
           <Skeleton className="h-2 w-full" />
           <div className="grid grid-cols-2 gap-150"><Skeleton className="h-10"/><Skeleton className="h-10"/></div>
           {showActions && <div className="grid grid-cols-2 gap-200">
-            <Skeleton className="h-[53px] rounded-lg"/>
-            <Skeleton className="h-[53px] rounded-lg"/>
+            <Skeleton className="h-[53px] rounded-none"/>
+            <Skeleton className="h-[53px] rounded-none"/>
           </div>}
         </div>
       ))}
@@ -55,7 +55,7 @@ export function CardsSkeleton({ count = 2, chart = false, showActions = false }:
 export function AmountsSkeleton() {
   return <div className="grid gap-150 md:grid-cols-3 md:gap-300">
     {Array.from({ length: 3 }, (_, index) => (
-      <div key={index} className="grid gap-200 rounded-xl bg-white p-300">
+      <div key={index} className="grid gap-200 px-inset bg-card p-300">
         <Skeleton className="h-4 w-24" /><Skeleton className="h-8 w-32" />
       </div>
     ))}

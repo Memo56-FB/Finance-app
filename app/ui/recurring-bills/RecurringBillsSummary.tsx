@@ -31,18 +31,18 @@ export const RecurringBillsSummary = ({ summary }: RecurringBillsSummaryProps) =
   ]
 
   return (
-    <article className='bg-white rounded-xl px-250 py-250 grid gap-250'>
-      <h2 className='text-preset-3 text-grey-900'><Text id="Summary" /></h2>
+    <article className='bg-card px-inset px-250 py-250 grid gap-250'>
+      <h2 className='text-preset-3 text-ink'><Text id="Summary" /></h2>
       <div className='grid'>
         {summaryItems.map((item) => (
           <div
-            className='flex flex-wrap gap-100 items-center justify-between border-b border-grey-100 py-200 first:pt-0 last:border-b-0 last:pb-0'
+            className='flex flex-wrap gap-100 items-center justify-between border-b border-line py-200 first:pt-0 last:border-b-0 last:pb-0'
             key={item.label}
           >
-            <p className={item.isDanger ? 'text-preset-5 text-red' : 'text-preset-5 text-grey-500'}>
+            <p className={item.isDanger ? 'text-preset-5 text-red' : 'text-preset-5 text-ink-muted'}>
               <ControlledLabel value={item.label} />
             </p>
-            <p className={item.isDanger ? 'text-preset-5-bold text-red break-all' : 'text-preset-5-bold text-grey-900 break-all'}>
+            <p className={item.isDanger ? 'text-preset-5-bold text-red break-all' : 'text-preset-5-bold text-ink break-all'}>
               {item.value}
             </p>
           </div>

@@ -47,7 +47,7 @@ export function CategoryField({ value, onChange, original, error, nullable = fal
 
 export function ColorField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const id = useId(), { t } = useI18n()
-  return <div className="grid gap-50"><label htmlFor={id} className="text-preset-5-bold text-grey-500">{t('Color Tag')}</label><SelectColorTag id={id} value={value} onValueChange={onChange} options={colorTags.map(option => ({ ...option, value: colorHex[option.value] }))} /></div>
+  return <div className="grid gap-50"><label htmlFor={id} className="text-preset-5-bold text-ink-muted">{t('Color Tag')}</label><SelectColorTag id={id} value={value} onValueChange={onChange} options={colorTags.map(option => ({ ...option, value: colorHex[option.value] }))} /></div>
 }
 
-export function AmountHelp() { return <p className="text-preset-5 text-grey-500">{useI18n().t('Use a decimal point without thousands separators.')}</p> }
+export function AmountHelp() { return <p className="text-preset-5 text-ink-muted">{useI18n().t('Use a decimal point without thousands separators.')}</p> }

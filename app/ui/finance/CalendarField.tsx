@@ -39,7 +39,7 @@ export function CalendarField({label, value, onChange, monthOnly = false, error}
   }
 
   return <div className="grid min-w-0 gap-50">
-    <label htmlFor={id} className="text-preset-5-bold text-grey-500">{t(label)}</label>
+    <label htmlFor={id} className="text-preset-5-bold text-ink-muted">{t(label)}</label>
     <div className="relative">
       <Input id={id} type="text" value={monthDraft ?? value} placeholder={pattern}
         className={monthOnly ? 'w-40 pr-11' : 'w-full pr-11'} required={!monthOnly}
@@ -58,12 +58,12 @@ export function CalendarField({label, value, onChange, monthOnly = false, error}
         setOpen(next)
       }}>
         <Popover.Trigger type="button" aria-label={t('Open calendar') + ' · ' + t(label)}
-          className="absolute inset-y-0 right-0 grid w-10 place-items-center rounded-md text-grey-500 hover:text-grey-900 focus-visible:ring-2">
+          className="absolute inset-y-0 right-0 grid w-10 place-items-center rounded-none text-ink-muted hover:text-ink focus-visible:ring-2">
           <CalendarDays aria-hidden="true" size={18}/>
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content aria-label={t(label)} sideOffset={4} collisionPadding={8} align="end"
-            className="z-50 max-h-[var(--radix-popover-content-available-height)] overflow-auto rounded-lg border border-grey-100 bg-white shadow-lg">
+            className="z-50 max-h-[var(--radix-popover-content-available-height)] overflow-auto rounded-none border border-line bg-card shadow-lg">
             {page && <Calendar mode="single" selected={selected} month={page} onMonthChange={setPage}
               onSelect={day => { if (day) accept(day) }} required
               locale={language === 'es' ? es : enUS} captionLayout="dropdown"

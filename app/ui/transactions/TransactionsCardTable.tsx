@@ -8,13 +8,13 @@ export const TransactionsCardTable = ({ transaction }: { transaction: Transactio
     <article className='flex justify-between'>
       <div className='flex gap-150 items-center'>
         <div className='flex flex-col gap-50'>
-          <p className='text-preset-4-bold text-grey-900'>{transaction.name}</p>
-          <p className='text-preset-5 text-grey-500'><ControlledLabel value={transaction.category} /></p>
+          <p className='text-preset-4-bold text-ink'>{transaction.name}</p>
+          <p className='text-preset-5 text-ink-muted'><ControlledLabel value={transaction.category} /></p>
         </div>
       </div>
       <div className='text-right flex flex-col gap-50'>
-        <p className='text-preset-4-bold text-grey-900'><Money signed value={transaction.amount} /></p>
-        <p className='text-preset-5 text-grey-500'><CalendarDate value={transaction.date} /></p>
+        <p className='text-preset-4-bold text-ink'><Money signed value={transaction.amount} /></p>
+        <p className='text-preset-5 text-ink-muted'><CalendarDate value={transaction.date} /></p>
       </div>
     </article>
   )

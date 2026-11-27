@@ -13,9 +13,9 @@ const RecurringBillsCard = ({title, value, color}: {
   color: string
 }) => {
   return (
-    <article className={`px-200 py-250 flex justify-between bg-beige-100 border-l-4 border-spacing-50 border-${color} rounded-lg`}>
-      <h3 className='text-preset-4 text-grey-500'><ControlledLabel value={title} /></h3>
-      <p className='text-preset-4-bold text-grey-900'>{value}</p>
+    <article className={`px-200 py-250 flex justify-between bg-background border-l-4 border-spacing-50 border-${color} rounded-none`}>
+      <h3 className='text-preset-4 text-ink-muted'><ControlledLabel value={title} /></h3>
+      <p className='text-preset-4-bold text-ink'>{value}</p>
     </article>
   )
 }
@@ -23,9 +23,9 @@ const RecurringBillsCard = ({title, value, color}: {
 export const RecurringBills = ({summary:actual}: {summary?:PaymentSummary}) => {
   const summary = actual ? {paid:{amount:actual.paid.totalAmount},upcoming:{amount:actual.pending.totalAmount},dueSoon:{amount:actual.dueSoon.totalAmount}} : calculateRecurringBillsSummary(recurringBills)
   return (
-    <article className='grid gap-400 bg-white rounded-xl px-250 py-300 md:p-400'>
+    <article className='grid gap-400 bg-card px-inset px-250 py-300 md:p-400'>
       <div className='flex flex-wrap justify-between gap-100'>
-        <h2 className='text-preset-2 text-grey-900'><Text id="Recurring Bills" /></h2>
+        <h2 className='text-preset-2 text-ink'><Text id="Recurring Bills" /></h2>
         <Button variant={'tertiary'} asChild><Link href="/finance/recurring-bills"><Text id="See Details" /></Link></Button>
       </div>
       <section className='grid gap-150'>

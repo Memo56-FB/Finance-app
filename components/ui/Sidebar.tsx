@@ -4,7 +4,7 @@ import { useI18n } from '@/lib/i18n/client'
 import React from 'react'
 import SidebarItem from './SidebarItem'
 import MinimizeMenu from './MinimizeMenu'
-import Image from 'next/image'
+import { BrandLogo } from './BrandLogo'
 import { ArrowsDownUp, ChartDonut, House, Receipt, TipJar, Tag } from '@phosphor-icons/react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import clsx from 'clsx'
@@ -17,7 +17,7 @@ export const Sidebar = () => {
   const pathname = usePathname()
   return (
     <nav
-      className={clsx('bg-grey-900 rounded-t-xl px-200 pt-100 flex justify-center md:px-500 lg:grid lg:grid-rows-[auto_1fr_auto] lg:items-start lg:rounded-r-xl lg:rounded-l-none transition-all lg:pl-0 lg:h-full lg:pb-300 lg:gap-300',
+      className={clsx('bg-panel border-t-4 border-line px-200 pt-100 flex justify-center md:px-100 lg:grid lg:grid-rows-[auto_1fr_auto] lg:items-start lg:border-t-0 lg:border-r-4 motion-safe:transition-all motion-safe:[transition-timing-function:steps(6)] lg:pl-0 lg:h-full lg:pb-300 lg:gap-300',
         {
           'lg:w-[98px] lg:justify-normal lg:pr-100': !isOpen,
           'lg:w-[300px] lg:justify-normal': isOpen
@@ -26,27 +26,20 @@ export const Sidebar = () => {
     >
       <div className='hidden lg:block lg:px-400 lg:py-500 justify-self-start'>
         
-          <Image
+          <BrandLogo
             className={clsx(
               {
                 'hidden': !isOpen
               }
             )}
-            src='/fullLogo.svg'
-            alt='finance'
-            width={121}
-            height={22}
           />
-          <Image
+          <BrandLogo
+            variant='mark'
             className={clsx(
               {
                 'hidden': isOpen
               }
             )}
-            src='/logo.svg'
-            alt='finance'
-            width={14}
-            height={25}
           />
       </div>
       <div className='flex w-full justify-between lg:flex-col lg:gap-50 lg:items-start '>

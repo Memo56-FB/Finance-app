@@ -14,9 +14,9 @@ export const Progress = ({ max, value, color, className, ...props }: ProgressPro
   return (
     <>
       <progress
-        className={cn(`h-400 w-full progress [&::-webkit-progress-bar]:bg-beige-100 [&::-webkit-progress-value]:bg-[var(--progress-color)] [&::-moz-progress-bar]:bg-[var(--progress-color)]
-          [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:p-50
-          [&::-webkit-progress-value]:rounded`, className)
+        className={cn(`h-400 w-full progress [&::-webkit-progress-bar]:bg-background [&::-webkit-progress-value]:bg-[var(--progress-color)] [&::-moz-progress-bar]:bg-[var(--progress-color)]
+          [&::-webkit-progress-bar]:rounded-none [&::-webkit-progress-bar]:p-50
+          [&::-webkit-progress-value]:rounded-none`, className)
         }
         max={max}
         value={value}

@@ -61,8 +61,8 @@ const PaginationLink = ({
     aria-disabled={disabled || undefined}
     tabIndex={disabled ? -1 : props.tabIndex}
     className={cn(
-      'flex min-h-10 min-w-11 items-center justify-center rounded-lg border border-beige-500 px-200 py-100 transition-colors',
-      isActive ? 'bg-grey-900 text-white' : 'bg-white text-grey-900 hover:bg-beige-500 hover:text-white',
+      'flex min-h-10 min-w-11 items-center justify-center px-200 py-100 motion-safe:transition-colors',
+      isActive ? 'bg-theme-3 text-ink px-bevel' : 'bg-card text-ink px-inset hover:bg-line',
       disabled && 'pointer-events-none cursor-not-allowed opacity-50',
       className
     )}
@@ -87,7 +87,7 @@ function PaginationArrow({ icon: Icon, label, className, ...props }: PaginationL
 }) {
   const { t } = useI18n()
   return <PaginationLink {...props} aria-label={t(label)} className={cn('group max-lg:min-h-11', className)}>
-    <Icon aria-hidden="true" size={16} weight="fill" className="text-grey-500 transition-colors group-hover:text-white" />
+    <Icon aria-hidden="true" size={16} weight="fill" className="text-ink-muted motion-safe:transition-colors group-hover:text-ink" />
   </PaginationLink>
 }
 
@@ -100,7 +100,7 @@ function PaginationNext(props: PaginationLinkProps) {
 }
 
 function PaginationEllipsis({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span {...props} aria-hidden="true" className={cn('px-1 text-preset-5 text-grey-500', className)}>…</span>
+  return <span {...props} aria-hidden="true" className={cn('px-1 text-preset-5 text-ink-muted', className)}>…</span>
 }
 
 function PaginationControls({ page, total, link, className }: {

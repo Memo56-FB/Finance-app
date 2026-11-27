@@ -15,10 +15,10 @@ const MinimizeMenu = ({onClick}: {onClick: () => void}) => {
       aria-label={isOpen ? t('Minimize Menu') : t('Expand Menu')}
       aria-expanded={isOpen}
       onClick={onClick}
-      className='items-center gap-200 text-preset-3 text-grey-300 hover:text-white transition-colors px-400 py-200 self-end hidden lg:flex lg:text-nowrap ease-in-out'
+      className='items-center gap-200 text-preset-3 text-ink-muted hover:text-ink hover:bg-line motion-safe:transition-colors motion-safe:[transition-timing-function:steps(3)] px-400 py-200 self-end hidden lg:flex lg:text-nowrap'
     >
       <ArrowFatLinesLeft weight='fill' size={24} className={clsx(
-        'transition-transform',
+        'motion-safe:transition-transform motion-safe:[transition-timing-function:steps(4)]',
         {
           'transform rotate-180': !isOpen
         }

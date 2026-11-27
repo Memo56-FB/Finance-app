@@ -36,7 +36,7 @@ export const RecurringBillsToolbar = ({
         value={sortBy}
         onValueChange={onSortChange}
       >
-        <SortAscending weight='fill' size={20} className='text-grey-900' />
+        <SortAscending weight='fill' size={20} className='text-ink' />
       </ResponsiveSelect>
     </div>
   )

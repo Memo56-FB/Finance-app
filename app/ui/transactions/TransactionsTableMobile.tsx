@@ -11,11 +11,11 @@ export const TransactionsTableMobile = ({ transactions }: { transactions: readon
       {transactions.map((transaction, index) => (
         <React.Fragment key={transaction.id}>
           <TransactionsCardTable transaction={transaction} />
-          {index < transactions.length - 1 && <Separator className='bg-grey-100' />}
+          {index < transactions.length - 1 && <Separator className='bg-line' />}
         </React.Fragment>
       ))}
       {transactions.length === 0 && (
-        <p className='py-300 text-center text-grey-500'><Text id="No transactions found." /></p>
+        <p className='py-300 text-center text-ink-muted'><Text id="No transactions found." /></p>
       )}
     </div>
   )

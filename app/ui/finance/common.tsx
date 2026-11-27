@@ -21,9 +21,9 @@ import { LoadingRegion, RowsSkeleton } from './Loading'
 import { cn } from '@/lib/utils'
 
 export type Label = keyof Messages
-export const panel='grid gap-250 rounded-xl bg-white px-250 py-300 md:p-400 min-w-0'
+export const panel='grid gap-250 px-inset bg-card px-250 py-300 md:p-400 min-w-0'
 export const financeDialog='w-[320px] px-250 py-300 md:w-full grid gap-250'
-export function PageHeader({title,children}:{title:Label;children?:ReactNode}) { const {t}=useI18n();return <header className="flex flex-wrap items-center justify-between gap-200"><h1 tabIndex={-1} className="text-preset-1 text-grey-900">{t(title)}</h1>{children}</header> }
+export function PageHeader({title,children}:{title:Label;children?:ReactNode}) { const {t}=useI18n();return <header className="flex flex-wrap items-center justify-between gap-200"><h1 tabIndex={-1} className="text-preset-1 text-ink">{t(title)}</h1>{children}</header> }
 export function QueryMessage({query, fallback = <RowsSkeleton/>}:{query:{isPending:boolean;isError:boolean;isRefetching?:boolean;data?:unknown;refetch:() => unknown};fallback?:ReactNode}) {
   const {t}=useI18n()
   const session = useAccountSession()
@@ -31,15 +31,15 @@ export function QueryMessage({query, fallback = <RowsSkeleton/>}:{query:{isPendi
   if(query.isError) return <div role="alert" className="grid gap-150 text-red"><p>{t('Could not load data. Please retry.')}</p><Button type="button" variant="secondary" disabled={session?.phase !== 'active'} onClick={()=>void query.refetch()}>{t('Reload data')}</Button></div>
   return null
 }
-export function Empty({label}:{label:Label}) { return <p className="text-preset-4 text-grey-500">{useI18n().t(label)}</p> }
+export function Empty({label}:{label:Label}) { return <p className="text-preset-4 text-ink-muted">{useI18n().t(label)}</p> }
 export function FormInput({label,error,money=false,...props}:ComponentProps<typeof Input> & {label:Label;error?:string;money?:boolean}) {
   const id=useId(),{t}=useI18n()
   const input=<Input {...props} id={id} className={cn(money && 'pl-[5rem]',props.className)} aria-invalid={!!error || undefined} aria-describedby={error ? id+'-error' : undefined}/>
-  return <div className="grid gap-50"><label htmlFor={id} className="text-preset-5-bold text-grey-500">{t(label)}</label>{money ? <div className="relative"><span aria-hidden="true" className="absolute left-250 top-[10px] text-preset-4 text-beige-500">$</span>{input}</div> : input}{error && <p id={id+'-error'} className="text-red text-preset-5">{error}</p>}</div>
+  return <div className="grid gap-50"><label htmlFor={id} className="text-preset-5-bold text-ink-muted">{t(label)}</label>{money ? <div className="relative"><span aria-hidden="true" className="absolute left-250 top-[10px] text-preset-4 text-ink-muted">$</span>{input}</div> : input}{error && <p id={id+'-error'} className="text-red text-preset-5">{error}</p>}</div>
 }
 export function FormSelect({label,value,onChange,options,error}:{label:Label;value:string;onChange:(value:string)=>void;options:{value:string;label:string}[];error?:string}) {
   const id=useId(),{t}=useI18n()
-  return <div className="grid gap-50 min-w-0"><label htmlFor={id} className="text-preset-5-bold text-grey-500">{t(label)}</label><Select value={value} onValueChange={onChange}><SelectTrigger id={id} className="min-w-0 [&>span]:truncate" aria-invalid={!!error || undefined} aria-describedby={error ? id+'-error' : undefined}><SelectValue placeholder={t(label)}/></SelectTrigger><SelectContent className="max-w-[calc(100vw_-_32px)]">{options.map(option=><SelectItem key={option.value} value={option.value} className="whitespace-normal break-words [overflow-wrap:anywhere]">{option.label}</SelectItem>)}</SelectContent></Select>{error && <p id={id+'-error'} className="text-red text-preset-5">{error}</p>}</div>
+  return <div className="grid gap-50 min-w-0"><label htmlFor={id} className="text-preset-5-bold text-ink-muted">{t(label)}</label><Select value={value} onValueChange={onChange}><SelectTrigger id={id} className="min-w-0 [&>span]:truncate" aria-invalid={!!error || undefined} aria-describedby={error ? id+'-error' : undefined}><SelectValue placeholder={t(label)}/></SelectTrigger><SelectContent className="max-w-[calc(100vw_-_32px)]">{options.map(option=><SelectItem key={option.value} value={option.value} className="whitespace-normal break-words [overflow-wrap:anywhere]">{option.label}</SelectItem>)}</SelectContent></Select>{error && <p id={id+'-error'} className="text-red text-preset-5">{error}</p>}</div>
 }
 export function errorLabel(error:unknown,category=false):Label {
   if(error instanceof ApiError) {
@@ -520,7 +520,7 @@ export function SaveOperations({ children }: { children: ReactNode }) {
 
   return <OperationsContext.Provider value={{ operations, submit, recordKeys }}>
     {children}
-    {operations.some(showOperation) && <section aria-label={t('Pending changes')} className="sticky bottom-0 z-10 grid max-h-[40dvh] gap-100 overflow-auto rounded-lg bg-white p-150">
+    {operations.some(showOperation) && <section aria-label={t('Pending changes')} className="sticky bottom-0 z-10 grid max-h-[40dvh] gap-100 overflow-auto rounded-none bg-card p-150">
       {operations.filter(showOperation).map(operation => <div className="flex flex-wrap items-center gap-100" key={operation.sequence}>
         <p role={operation.state === 'pending' ? 'status' : 'alert'}>
           {t(operation.label)}{operation.name ? ' · ' + operation.name : ''} · {t(operation.state === 'pending' ? 'Pending confirmation' :
@@ -599,7 +599,7 @@ export function SaveForm({save,children,category=false,submitLabel='Save',classN
     <fieldset disabled={save.blocked} className="grid gap-[inherit] min-w-0">{children}</fieldset>
     {save.duplicate && <p role="alert">{t('Another change for this record is pending.')}</p>}
     {Boolean(save.error) && <div role="alert" className="grid gap-100 text-red"><p>{t(errorLabel(save.error,category))}</p>{!(save.error instanceof ApiError && save.error.status === 400) && <Button type="button" disabled={save.blocked} variant="secondary" onClick={()=>void save.refresh()}>{t('Reload data')}</Button>}</div>}
-    <Button type="submit" disabled={save.blocked} variant={destructive ? 'destroy' : undefined} className="text-white">{t(submitLabel)}</Button>
+    <Button type="submit" disabled={save.blocked} variant={destructive ? 'destroy' : undefined} className="text-ink">{t(submitLabel)}</Button>
     <SessionRetry />
   </form>
 }
@@ -656,11 +656,11 @@ export function NewDialog({title,children,buttonLabel,prefix=true,variant,headin
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null)
   const { t } = useI18n()
   return <Dialog open={dialog.open} onOpenChange={dialog.setOpen}>
-    {renderTrigger ? renderTrigger(() => dialog.setOpen(true), setTrigger, dialog.open) : <DialogTrigger asChild><Button ref={setTrigger} variant={variant} className={variant ? '' : 'text-white'}>{prefix ? '+ ' : ''}{t(buttonLabel ?? title)}</Button></DialogTrigger>}
+    {renderTrigger ? renderTrigger(() => dialog.setOpen(true), setTrigger, dialog.open) : <DialogTrigger asChild><Button ref={setTrigger} variant={variant} className={variant ? '' : 'text-ink'}>{prefix ? '+ ' : ''}{t(buttonLabel ?? title)}</Button></DialogTrigger>}
     <DialogContent style={concealed ? { visibility: 'hidden' } : undefined} className={cn(contentWidth, contentClassName)} {...dialog.content} onCloseAutoFocus={event => dialog.finishClose(event, trigger)}>
       <DialogHeader className={contentClassName ? 'grid justify-start gap-250' : undefined}>
-        <DialogTitle className={cn(contentClassName && 'text-start',heading && 'text-start text-preset-2 text-grey-900')}>{heading ?? t(title)}</DialogTitle>
-        <DialogDescription className={description ? 'text-start text-preset-4 text-grey-500' : 'sr-only'}>{t(description ?? title)}</DialogDescription>
+        <DialogTitle className={cn(contentClassName && 'text-start',heading && 'text-start text-preset-2 text-ink')}>{heading ?? t(title)}</DialogTitle>
+        <DialogDescription className={description ? 'text-start text-preset-4 text-ink-muted' : 'sr-only'}>{t(description ?? title)}</DialogDescription>
       </DialogHeader>
       <DialogSaveContext.Provider value={dialog.save}>{children}</DialogSaveContext.Provider>
     </DialogContent>
@@ -678,7 +678,7 @@ export function RowActions({name,recordId,edit,remove,extra,contentClassName}:{n
     dialog.setOpen(true)
   }
   return <>
-    <DropdownMenu><DropdownMenuTrigger ref={trigger} aria-label={`${t('Actions')}: ${name} (#${recordId})`} className="flex min-h-[44px] min-w-[44px] items-center justify-center"><DotsThreeOutline size={20} weight="fill"/></DropdownMenuTrigger><DropdownMenuContent className="rounded-lg bg-white px-250 py-150" onCloseAutoFocus={event => { if (dialog.open) event.preventDefault() }}>
+    <DropdownMenu><DropdownMenuTrigger ref={trigger} aria-label={`${t('Actions')}: ${name} (#${recordId})`} className="flex min-h-[44px] min-w-[44px] items-center justify-center"><DotsThreeOutline size={20} weight="fill"/></DropdownMenuTrigger><DropdownMenuContent className="rounded-none bg-card px-250 py-150" onCloseAutoFocus={event => { if (dialog.open) event.preventDefault() }}>
       <DropdownMenuItem onSelect={() => select('edit')}>{t('Edit')}</DropdownMenuItem><DropdownMenuSeparator/>
       {extra && <><DropdownMenuItem onSelect={() => select('extra')}>{t(extra.label)}</DropdownMenuItem><DropdownMenuSeparator/></>}
       <DropdownMenuItem className="text-red" onSelect={() => select('delete')}>{t('Delete')}</DropdownMenuItem>
@@ -697,5 +697,5 @@ export function RowActions({name,recordId,edit,remove,extra,contentClassName}:{n
 
 export function ConfirmForm({description,save,category=false}:{description:Label;save:ReturnType<typeof useSave>;category?:boolean}) {
   const {t}=useI18n()
-  return <><SaveForm save={save} category={category} destructive={!category} submitLabel="Yes, Confirm Deletion"><p className="text-preset-4 text-grey-500">{t('Confirm deletion?')}</p><p className="text-preset-4 text-grey-500">{t(description)}</p></SaveForm>{!category && <DialogClose className="text-preset-4 text-grey-500">{t('No, I want to go back')}</DialogClose>}</>
+  return <><SaveForm save={save} category={category} destructive={!category} submitLabel="Yes, Confirm Deletion"><p className="text-preset-4 text-ink-muted">{t('Confirm deletion?')}</p><p className="text-preset-4 text-ink-muted">{t(description)}</p></SaveForm>{!category && <DialogClose className="text-preset-4 text-ink-muted">{t('No, I want to go back')}</DialogClose>}</>
 }
