@@ -21,14 +21,14 @@ it('keeps idle account data on window focus and tab return', async ()=>{
   currentAccount.mockReset().mockResolvedValue({username:'account-a'})
   const client=new QueryClient(),invalidate=vi.spyOn(client,'invalidateQueries').mockResolvedValue()
   vi.spyOn(document,'visibilityState','get').mockReturnValue('visible')
-  render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="account-a">private</AccountScope></PreferencesProvider></QueryClientProvider>)
+  render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}><AccountScope account="account-a" sessionTag="tag-a">private</AccountScope></PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   await act(async () => {
     vi.advanceTimersByTime(180_000)
     document.dispatchEvent(new Event('visibilitychange'))
     window.dispatchEvent(new Event('focus'))
   })
-  expect(currentAccount).toHaveBeenCalledOnce()
+  expect(currentAccount).not.toHaveBeenCalled()
   expect(invalidate).not.toHaveBeenCalled()
 })
 
@@ -36,7 +36,7 @@ it('pauses actions during identity verification, keeps a matching draft and disc
   currentAccount.mockReset().mockResolvedValue({username:'account-a'})
   const client = new QueryClient()
   render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
-    <AccountScope account="account-a"><input aria-label="Draft" defaultValue="My draft"/></AccountScope>
+    <AccountScope account="account-a" sessionTag="tag-a"><input aria-label="Draft" defaultValue="My draft"/></AccountScope>
   </PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   const field = screen.getByLabelText('Draft')
@@ -46,7 +46,7 @@ it('pauses actions during identity verification, keeps a matching draft and disc
     window.dispatchEvent(new Event('finance-session-expired'))
     window.dispatchEvent(new Event('finance-session-expired'))
   })
-  expect(currentAccount).toHaveBeenCalledTimes(2)
+  expect(currentAccount).toHaveBeenCalledOnce()
   expect(field.closest('[inert]')).toBeInTheDocument()
   await act(async () => { pending.resolve({username:'account-a'}) })
   expect(field).toHaveValue('My draft')
@@ -55,33 +55,29 @@ it('pauses actions during identity verification, keeps a matching draft and disc
   announceSessionChange()
   const retry = await screen.findByRole('button', {name:'Retry session check'})
   expect(field.closest('[inert]')).toBeInTheDocument()
-  currentAccount.mockResolvedValueOnce({username:'account-b'})
+  currentAccount.mockRejectedValueOnce(new ApiError(401))
   await act(async () => { fireEvent.click(retry) })
   expect(field).not.toBeInTheDocument()
   expect(navigate).toHaveBeenCalledOnce()
 })
 
-it('keeps cached content on a routine failure and conceals it on a session signal', async () => {
+it('skips navigation revalidation and conceals data on a session signal', async () => {
   currentAccount.mockReset().mockResolvedValue({username:'account-a'})
   const client = new QueryClient()
   render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
-    <AccountScope account="account-a"><p>Cached private content</p></AccountScope>
+    <AccountScope account="account-a" sessionTag="tag-a"><p>Cached private content</p></AccountScope>
   </PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   const content = screen.getByText('Cached private content')
-  const delayed = Promise.withResolvers<{username:string}>()
-  currentAccount.mockReturnValueOnce(delayed.promise)
   await act(async () => {
     window.dispatchEvent(new Event('finance-navigation'))
     window.dispatchEvent(new Event('finance-navigation'))
   })
-  expect(currentAccount).toHaveBeenCalledTimes(2)
-  expect(content.closest('[inert]')).toBeNull()
-  await act(async () => { delayed.reject(new ApiError(503)) })
-  await screen.findByRole('button', {name:'Retry session check'})
+  expect(currentAccount).not.toHaveBeenCalled()
   expect(content.closest('[inert]')).toBeNull()
   currentAccount.mockRejectedValueOnce(new ApiError(503))
   await act(async () => { announceSessionChange() })
+  await screen.findByRole('button', {name:'Retry session check'})
   expect(content.closest('[inert]')).toHaveClass('hidden')
 })
 
@@ -114,7 +110,7 @@ it('keeps independent local budget operations scoped to the session and rejects 
 
   const client = new QueryClient()
   const { rerender } = render(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
-    <AccountScope key="account-a" account="account-a"><SaveOperations><Editor/></SaveOperations></AccountScope>
+    <AccountScope key="account-a" account="account-a" sessionTag="tag-a"><SaveOperations><Editor/></SaveOperations></AccountScope>
   </PreferencesProvider></QueryClientProvider>)
   await act(async () => {})
   fireEvent.click(screen.getByText('Cancel draft'))
@@ -133,7 +129,7 @@ it('keeps independent local budget operations scoped to the session and rejects 
 
   currentAccount.mockResolvedValue({ username: 'account-b' })
   rerender(<QueryClientProvider client={client}><PreferencesProvider preferences={{language:'en'}} messages={en}>
-    <AccountScope key="account-b" account="account-b"><SaveOperations><Editor/></SaveOperations></AccountScope>
+    <AccountScope key="account-b" account="account-b" sessionTag="tag-b"><SaveOperations><Editor/></SaveOperations></AccountScope>
   </PreferencesProvider></QueryClientProvider>)
   await act(async () => { second.reject(new ApiError(409)) })
   expect(screen.queryByText('local:2 Budget 2')).toBeNull()

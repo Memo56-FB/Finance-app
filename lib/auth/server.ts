@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { sessionTag } from './session-tag'
 import { upstream } from '@/lib/api/upstream'
-import { destination, safeNext, type Access, type SearchParams } from './types'
+import { safeNext, type Access, type SearchParams } from './types'
 
 export const getAccess = cache(async (): Promise<Access> => {
   const jar = await cookies()
@@ -19,15 +19,6 @@ export const getAccess = cache(async (): Promise<Access> => {
     return typeof data?.username === 'string' && data.username ? { kind: 'account', username: data.username, sessionTag: sessionTag(session) } : { kind: 'unavailable' }
   } catch { return { kind: 'unavailable' } }
 })
-export async function requireAccess(path: string, params: SearchParams) {
-  const access = await getAccess()
-  if (access.kind === 'anonymous' || access.kind === 'unavailable') {
-    const query = new URLSearchParams({ next: destination(path, params) })
-    if (access.kind === 'unavailable') query.set('reason', 'unavailable')
-    redirect('/login?' + query)
-  }
-  return access
-}
 export async function publicAccess(params: SearchParams) {
   const access = await getAccess()
   if (access.kind === 'account') redirect(safeNext(typeof params.next === 'string' ? params.next : undefined))

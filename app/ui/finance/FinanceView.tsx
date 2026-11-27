@@ -114,8 +114,7 @@ export function FinanceView({ guest }: { guest: boolean }) {
     previous.current = pathname
     root.current?.closest('[data-finance-scroll]')?.scrollTo(0, 0)
     root.current?.querySelector('h1')?.focus({ preventScroll: true })
-    if (!guest) window.dispatchEvent(new Event('finance-navigation'))
-  }, [guest, pathname])
+  }, [pathname])
 
   const View = (guest ? guestViews : accountViews)[index]
   return <div className="contents" ref={root}>

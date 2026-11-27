@@ -33,7 +33,11 @@ const server = createServer(async (req,res) => {
     }
     return send(200,{token:session.token,headerName:'X-CSRF-TOKEN',parameterName:'_csrf'})
   }
-  if (action === '/api/auth/me') return session?.username ? send(200,{username:session.username}) : send(401)
+  if (action === '/__auth-me-count') return session ? send(200, {count: session.meReads ?? 0}) : send(401)
+  if (action === '/api/auth/me') {
+    if (session) session.meReads = (session.meReads ?? 0) + 1
+    return session?.username ? send(200,{username:session.username}) : send(401)
+  }
   let body = ''
   for await (const chunk of req) body += chunk
   if (!action.startsWith('/api/auth/')) return handleFinance(req,res,session,body)

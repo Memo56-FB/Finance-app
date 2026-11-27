@@ -121,11 +121,13 @@ test('expired and fake sessions are rejected; infrastructure failure does not gr
   await expect(page).toHaveURL(/\/login/)
   await context.addCookies([{name:'JSESSIONID',value:'unavailable',url:baseURL}])
   await page.goto('/finance/pots')
-  await expect(page).toHaveURL(/reason=unavailable/)
+  await expect(page).toHaveURL('/finance/pots')
+  await expect(page.getByRole('button',{name:'Retry session check'})).toBeVisible()
   await expect(page.locator('p[role="alert"]')).toContainText('unavailable')
   expect((await context.cookies()).find(c=>c.name==='finance-guest')).toBeUndefined()
-  await page.getByRole('button',{name:'Continue as guest'}).click()
-  await expect(page).toHaveURL('/finance/pots')
+  await context.clearCookies({name:'JSESSIONID'})
+  await page.getByRole('button',{name:'Retry session check'}).click()
+  await expect(page).toHaveURL(/\/login\?next=/)
 })
 test('guest to account transition and two independent users retain isolated identity and language', async ({ browser }) => {
   const contexts = await Promise.all([browser.newContext(),browser.newContext()])
@@ -267,4 +269,49 @@ test('sign-in, sign-out and guest access keep their names while busy', async ({p
     await expect(guest.locator('[data-slot="skeleton"]')).toBeVisible()
   } finally { guestHold.resolve() }
   await expect(page).toHaveURL('/finance')
+})
+
+test('finance entries and navigation do not request identity in either hop', async ({ page, context }) => {
+  await login(page)
+  await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible()
+  const session = (await context.cookies()).find(cookie => cookie.name === 'JSESSIONID')!
+  const upstreamCount = async () => {
+    const response = await context.request.get(apiURL + '/__auth-me-count', {
+      headers: { Cookie: 'JSESSIONID=' + session.value },
+    })
+    expect(response.ok()).toBe(true)
+    return (await response.json()).count
+  }
+  const baseline = await upstreamCount()
+  let browserChecks = 0
+  page.on('request', request => {
+    if (new URL(request.url()).pathname === '/api/auth/me') browserChecks++
+  })
+  const sections = [
+    ['Overview', 'Overview'],
+    ['Transactions', 'Transactions'],
+    ['Categories', 'Categories'],
+    ['Budgets', 'Budgets'],
+    ['Pots', 'Pots'],
+    ['Recurring bills', 'Recurring Bills'],
+  ]
+  for (const [link, heading] of sections) {
+    await page.getByRole('link', { name: link, exact: true }).click()
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
+  }
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'Pots', exact: true })).toBeVisible()
+  await page.goForward()
+  await expect(page.getByRole('heading', { name: 'Recurring Bills', exact: true })).toBeVisible()
+  for (const [i, route] of routes.entries()) {
+    await page.goto(route)
+    await expect(page.getByRole('heading', { name: sections[i][1], exact: true })).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('button', { name: 'Logout', exact: true })).toBeEnabled()
+  }
+  await page.getByRole('link', { name: 'Transactions', exact: true }).click()
+  await page.getByPlaceholder('Search transaction').fill('pizza')
+  await expect(page).toHaveURL(/query=pizza/)
+  expect(browserChecks).toBe(0)
+  expect(await upstreamCount()).toBe(baseline)
 })

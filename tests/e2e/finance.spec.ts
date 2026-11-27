@@ -386,10 +386,12 @@ test('floating notifications preserve layout, translations and dismissal',async(
     await page.setViewportSize({width,height:900})
     await context.addCookies([{name:'finance-language',value:language,url:origin}])
     await page.goto('/finance/categories')
+    const addCategory = page.getByRole('button',{name:add,exact:true})
+    await expect(addCategory).toBeEnabled()
     await page.evaluate(() => document.fonts.ready.then(() => {}))
     await expect(page.locator('main [inert]')).toHaveCount(0)
     const heading=page.getByRole('heading',{level:1}),before=(await heading.boundingBox())!
-    await page.getByRole('button',{name:add,exact:true}).click()
+    await addCategory.click()
     await page.getByRole('dialog').getByLabel(name,{exact:true}).fill('Toast '+language)
     await save(page)
     const notice=page.locator('.Toastify__toast').filter({hasText:saved})
@@ -942,8 +944,7 @@ test('logout cancels late private reads and a financial 401 returns to login',as
   await requested
   await page.getByRole('button',{name:'Logout',exact:true}).click();await expect(page).toHaveURL('/login')
   await account(context)
-  const checked=page.waitForResponse(response=>response.url() === origin+'/api/auth/me' && response.status() === 200)
-  await page.goto('/finance/categories');await checked;release()
+  await page.goto('/finance/categories');release()
   await expect(page.getByText('No categories yet.',{exact:true})).toBeVisible()
   await expect(page.locator('main')).not.toContainText('Private late response')
   await page.getByRole('button',{name:'+ Add category',exact:true}).click()

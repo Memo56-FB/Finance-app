@@ -27,7 +27,7 @@ export function PageHeader({title,children}:{title:Label;children?:ReactNode}) {
 export function QueryMessage({query, fallback = <RowsSkeleton/>}:{query:{isPending:boolean;isError:boolean;isRefetching?:boolean;data?:unknown;refetch:() => unknown};fallback?:ReactNode}) {
   const {t}=useI18n()
   const session = useAccountSession()
-  if (query.isPending && session?.phase !== 'read-only' && session?.phase !== 'unavailable') return fallback && <LoadingRegion>{fallback}</LoadingRegion>
+  if (query.isPending && session?.phase !== 'unavailable') return fallback && <LoadingRegion>{fallback}</LoadingRegion>
   if(query.isError) return <div role="alert" className="grid gap-150 text-red"><p>{t('Could not load data. Please retry.')}</p><Button type="button" variant="secondary" disabled={session?.phase !== 'active'} onClick={()=>void query.refetch()}>{t('Reload data')}</Button></div>
   return null
 }

@@ -91,9 +91,11 @@ with no permanent demo-data banner. Logout calls Spring; guest exit works with t
 Both preserve the independent language preference.
 
 The root redirects according to access. Direct finance entries, reloads and RSC
-requests verify the session on the server. In an open finance tab, the six
-destinations follow browser history and open while identity and financial reads
-run in the background. Return URLs are limited to known finance routes and retain
+requests verify the session with a financial read the destination needs. Within
+a finance tab, navigation and filters use financial reads and cached results.
+Identity checks run at sign-in and when a session change or financial rejection
+is detected. A silent revocation during cached navigation is detected on the
+next protected request or session signal. Return URLs are limited to known finance routes and retain
 filters. Public forms retain server-rendered HTML and use JavaScript for submission. Finance is noindex, nofollow; public metadata remains
 available. This does not promise search indexing of protected pages.
 

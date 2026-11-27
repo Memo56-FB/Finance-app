@@ -11,7 +11,7 @@ import { announceSessionChange, sessionChannel, useAccessNavigation } from './cl
 import type { Access } from './types'
 
 const subscribe = () => () => {}
-export function SessionControls({ access }: { access: Access }) {
+export function SessionControls({ access }: { access: Pick<Access, 'kind'> }) {
   const { t } = useI18n()
   const ready = useSyncExternalStore(subscribe, () => true, () => false)
   const navigate = useAccessNavigation()
