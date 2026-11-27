@@ -4,7 +4,7 @@ async function account(context:BrowserContext,language='en') {
   const username=`finance-${Date.now()}-${Math.random()}`,password='test-password-123'
   const token=await (await context.request.get(origin+'/api/auth/csrf')).json()
   const headers={Origin:origin,[token.headerName]:token.token}
-  expect((await context.request.post(origin+'/api/auth/register',{headers,data:{name:'Finance test',username,password}})).status()).toBe(201)
+  expect((await context.request.post(origin+'/api/auth/register',{headers,data:{username,password}})).status()).toBe(201)
   expect((await context.request.post(origin+'/api/auth/login',{headers,form:{username,password}})).status()).toBe(204)
   await context.addCookies([{name:'finance-language',value:language,url:origin}])
   return username

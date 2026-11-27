@@ -69,7 +69,7 @@ Production environment, then redeploy.
 Spring's `FINANCE_FRONTEND_ORIGIN` must allow the frontend origin for each
 environment. Auth and financial requests use the Next.js server to reach the API.
 
-Registration at /singup takes a display name, username and password. After
+Registration at /singup takes a username and password. After
 registration, sign in at /login with the username and password. Usernames
 are case-insensitive. Spring's HttpOnly JSESSIONID is the sole
 account session. Next.js transports and verifies it, including session rotation

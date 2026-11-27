@@ -27,7 +27,7 @@ test('all finance HTML and RSC entries reject anonymous access', async ({ reques
 test('registration confirms without login; real form login and logout rotate cookies', async ({ page, context }) => {
   const username = 'new-'+Date.now()+'-'+test.info().workerIndex
   await page.goto('/singup')
-  await page.getByLabel('Name',{exact:true}).fill('María José')
+  await expect(page.locator('input[name="name"]')).toHaveCount(0)
   await page.getByLabel('Username',{exact:true}).fill(username)
   await page.getByLabel('Create Password',{exact:true}).fill('  test-password-123  ')
   await page.getByRole('button',{name:'Create Account',exact:true}).click()
@@ -86,7 +86,6 @@ test('invalid login is local, duplicate registration is a field error, and pendi
   await expect(page.locator('p[role="alert"]')).toContainText('Invalid username or password.')
   await expect(page).toHaveURL('/login')
   await page.goto('/singup')
-  await page.getByLabel('Name',{exact:true}).fill('Example')
   await page.getByLabel('Username',{exact:true}).fill('first')
   await page.getByLabel('Create Password',{exact:true}).fill('test-password-123')
   let submissions = 0
@@ -151,7 +150,7 @@ test.describe('without JavaScript', () => {
 test.use({ javaScriptEnabled: false })
 test('mutations reject cross-origin and missing CSRF; public HTML remains available without scripts', async ({ request,page }) => {
   expect((await request.post('/api/auth/guest',{headers:{Origin:'https://evil.test'}})).status()).toBe(403)
-  expect((await request.post('/api/auth/register',{headers:{Origin:baseURL},data:{name:'a',username:'sample',password:'secret'}})).status()).toBe(403)
+  expect((await request.post('/api/auth/register',{headers:{Origin:baseURL},data:{username:'sample',password:'secret'}})).status()).toBe(403)
   await page.goto(baseURL+'/login')
   await expect(page.getByRole('heading',{name:'Login',exact:true})).toBeVisible()
   expect(await page.locator('noscript').textContent()).toBe('Enable JavaScript to use these forms.')

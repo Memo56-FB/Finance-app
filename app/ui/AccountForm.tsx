@@ -15,7 +15,7 @@ import { credentialErrors, type Credentials } from '@/lib/auth/validation'
 
 const subscribe = () => () => {}
 type Props = { register?: boolean; next?: string; unavailable?: boolean }
-const fieldMessages = { name: 'Review your name (1–100 characters).', username: 'Use 1–254 letters (A–Z), numbers, periods, hyphens or underscores.', password: 'Use at least 8 characters and at most 72 UTF-8 bytes.' } as const
+const fieldMessages = { username: 'Use 1–254 letters (A–Z), numbers, periods, hyphens or underscores.', password: 'Use at least 8 characters and at most 72 UTF-8 bytes.' } as const
 export function AccountForm({ register = false, next, unavailable = false }: Props) {
   const { t } = useI18n()
   const ready = useSyncExternalStore(subscribe, () => true, () => false)
@@ -37,7 +37,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
       }
       if (!values) return
       if (register) {
-        await api.post('register', { ...values, name: values.name.trim(), username: values.username.trim().toLowerCase() })
+        await api.post('register', { username: values.username.trim().toLowerCase(), password: values.password })
         setCreated(true)
       } else {
         if (!confirming) {
@@ -63,7 +63,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
   async function run(action: 'account' | 'guest', form?: HTMLFormElement) {
     if (busy.current) return
     const data = form ? new FormData(form) : undefined
-    const values = data ? { name: String(data.get('name') ?? ''), username: String(data.get('username') ?? ''), password: String(data.get('password') ?? '') } : undefined
+    const values = data ? { username: String(data.get('username') ?? ''), password: String(data.get('password') ?? '') } : undefined
     const invalid = !confirming && action === 'account' && values ? credentialErrors(values, register) : []
     setFields(invalid); setError(null)
     if (invalid.length) return
@@ -88,12 +88,12 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
     {unavailable && <Button type="button" variant="secondary" disabled={!ready || mutation.isPending} onClick={() => window.location.reload()}>{t("Retry session check")}</Button>}
     {created ? <><p role="status">{t('Account created. Please log in.')}</p><Link className="underline" href={'/login' + query}>{t('Login')}</Link></> :
       <fieldset disabled={!ready || mutation.isPending} className="grid gap-300 min-w-0" aria-busy={mutation.isPending}>
-        {(['name', 'username', 'password'] as const).filter(field => register || field !== 'name').map(field => {
+        {(['username', 'password'] as const).map(field => {
           const invalid = fields.includes(field)
           const props = { id: field, name: field, required: !confirming, autoComplete: field === 'password' ? register ? 'new-password' : 'current-password' : field, 'aria-invalid': invalid, 'aria-describedby': invalid ? field + '-error' : undefined }
           return <div className="grid gap-50" key={field}>
-            <label htmlFor={field} className="text-preset-5-bold text-grey-500">{t(field === 'name' ? 'Name' : field === 'username' ? 'Username' : register ? 'Create Password' : 'Password')}</label>
-            {field === 'password' ? <InputPassword {...props} /> : <Input {...props} type="text" {...(field === 'username' && { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false })} />}
+            <label htmlFor={field} className="text-preset-5-bold text-grey-500">{t(field === 'username' ? 'Username' : register ? 'Create Password' : 'Password')}</label>
+            {field === 'password' ? <InputPassword {...props} /> : <Input {...props} type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} />}
             {invalid && <p id={field + '-error'} className="text-preset-5 text-red">{t(fieldMessages[field])}</p>}
           </div>
         })}

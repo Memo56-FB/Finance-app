@@ -44,7 +44,8 @@ async function handle(request: NextRequest, context: { params: Promise<{ action:
         if (action === 'register') {
           if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') return reply(415)
           const data = JSON.parse(body)
-          if (!data || typeof data !== 'object' || !['name', 'username', 'password'].every(k => typeof data[k] === 'string')) return reply(400)
+          if (typeof data?.username !== 'string' || typeof data?.password !== 'string') return reply(400)
+          body = JSON.stringify({ username: data.username, password: data.password })
           headers.set('Content-Type', 'application/json')
         } else if (action === 'login') {
           if (request.headers.get('content-type')?.split(';')[0] !== 'application/x-www-form-urlencoded') return reply(415)

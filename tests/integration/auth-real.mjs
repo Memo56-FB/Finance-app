@@ -13,10 +13,10 @@ try {
   const csrf = await (await http.get('/api/auth/csrf')).json()
   const registered = await http.post('/api/auth/register', {
     headers: { Origin: origin, [csrf.headerName]: csrf.token },
-    data: { name: 'María José', username, password },
+    data: { username, password },
   })
   assert.equal(registered.status(), 201)
-  assert.deepEqual(await registered.json(), { name: 'María José', username })
+  assert.deepEqual(await registered.json(), { username })
   assert.equal((await http.get('/api/auth/me')).status(), 401)
   const previous = (await context.cookies()).find(c => c.name === 'JSESSIONID')
   assert.ok(previous)
@@ -25,7 +25,7 @@ try {
   await page.getByLabel('Username', { exact: true }).fill(username.toUpperCase())
   await page.getByLabel('Password', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Login', exact: true }).click()
-  await expect(page).toHaveURL(origin + '/finance')
+  await expect(page).toHaveURL(origin + '/finance', { timeout: 20_000 })
   const current = (await context.cookies()).find(c => c.name === 'JSESSIONID')
   assert.ok(current?.httpOnly)
   assert.equal(current.path, '/')

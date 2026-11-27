@@ -41,12 +41,13 @@ const server = createServer(async (req,res) => {
   if (action === '/api/auth/register') {
     let data
     try { data = JSON.parse(body) } catch { return send(400,{errors:[]}) }
+    if (typeof data?.username !== 'string' || typeof data?.password !== 'string') return send(400, {errors:[]})
     const username = data.username.trim().toLowerCase()
     if (!/^[a-z0-9._-]{1,254}$/.test(username)) return send(400,{errors:[{field:'username',message:'Invalid'}]})
-    if (!data.name.trim() || data.password.length < 8 || Buffer.byteLength(data.password) > 72) return send(400,{errors:[{field:'password',message:'Invalid'}]})
+    if (!data.password.trim() || data.password.length < 8 || Buffer.byteLength(data.password) > 72) return send(400,{errors:[{field:'password',message:'Invalid'}]})
     if (users.has(username)) return send(409,{status:409})
     users.set(username,data.password)
-    return send(201,{name:data.name.trim(),username})
+    return send(201,{username})
   }
   if (action === '/api/auth/login') {
     const data = new URLSearchParams(body), username = data.get('username')?.trim().toLowerCase()

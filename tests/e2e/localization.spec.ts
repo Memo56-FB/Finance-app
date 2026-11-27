@@ -117,6 +117,7 @@ test('Spanish auth forms and money previews preserve demo safeguards', async ({ 
   await page.getByRole('button',{name:'Cerrar',exact:true}).click()
   for (const route of ['/login','/singup']) {
     await page.goto(route)
+    await expect(page.locator('input[name="name"]')).toHaveCount(0)
     await page.getByLabel('Nombre de usuario',{exact:true}).fill('test')
     await page.locator('input[name="password"]').fill('dummy-password')
     await expect(page.locator('form')).toHaveAttribute('method','post')

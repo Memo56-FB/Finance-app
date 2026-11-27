@@ -27,13 +27,13 @@ it('isolates query caches and validates redirects', () => {
 })
 it('accepts normalized usernames and rejects invalid identifiers on both forms', () => {
   for (const register of [false, true]) {
-    const check = (username: string) => credentialErrors({name:'María', username, password:'test-password'}, register)
+    const check = (username: string) => credentialErrors({username, password:'test-password'}, register)
     for (const username of ['a', '  User_01.A-B  ', 'a'.repeat(254)]) expect(check(username)).toEqual([])
     for (const username of ['', 'a'.repeat(255), 'a@b.com', 'two words', 'maría']) expect(check(username)).toContain('username')
   }
 })
 it('checks password UTF-8 boundaries without trimming significant spaces', () => {
-  const values = { name: 'María', username: 'maria', password: 'abcdefgh' }
+  const values = { username: 'maria', password: 'abcdefgh' }
   for (const password of ['a'.repeat(72),'é'.repeat(36),'  abcdefgh  ']) expect(credentialErrors({ ...values, password }, true)).toEqual([])
   for (const password of ['a'.repeat(73),'é'.repeat(37),'abcdefg','        ']) expect(credentialErrors({ ...values, password }, true)).toContain('password')
 })
@@ -111,4 +111,18 @@ it('only extends a live session cookie after a successful remembered login', asy
   const signedIn = await POST(request('login','POST',headers,remembered),context('login'))
   expect(signedIn.headers.getSetCookie().filter(cookie => cookie.startsWith('JSESSIONID=')))
     .toEqual([deletion, session + '; Max-Age=2592000'])
+})
+
+it('forwards username and password only, including for a legacy registration body', async () => {
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(Response.json({ username: 'sample' }, { status: 201 }))
+  const headers = { 'X-CSRF-TOKEN': 't', 'Content-Type': 'application/json' }
+  for (const body of ['{', '{"username":42,"password":"secret12"}', '{"username":"sample","password":42}']) {
+    expect((await POST(request('register', 'POST', headers, body), context('register'))).status).toBe(400)
+  }
+  expect(fetch).not.toHaveBeenCalled()
+  const credentials = { username: 'sample', password: '  secret12  ' }
+  const response = await POST(request('register', 'POST', headers, JSON.stringify({ ...credentials, name: 'Legacy' })), context('register'))
+  expect(response.status).toBe(201)
+  expect(JSON.parse(fetch.mock.calls[0][1]?.body as string)).toEqual(credentials)
+  expect(await response.json()).toEqual({ username: 'sample' })
 })
