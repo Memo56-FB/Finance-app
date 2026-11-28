@@ -13,11 +13,11 @@ const page = async ({ searchParams }: PageProps) => {
 
   return (
     <>
-    <div className="lg:absolute lg:right-0 lg:top-0 lg:z-10"><PreferencesBar /></div>
-    <main className='grid grid-rows-[auto_1fr] h-full lg:flex '>
-      <div className='bg-card border-b-4 border-line px-500 py-300 grid place-items-center lg:hidden'>
-        <BrandLogo />
-      </div>
+    <header className="bg-card border-b-4 border-line px-500 py-300 grid shrink-0 place-items-center lg:hidden">
+      <BrandLogo />
+    </header>
+    <div className="lg:absolute lg:right-0 lg:top-0 lg:z-10"><PreferencesBar authPage /></div>
+    <main className="grid flex-1 lg:flex">
       <aside className="hidden p-250 lg:flex lg:flex-grow lg:max-w-[600px]">
         <div className="pixelated lg:flex lg:flex-col lg:justify-between lg:p-500 lg:bg-[url('/brand/login-scene.png')] lg:bg-cover lg:bg-center lg:bg-no-repeat lg:h-full lg:w-full lg:max-w-[560px] px-frame">
           <BrandLogo />

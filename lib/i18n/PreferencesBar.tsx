@@ -4,6 +4,7 @@ import { useSyncExternalStore, useTransition } from 'react'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { savePreference } from './cookie'
 import { Text, useI18n } from './client'
@@ -43,7 +44,7 @@ function ThemeSwatch({ theme }: { theme: Theme }) {
   return <span aria-hidden="true" className={`inline-block size-4 border-2 border-line ${themeSwatches[theme]}`} />
 }
 
-export function PreferencesBar() {
+export function PreferencesBar({ authPage = false }: { authPage?: boolean }) {
   const locale = useI18n()
   const selected = languages[locale.language]
   const router = useRouter()
@@ -67,10 +68,11 @@ export function PreferencesBar() {
       toast.error(<Text id="Could not save preferences."/>,{toastId:'preference-error',role:'alert',autoClose:false})
     }
   }
-  return <aside className="flex shrink-0 flex-col items-end gap-100 px-200 py-100 md:px-500 text-preset-5">
+  const triggerClass = 'w-auto max-sm:gap-100 max-sm:px-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
+  const languageSelect = <>
       <label htmlFor="preference-language" className="sr-only">{locale.t('Language')}</label>
       <Select value={locale.language} disabled={pending} onValueChange={change}>
-        <SelectTrigger id="preference-language" aria-busy={pending} className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+        <SelectTrigger id="preference-language" aria-busy={pending} className={triggerClass}>
           <SelectValue>
             <span className="flex items-center gap-100">
               <Image src={`/flags/${selected.flag}.svg`} width={24} height={16} alt="" aria-hidden="true" />
@@ -89,9 +91,11 @@ export function PreferencesBar() {
           ))}
         </SelectContent>
       </Select>
+  </>
+  const themeSelect = <>
       <label htmlFor="preference-theme" className="sr-only">{locale.t('Theme')}</label>
       <Select value={theme} onValueChange={changeTheme}>
-        <SelectTrigger id="preference-theme" className="w-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+        <SelectTrigger id="preference-theme" className={triggerClass}>
           <SelectValue>
             <span className="flex items-center gap-100">
               <ThemeSwatch theme={theme} />
@@ -110,5 +114,11 @@ export function PreferencesBar() {
           ))}
         </SelectContent>
       </Select>
+  </>
+  return <aside className={cn(
+    'flex shrink-0 items-center justify-between gap-100 px-200 py-100 md:gap-8 md:px-500 text-preset-5',
+    authPage ? 'md:justify-end' : 'max-md:grow',
+  )}>
+    {authPage ? <>{themeSelect}{languageSelect}</> : <>{languageSelect}{themeSelect}</>}
   </aside>
 }

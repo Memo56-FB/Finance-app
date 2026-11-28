@@ -9,7 +9,7 @@ export function FinanceShell({ kind, children }: { kind: 'account' | 'guest'; ch
         <Sidebar />
       </div>
       <div data-finance-scroll className='min-h-0 min-w-0 overflow-auto lg:flex-1'>
-        <div className="flex items-start justify-between gap-200">
+        <div className="flex items-start justify-between gap-x-200 max-md:flex-wrap">
           <SessionControls access={{ kind }} />
           <PreferencesBar />
         </div>
