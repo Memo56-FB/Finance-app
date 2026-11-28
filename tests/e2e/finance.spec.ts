@@ -350,6 +350,12 @@ test('budget chart keeps large amounts inside the ring', async ({page, context})
       await expect(label).toBeVisible()
       await expect.poll(async () => (await label.boundingBox())?.width).toBeLessThan(125)
     }
+    await chart.scrollIntoViewIfNeeded()
+    const box = (await chart.boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 75)
+    const tooltip = chart.locator('.recharts-tooltip-wrapper')
+    await expect(tooltip).toContainText('Equipment')
+    await expect(tooltip).toContainText('$123,456,789.25')
   }
 })
 
