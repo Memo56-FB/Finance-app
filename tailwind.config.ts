@@ -21,7 +21,7 @@ const config: Config = {
   		},
   		fontFamily: {
   			sans: ['var(--font-sans)', 'ui-monospace', 'monospace'],
-  			heading: ['var(--font-heading)', 'ui-monospace', 'monospace'],
+			heading: ['var(--font-sans)', 'ui-monospace', 'monospace'],
   		},
   		colors: {
 				// Pixel art semantic colors (theme ramp changes with data-theme)

@@ -1,14 +1,11 @@
-import { Pixelify_Sans, Press_Start_2P } from "next/font/google";
+import localFont from "next/font/local";
 
-export const pixelifySans = Pixelify_Sans({
-  subsets: ["latin"],
+export const minecraft = localFont({
+  src: [
+    { path: "./Minecraft-Regular.otf", weight: "400", style: "normal" },
+    { path: "./Minecraft-Bold.otf", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-sans",
-});
-
-export const pressStart = Press_Start_2P({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-heading",
+  fallback: ["system-ui", "sans-serif"],
 });
