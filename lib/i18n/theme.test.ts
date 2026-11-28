@@ -15,25 +15,25 @@ function jar(accepts = true) {
 }
 
 describe('theme boundary', () => {
-  it('accepts only supported themes and otherwise uses overworld', () => {
-    for (const value of ['overworld', 'nether', 'diamond']) expect(validateTheme(value)).toBe(value)
-    for (const value of [undefined, '', 'Nether', 'green', '<bad>', 'es']) expect(validateTheme(value)).toBe(defaultTheme)
-    expect(defaultTheme).toBe('overworld')
+  it('accepts only supported themes and falls back to dark for legacy cookies', () => {
+    for (const value of ['light', 'dark']) expect(validateTheme(value)).toBe(value)
+    for (const value of [undefined, '', 'overworld', 'nether', 'diamond', 'green', '<bad>', 'es']) expect(validateTheme(value)).toBe(defaultTheme)
+    expect(defaultTheme).toBe('dark')
   })
 
   it('stores a supported theme in its own cookie', () => {
     const doc = jar()
-    savePreference(doc, 'diamond', false, 'theme')
-    expect(doc.cookie).toBe(`${cookieNames.theme}=diamond`)
+    savePreference(doc, 'light', false, 'theme')
+    expect(doc.cookie).toBe(`${cookieNames.theme}=light`)
   })
 
   it('rejects unsupported theme values and values from another preference', () => {
     expect(() => savePreference(jar(), 'green', false, 'theme')).toThrow('Unsupported preference')
     expect(() => savePreference(jar(), 'es', false, 'theme')).toThrow('Unsupported preference')
-    expect(() => savePreference(jar(), 'nether', false)).toThrow('Unsupported preference')
+    expect(() => savePreference(jar(), 'dark', false)).toThrow('Unsupported preference')
   })
 
   it('reports a rejected cookie', () => {
-    expect(() => savePreference(jar(false), 'nether', false, 'theme')).toThrow('Cookie rejected')
+    expect(() => savePreference(jar(false), 'dark', false, 'theme')).toThrow('Cookie rejected')
   })
 })

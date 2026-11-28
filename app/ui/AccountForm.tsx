@@ -98,7 +98,7 @@ export function AccountForm({ register = false, next, unavailable = false }: Pro
           </div>
         })}
         {!register && !confirming && <label className="inline-flex min-h-11 w-fit cursor-pointer items-center gap-100 text-preset-4 text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
-          <input type="checkbox" name="remember-me" value="true" className="h-4 w-4 accent-green" />
+          <input type="checkbox" name="remember-me" value="true" className="h-4 w-4 accent-green [[data-theme=light]_&]:accent-theme-2" />
           {t('Remember me')}
         </label>}
         <Button type="submit" aria-busy={mutation.isPending && mutation.variables?.action === 'account'}>

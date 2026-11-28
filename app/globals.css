@@ -12,21 +12,23 @@
   :root {
     --radius: 0rem;
 
-    /* Base compartida por los tres temas (valores HSL sin envoltorio) */
-    --bg: 240 29% 7%;
-    --panel: 240 29% 12%;
-    --line: 240 23% 24%;
-    --ink: 45 35% 93%;
-    --ink-muted: 240 19% 75%;
-    --gold: 46 100% 62%;
+    /* Obsidian and amethyst */
+    color-scheme: dark;
+    --bg: 253 30% 8%;
+    --panel: 253 25% 15%;
+    --line: 253 22% 28%;
+    --ink: 264 42% 95%;
+    --ink-muted: 259 25% 78%;
+    --gold: 43 92% 70%;
     --danger: 349 100% 68%;
-    --frame: 0 0% 0%;
+    --frame: 257 49% 4%;
 
-    /* Rampa del tema: Overworld (por defecto) */
-    --p1: 92 69% 62%;
-    --p2: 102 52% 46%;
-    --p3: 110 54% 31%;
-    --p4: 113 52% 20%;
+    --text-shadow: var(--frame);
+
+    --p1: 269 82% 78%;
+    --p2: 265 65% 64%;
+    --p3: 257 46% 36%;
+    --p4: 255 48% 25%;
 
     /* Tokens shadcn */
     --background: var(--bg);
@@ -55,26 +57,26 @@
     --chart-5: var(--danger);
   }
 
-  [data-theme='nether'] {
-    --p1: 19 100% 71%;
-    --p2: 6 74% 53%;
-    --p3: 3 71% 37%;
-    --p4: 358 71% 21%;
-  }
-
-  [data-theme='diamond'] {
-    --p1: 186 100% 78%;
-    --p2: 192 79% 57%;
-    --p3: 204 73% 38%;
-    --p4: 216 67% 27%;
+  :root[data-theme='light'] {
+    /* Sandstone, quartz and oak */
+    color-scheme: light;
+    --bg: 43 40% 88%;
+    --panel: 49 56% 96%;
+    --line: 39 20% 74%;
+    --ink: 33 22% 12%;
+    --ink-muted: 34 15% 28%;
+    --gold: 32 90% 24%;
+    --danger: 5 72% 33%;
+    --frame: 34 17% 28%;
+    --text-shadow: 49 56% 96%;
+    --p1: 28 54% 26%;
+    --p2: 27 48% 32%;
+    --p3: 31 43% 72%;
+    --p4: 29 37% 64%;
   }
 
   * {
     @apply border-border;
-  }
-
-  html {
-    color-scheme: dark;
   }
 
   body {
@@ -137,7 +139,7 @@
   }
 
   .px-text-shadow {
-    text-shadow: 2px 2px 0 hsl(var(--frame));
+    text-shadow: 2px 2px 0 hsl(var(--text-shadow));
   }
 
   .px-gradient {

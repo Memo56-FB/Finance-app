@@ -47,9 +47,8 @@ const ratio = (a: Hsl, b: Hsl) => {
 
 const base = readTokens(blockFor(':root'))
 const themes = {
-  overworld: readTokens(blockFor(':root')),
-  nether: readTokens(blockFor("[data-theme='nether']")),
-  diamond: readTokens(blockFor("[data-theme='diamond']")),
+  dark: base,
+  light: readTokens(blockFor(":root[data-theme='light']")),
 }
 
 describe.each(Object.entries(themes))('%s theme contrast', (_name, ramp) => {

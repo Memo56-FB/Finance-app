@@ -2,7 +2,7 @@ import { QueryProvider } from '@/lib/api/QueryProvider'
 import { Notifications } from '@/components/ui/Notifications'
 import { PreferencesProvider } from '@/lib/i18n/client'
 import { getI18n, getTheme } from '@/lib/i18n/server'
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { minecraft } from "./ui/fonts";
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -10,6 +10,10 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 export const metadata: Metadata = {
   title: "finance",
   description: "Track your money, budgets and savings pots in a retro pixel-art world.",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark light",
 };
 
 export default async function RootLayout({

@@ -16,15 +16,13 @@ const languages = {
 }
 
 const themeLabels: Record<Theme, keyof Messages> = {
-  overworld: 'Overworld',
-  nether: 'Nether',
-  diamond: 'Diamond',
+  light: 'Light',
+  dark: 'Dark',
 }
 
 const themeSwatches: Record<Theme, string> = {
-  overworld: 'bg-[#5fbf3a]',
-  nether: 'bg-[#e0452b]',
-  diamond: 'bg-[#2fc8d8]',
+  light: 'bg-[#eee6d4]',
+  dark: 'bg-[hsl(253_25%_15%)]',
 }
 
 function subscribeToTheme(onChange: () => void) {
