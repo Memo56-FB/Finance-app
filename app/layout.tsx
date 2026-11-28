@@ -10,7 +10,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 export const metadata: Metadata = {
   title: "finance",
   description: "Track your money, budgets and savings pots in a retro pixel-art world.",
-  icons: { icon: "/icon.svg" },
 };
 
 export default async function RootLayout({
