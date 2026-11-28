@@ -20,7 +20,7 @@ export const SummaryCardCurrentBalance = ({title, value}: {
   value: React.ReactNode
 }) => {
   return (
-    <article className='grid gap-150 p-250 md:p-300 px-gradient px-bevel text-ink px-text-shadow'>
+    <article className='grid gap-150 p-250 md:p-300 bg-theme-3 px-bevel text-ink px-text-shadow'>
       <h3 className='text-preset-4'><ControlledLabel value={title} /></h3>
       <p className='text-preset-1 break-all'>
         {value}
