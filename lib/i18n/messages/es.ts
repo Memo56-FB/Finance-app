@@ -157,6 +157,8 @@ export const es: Messages = {
   "Gold": "Dorado",
   "Orange": "Naranja",
   "Language": "Idioma",
+  "Light": "Claro",
+  "Dark": "Oscuro",
   "Could not save preferences.": "No se pudieron guardar las preferencias.",
   "Monthly": "Cada mes, día",
   "savings preview": "vista previa de ahorros",

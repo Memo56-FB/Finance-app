@@ -72,16 +72,16 @@ const TransactionsPage = () => {
 
   return (
     <>
-      <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Transactions" /></h1>
-      <section className='bg-white mt-400 px-250 py-300 rounded-xl grid gap-300'>
+      <h1 tabIndex={-1} className='text-preset-1 text-ink'><Text id="Transactions" /></h1>
+      <section className='bg-card mt-400 px-250 py-300 px-inset grid gap-300'>
         <div className='flex gap-300 items-center justify-between mb-300'>
           <InputSearch aria-label={t("Search transactions")} type='text' placeholder={t("Search transaction")} value={query} onChange={handleQueryChange} />
           <div className='flex gap-300'>
             <ResponsiveSelect label={t("Sort By")} options={sortOptions.map(value => ({ value, label: messages[value as keyof typeof messages] ?? value }))} value={sortBy} onValueChange={handleSortChange}>
-              <SortAscending weight='fill' size={20} className='text-grey-900' />
+              <SortAscending weight='fill' size={20} className='text-ink' />
             </ResponsiveSelect>
             <ResponsiveSelect label={t("Category")} options={categoryOptions.map(value => ({ value, label: messages[value as keyof typeof messages] ?? value }))} value={category} onValueChange={handleCategoryChange}>
-              <Funnel weight='fill' size={20} className='text-grey-900' />
+              <Funnel weight='fill' size={20} className='text-ink' />
             </ResponsiveSelect>
           </div>
         </div>
@@ -95,7 +95,7 @@ const TransactionsPage = () => {
 
 export default function Page() {
   return (
-    <Suspense fallback={<><h1 tabIndex={-1} className="text-preset-1 text-grey-900"><Text id="Transactions" /></h1><LoadingRegion><RowsSkeleton/></LoadingRegion></>}>
+    <Suspense fallback={<><h1 tabIndex={-1} className="text-preset-1 text-ink"><Text id="Transactions" /></h1><LoadingRegion><RowsSkeleton/></LoadingRegion></>}>
       <TransactionsPage />
     </Suspense>
   )

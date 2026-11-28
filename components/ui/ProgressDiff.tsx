@@ -38,13 +38,12 @@ export const ProgressDiff = ({
       aria-valuemax={safeMax}
       aria-valuenow={nextValue}
       {...props}
-      className={cn('relative w-full h-2 block bg-beige-100 rounded-lg overflow-hidden', className)}
+      className={cn('relative w-full h-2 block bg-background overflow-hidden', className)}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'absolute inset-y-0 left-0 block rounded-lg bg-grey-900 transition-[width]',
-          hasDiffSegment && 'rounded-r-none'
+          'absolute inset-y-0 left-0 block bg-ink motion-safe:transition-[width]'
         )}
         style={{
           width: `max(0px, calc(${basePercentage}% - ${gapOffset}))`,
@@ -53,7 +52,7 @@ export const ProgressDiff = ({
       <span
         aria-hidden="true"
         className={cn(
-          'absolute inset-y-0 block rounded-lg rounded-l-none transition-[left,width]',
+          'absolute inset-y-0 block motion-safe:transition-[left,width]',
           `bg-${color}`
         )}
         style={{

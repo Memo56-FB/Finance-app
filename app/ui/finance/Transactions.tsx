@@ -132,7 +132,7 @@ export function ListToolbar({category=false, search}:{category?:boolean;search:R
   const visibleCategories = useCategoryView(categories.data)
   const options=[{value:'all',label:t('All categories')},...categoryOptions(visibleCategories?.filter(row => validId(row.id)) ?? [])]
   if(validId(selected) && !options.some(option=>option.value === selected)) options.push({value:selected,label:`${t('Inactive category')} (#${selected})`})
-  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} {...input}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>{category && (categories.isPending && phase === 'active' ? <QueryMessage query={categories} fallback={<div className="w-12 md:w-32"><FieldSkeleton/></div>}/> : <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-grey-900"/></ResponsiveSelect>)}</div></div>{category && categories.isError && <QueryMessage query={categories}/>}</>
+  return <><div className="flex items-center justify-between gap-300"><InputSearch aria-label={t(category ? 'Search transactions' : 'Search bills')} placeholder={t(category ? 'Search transaction' : 'Search bills')} {...input}/><div className="flex shrink-0 gap-300"><ResponsiveSelect label={t('Sort By')} value={sort} onValueChange={value=>update('sortBy',value)} options={sorts.map(([value,label])=>({value,label:t(label)}))}><SortAscending size={20} weight="fill" className="text-ink"/></ResponsiveSelect>{category && (categories.isPending && phase === 'active' ? <QueryMessage query={categories} fallback={<div className="w-12 md:w-32"><FieldSkeleton/></div>}/> : <ResponsiveSelect label={t('Category')} value={validId(selected) ? selected : 'all'} onValueChange={value=>update('category',value === 'all' ? '' : value)} options={options}><Funnel size={20} weight="fill" className="text-ink"/></ResponsiveSelect>)}</div></div>{category && categories.isError && <QueryMessage query={categories}/>}</>
 }
 export function PagedNavigation({data,applyFilter}:{data:{page:number;totalPages:string};applyFilter:(key:string,value:string)=>void}) {
   const {params,update}=useFinancialURL()
@@ -152,26 +152,26 @@ export function PagedNavigation({data,applyFilter}:{data:{page:number;totalPages
 }
 function Origin({row}:{row:Transaction}) {
   const {t}=useI18n()
-  return <span className="text-preset-5 text-grey-500">{t(row.sourceType === 'POT' ? 'Pot movement' : row.sourceType === 'RECURRING_PAYMENT' ? 'Recurring payment' : 'Manual')}{row.potName ? ` · ${row.potName}` : ''}{row.openingBalance ? ` · ${t('Opening balance')}` : ''}</span>
+  return <span className="text-preset-5 text-ink-muted">{t(row.sourceType === 'POT' ? 'Pot movement' : row.sourceType === 'RECURRING_PAYMENT' ? 'Recurring payment' : 'Manual')}{row.potName ? ` · ${row.potName}` : ''}{row.openingBalance ? ` · ${t('Opening balance')}` : ''}</span>
 }
 export function TransactionRows({rows,actions=false,showCategory=false}:{rows:Transaction[];actions?:boolean;showCategory?:boolean}) {
   const {t}=useI18n()
   if(!rows.length)return <Empty label="No transactions found."/>
   if(!actions) return <div className={showCategory ? 'grid gap-150' : 'grid gap-250'}>{rows.map((row,index)=><Fragment key={row.id}>
     <article className="flex items-center justify-between gap-200">
-      <div className="grid gap-50 min-w-0"><p className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</p>{showCategory && <p className="text-preset-5 text-grey-500 break-words">{row.categoryName ?? t('No category')}</p>}</div>
-      <div className="grid gap-100 text-right min-w-0"><p className={`text-preset-4-bold break-all ${!showCategory && !row.amount.startsWith('-') ? 'text-green' : 'text-grey-900'}`}><Money value={row.amount} signed/></p><p className="text-preset-5 text-grey-500"><CalendarDate value={row.transactionDate}/></p></div>
-    </article>{index < rows.length-1 && <Separator className="bg-grey-100"/>}
+      <div className="grid gap-50 min-w-0"><p className="text-preset-4-bold text-ink break-words [overflow-wrap:anywhere]">{row.name}</p>{showCategory && <p className="text-preset-5 text-ink-muted break-words">{row.categoryName ?? t('No category')}</p>}</div>
+      <div className="grid gap-100 text-right min-w-0"><p className={`text-preset-4-bold break-all ${!showCategory && !row.amount.startsWith('-') ? 'text-green' : 'text-ink'}`}><Money value={row.amount} signed/></p><p className="text-preset-5 text-ink-muted"><CalendarDate value={row.transactionDate}/></p></div>
+    </article>{index < rows.length-1 && <Separator className="bg-line"/>}
   </Fragment>)}</div>
   return <div role="table" aria-label={t('Transactions')} className="grid gap-300">
-    <div role="row" className="sr-only md:not-sr-only md:grid md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400 md:py-150 md:border-b md:border-grey-100 text-preset-5 text-grey-500">
+    <div role="row" className="sr-only md:not-sr-only md:grid md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400 md:py-150 md:border-b md:border-line text-preset-5 text-ink-muted">
       <span role="columnheader" className="col-span-3">{t('Name')}</span><span role="columnheader">{t('Category')}</span><span role="columnheader">{t('Transaction Date')}</span><span role="columnheader">{t('Amount')}</span><span role="columnheader" className="sr-only">{t('Actions')}</span>
     </div>
-    <div role="rowgroup">{rows.map(row=><article role="row" key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto_44px] items-center gap-x-150 gap-y-50 py-200 first:pt-0 last:pb-0 border-b border-grey-100 last:border-b-0 md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400">
-      <div role="cell" className="min-w-0 md:col-span-3"><p className="text-preset-4-bold text-grey-900 break-words [overflow-wrap:anywhere]">{row.name}</p><span className="sr-only"><Origin row={row}/></span></div>
-      <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-grey-500 break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
-      <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-grey-500 md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
-      <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-grey-900 break-all"><Money value={row.amount} signed/></p></div>
+    <div role="rowgroup">{rows.map(row=><article role="row" key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto_44px] items-center gap-x-150 gap-y-50 py-200 first:pt-0 last:pb-0 border-b border-line last:border-b-0 md:grid-cols-[repeat(6,minmax(0,1fr))_44px] md:gap-400">
+      <div role="cell" className="min-w-0 md:col-span-3"><p className="text-preset-4-bold text-ink break-words [overflow-wrap:anywhere]">{row.name}</p><span className="sr-only"><Origin row={row}/></span></div>
+      <p role="cell" className="col-start-1 row-start-2 text-preset-5 text-ink-muted break-words md:col-start-4 md:row-start-1">{row.categoryName ?? t('No category')}</p>
+      <p role="cell" className="col-start-2 row-start-2 text-right text-preset-5 text-ink-muted md:col-start-5 md:row-start-1 md:text-left"><CalendarDate value={row.transactionDate}/></p>
+      <div role="cell" className="col-start-2 row-start-1 min-w-0 text-right md:col-start-6 md:text-left"><p className="text-preset-4-bold text-ink break-all"><Money value={row.amount} signed/></p></div>
       <div role="cell" className="col-start-3 row-span-2 row-start-1 md:col-start-7 md:row-span-1">{validId(row.id) && <RowActions name={row.name} recordId={row.id} contentClassName={financeDialog} edit={<TransactionForm record={row}/>} remove={<DeleteForm resource="transactions" id={row.id} name={row.name} linked={row.sourceType} before={row}/>}/>}</div>
     </article>)}</div>
   </div>
@@ -181,7 +181,7 @@ export function Transactions() {
   const {params}=search, {queries}=useFinance(), filters=filtersFromURL(params),query=useQuery(queries.transactions(filters))
   const items = useTransactionView(query.data, filters)
   useEffect(()=>{const category=params.get('category');if(category && !validId(category)){const next=new URLSearchParams(params);next.delete('category');next.set('page','1');window.history.replaceState(null,'','?'+next)}},[params])
-  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{<TransactionForm/>}</NewDialog></PageHeader><section className="bg-white mt-400 px-250 py-300 rounded-xl grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query} fallback={items ? null : undefined}/>{items && <TransactionRows rows={items} actions/>}{query.data && <PagedNavigation data={query.data} applyFilter={search.applyFilter}/>}</section></>
+  return <><PageHeader title="Transactions"><NewDialog title="Add transaction">{<TransactionForm/>}</NewDialog></PageHeader><section className="bg-card mt-400 px-250 py-300 px-inset grid gap-300"><ListToolbar category search={search}/><QueryMessage query={query} fallback={items ? null : undefined}/>{items && <TransactionRows rows={items} actions/>}{query.data && <PagedNavigation data={query.data} applyFilter={search.applyFilter}/>}</section></>
 }
 
 function TransactionForm({ record }: { record?: Transaction }) {
@@ -223,7 +223,7 @@ function TransactionForm({ record }: { record?: Transaction }) {
   const error = useFieldError(save.error)
   return <SaveForm save={save}>
     {record && <p><Origin row={record}/></p>}
-    {record && record.sourceType !== 'MANUAL' && <p className="text-preset-4 text-grey-500">{t('This correction can change a linked pot balance or payment status.')}</p>}
+    {record && record.sourceType !== 'MANUAL' && <p className="text-preset-4 text-ink-muted">{t('This correction can change a linked pot balance or payment status.')}</p>}
     <FormInput label="Name" value={name} onChange={e => setName(e.target.value)} maxLength={100} error={error('name')} required />
     <CategoryField value={categoryId || (nullable ? 'none' : '')} onChange={setCategory} original={record?.categoryId ? { id: record.categoryId, name: record.categoryName ?? '' } : undefined} nullable={nullable} error={error('categoryId')} />
     <CalendarField label="Transaction Date" value={date} onChange={setDate} error={error('transactionDate')} />

@@ -14,23 +14,23 @@ export const  PotCard = ({title, totalSaved, targetOf, color}: {
   color: string
 }) => {
   return (
-    <article className='bg-white rounded-xl px-250 py-300 md:p-300 grid gap-400'>
+    <article className='bg-card px-inset px-250 py-300 md:p-300 grid gap-400'>
       <header className='flex justify-between'>
         <div className='flex gap-200 items-center'>
           <Circle size={16} weight="fill" className={`fill-${color}`} />
-          <h1 className='text-preset-2 text-grey-900'>{title}</h1>
+          <h1 className='text-preset-2 text-ink'>{title}</h1>
         </div>
         <EditDeleteDropdown />
       </header>
       <section className='grid gap-200'>
         <div className='flex justify-between items-center'>
-          <p className='text-preset-4 text-grey-500'><Text id="Total Saved" /></p>
-          <p className='text-preset-1 text-grey-900'><Money value={totalSaved} /></p>
+          <p className='text-preset-4 text-ink-muted'><Text id="Total Saved" /></p>
+          <p className='text-preset-1 text-ink'><Money value={totalSaved} /></p>
         </div>
         <div className='grid justify-between items-center grid-cols-2 gap-150'>
-          <Progress color={color} max={targetOf} value={totalSaved} className='rounded-md h-2 [&::-webkit-progress-bar]:p-0 col-span-2' />
-          <p className='text-preset-5-bold text-grey-500'><Percentage value={targetOf > 0 ? totalSaved / targetOf : 0} /></p>
-          <p className='text-right text-preset-5 text-grey-500'><Text id="Target of" /> <Money value={targetOf} /></p>
+          <Progress color={color} max={targetOf} value={totalSaved} className='rounded-none h-2 [&::-webkit-progress-bar]:p-0 col-span-2' />
+          <p className='text-preset-5-bold text-ink-muted'><Percentage value={targetOf > 0 ? totalSaved / targetOf : 0} /></p>
+          <p className='text-right text-preset-5 text-ink-muted'><Text id="Target of" /> <Money value={targetOf} /></p>
         </div>
       </section>
       <div className='grid grid-cols-2 gap-200'>

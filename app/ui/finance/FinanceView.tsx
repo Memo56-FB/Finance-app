@@ -31,7 +31,7 @@ import { RecurringBillsLayout } from '@/app/ui/recurring-bills/RecurringBillsLay
 function GuestOverview() {
   return (
     <>
-      <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Overview" /></h1>
+      <h1 tabIndex={-1} className='text-preset-1 text-ink'><Text id="Overview" /></h1>
       <Summary />
       <section className='grid grid-cols-1 gap-200 xl:gap-0 xl:grid-cols-[auto_auto] xl:gap-x-300'>
         <div className='flex flex-col gap-200 xl:gap-200'>
@@ -50,7 +50,7 @@ function GuestBudgets() {
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>
-        <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Budgets" /></h1>
+        <h1 tabIndex={-1} className='text-preset-1 text-ink'><Text id="Budgets" /></h1>
         <CreateBudget />
       </header>
       <section className='grid grid-cols-1 items-start gap-300 lg:grid-cols-2'>
@@ -66,7 +66,7 @@ function GuestPots() {
   return (
     <>
       <header className='flex flex-wrap items-center justify-between gap-200'>
-        <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Pots" /></h1>
+        <h1 tabIndex={-1} className='text-preset-1 text-ink'><Text id="Pots" /></h1>
         <CreatePot />
       </header>
       <section className='grid gap-300 xl:grid-cols-2'>
@@ -82,7 +82,7 @@ function GuestPots() {
 function GuestRecurring() {
   return (
     <>
-      <h1 tabIndex={-1} className='text-preset-1 text-grey-900'><Text id="Recurring Bills" /></h1>
+      <h1 tabIndex={-1} className='text-preset-1 text-ink'><Text id="Recurring Bills" /></h1>
       <RecurringBillsLayout />
     </>
   )

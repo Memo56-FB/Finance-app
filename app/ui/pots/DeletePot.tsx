@@ -17,7 +17,7 @@ export const DeletePot = () => {
           <DialogDescription className="text-start"><Text id="Deletion is unavailable in this demo. Your savings pot will stay unchanged." /></DialogDescription>
         </DialogHeader>
         <Button type="button" disabled variant={'destroy'}><Text id="Yes, Confirm Deletion" /></Button>
-        <DialogClose className='text-preset-4 text-grey-500'><Text id="No, I want to go back" /></DialogClose>
+        <DialogClose className='text-preset-4 text-ink-muted'><Text id="No, I want to go back" /></DialogClose>
       </DialogContent>
     </Dialog>
   )

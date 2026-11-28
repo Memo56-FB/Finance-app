@@ -350,6 +350,12 @@ test('budget chart keeps large amounts inside the ring', async ({page, context})
       await expect(label).toBeVisible()
       await expect.poll(async () => (await label.boundingBox())?.width).toBeLessThan(125)
     }
+    await chart.scrollIntoViewIfNeeded()
+    const box = (await chart.boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 75)
+    const tooltip = chart.locator('.recharts-tooltip-wrapper')
+    await expect(tooltip).toContainText('Equipment')
+    await expect(tooltip).toContainText('$123,456,789.25')
   }
 })
 
@@ -507,7 +513,7 @@ test('original finance cards and pot previews remain usable on desktop and mobil
       if(route === '/finance/budgets') await expect(page.getByText('Lunch',{exact:true})).toBeVisible()
       if(route === '/finance/recurring-bills') {
         const total=page.locator('article').filter({has:page.getByText('Total Bills',{exact:true})}).first()
-        await expect(total).toHaveCSS('background-color','rgb(32, 31, 36)')
+        await expect(total).toHaveCSS('background-color','rgb(22, 22, 39)')
         await expect(total.locator('svg')).toBeVisible()
       }
       if(route === '/finance/transactions' || route === '/finance/recurring-bills') {
@@ -1566,7 +1572,7 @@ for (const language of ['en', 'es']) test(`each finance destination exposes its 
       const loading = page.locator('main [aria-busy="true"]')
       await expect(loading.locator('[data-slot="skeleton"]').first()).toBeVisible()
       if (href === '/finance/pots') {
-        const actions = loading.locator('.rounded-xl').first().locator(':scope > :last-child > [data-slot="skeleton"]')
+        const actions = loading.locator('.bg-card').first().locator(':scope > :last-child > [data-slot="skeleton"]')
         await expect(actions).toHaveCount(2)
         await expect(actions.first()).toHaveCSS('height', '53px')
         await expect(actions.last()).toHaveCSS('height', '53px')
@@ -1679,7 +1685,7 @@ test('recurring bills reserve the summary and list positions until each response
     const search = page.getByRole('textbox', {name:'Search bills'})
     await expect(search).toBeVisible()
     await expect(loading).toHaveCount(2)
-    await expect(loading.first().locator('.bg-grey-900')).toBeVisible()
+    await expect(loading.first().locator('.bg-panel')).toBeVisible()
     await expect(loading.last().locator('[data-slot="skeleton"]').first()).toBeVisible()
     const summaryBox = (await loading.first().boundingBox())!
     const searchBox = (await search.boundingBox())!

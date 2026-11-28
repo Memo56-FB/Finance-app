@@ -2,20 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -24,76 +10,146 @@
 
 @layer base {
   :root {
-    --radius: 0.5rem;
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
+    --radius: 0rem;
 
-@layer base {
+    /* Obsidian and amethyst */
+    color-scheme: dark;
+    --bg: 253 30% 8%;
+    --panel: 253 25% 15%;
+    --line: 253 22% 28%;
+    --ink: 264 42% 95%;
+    --ink-muted: 259 25% 78%;
+    --gold: 43 92% 70%;
+    --danger: 349 100% 68%;
+    --frame: 257 49% 4%;
+
+    --text-shadow: var(--frame);
+
+    --p1: 269 82% 78%;
+    --p2: 265 65% 64%;
+    --p3: 257 46% 36%;
+    --p4: 255 48% 25%;
+
+    /* Tokens shadcn */
+    --background: var(--bg);
+    --foreground: var(--ink);
+    --card: var(--panel);
+    --card-foreground: var(--ink);
+    --popover: var(--panel);
+    --popover-foreground: var(--ink);
+    --primary: var(--p4);
+    --primary-foreground: var(--ink);
+    --secondary: var(--line);
+    --secondary-foreground: var(--ink);
+    --muted: var(--line);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--line);
+    --accent-foreground: var(--ink);
+    --destructive: var(--danger);
+    --destructive-foreground: var(--bg);
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--gold);
+    --chart-1: var(--p1);
+    --chart-2: var(--p2);
+    --chart-3: var(--p3);
+    --chart-4: var(--gold);
+    --chart-5: var(--danger);
+  }
+
+  :root[data-theme='light'] {
+    /* Sandstone, quartz and oak */
+    color-scheme: light;
+    --bg: 43 40% 88%;
+    --panel: 49 56% 96%;
+    --line: 39 20% 74%;
+    --ink: 33 22% 12%;
+    --ink-muted: 34 15% 28%;
+    --gold: 32 90% 24%;
+    --danger: 5 72% 33%;
+    --frame: 34 17% 28%;
+    --text-shadow: 49 56% 96%;
+    --p1: 28 54% 26%;
+    --p2: 27 48% 32%;
+    --p3: 31 43% 72%;
+    --p4: 29 37% 64%;
+  }
+
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  :focus-visible {
+    outline: 3px solid hsl(var(--gold));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: hsl(var(--p2));
+    color: hsl(var(--bg));
+  }
+
+  img.pixelated,
+  .pixelated {
+    image-rendering: pixelated;
+  }
+}
+
+/* Pixel art: bordes escalonados con box-shadow para no recortar el foco */
+@layer components {
+  .px-frame {
+    box-shadow:
+      0 -4px 0 0 hsl(var(--frame)),
+      0 4px 0 0 hsl(var(--frame)),
+      -4px 0 0 0 hsl(var(--frame)),
+      4px 0 0 0 hsl(var(--frame)),
+      inset 0 0 0 4px hsl(var(--line));
+  }
+
+  .px-bevel {
+    box-shadow:
+      0 -4px 0 0 hsl(var(--frame)),
+      0 4px 0 0 hsl(var(--frame)),
+      -4px 0 0 0 hsl(var(--frame)),
+      4px 0 0 0 hsl(var(--frame)),
+      inset 4px 4px 0 0 hsl(var(--p2)),
+      inset -4px -4px 0 0 hsl(var(--frame) / 0.55);
+  }
+
+  .px-inset {
+    box-shadow:
+      0 -4px 0 0 hsl(var(--frame)),
+      0 4px 0 0 hsl(var(--frame)),
+      -4px 0 0 0 hsl(var(--frame)),
+      4px 0 0 0 hsl(var(--frame)),
+      inset 4px 4px 0 0 hsl(var(--frame) / 0.65),
+      inset -4px -4px 0 0 hsl(var(--line));
+  }
+
+  .px-bar {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 6px,
+      hsl(var(--frame) / 0.45) 6px 8px
+    );
+  }
+
+  .px-text-shadow {
+    text-shadow: 2px 2px 0 hsl(var(--text-shadow));
   }
 }
 
 /* My components */
 @layer components {
   .text-preset-1 {
-    @apply !text-[32px] !leading-[120%] !tracking-normal !font-bold;
+    @apply !font-heading !text-[22px] !leading-[140%] !tracking-normal !font-normal;
   }
   .text-preset-2 {
-    @apply !text-[20px] !leading-[150%] !tracking-normal !font-bold;
+    @apply !font-heading !text-[14px] !leading-[160%] !tracking-normal !font-normal;
   }
   .text-preset-3 {
     @apply !text-[16px] !leading-[150%] !tracking-normal !font-bold;
@@ -105,9 +161,20 @@
     @apply !text-[14px] !leading-[150%] !tracking-normal !font-bold;
   }
   .text-preset-5 {
-    @apply !text-[12px] !leading-[150%] !tracking-normal;
+    @apply !text-[14px] !leading-[150%] !tracking-normal;
   }
   .text-preset-5-bold {
-    @apply !text-[12px] !leading-[150%] !tracking-normal !font-bold;
+    @apply !text-[14px] !leading-[150%] !tracking-normal !font-bold;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -156,6 +156,8 @@ export const en = {
   "Gold": "Gold",
   "Orange": "Orange",
   "Language": "Language",
+  "Light": "Light",
+  "Dark": "Dark",
   "Could not save preferences.": "Could not save preferences.",
   "Monthly": "Monthly",
   "savings preview": "savings preview",

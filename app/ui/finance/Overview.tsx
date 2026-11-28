@@ -60,7 +60,7 @@ export function Overview() {
       <CalendarField label="Month" monthOnly value={selectedMonth} onChange={setSelectedMonth}/>
       {month && <Button variant="secondary" onClick={() => setSelectedMonth('')}>{t('Back to current period')}</Button>}
     </div>
-    {start && end && !awaitingCut && <p aria-live="polite" className="text-preset-4 text-grey-500">{periodLabel}: <CalendarDate value={start}/> – <CalendarDate value={end}/></p>}
+    {start && end && !awaitingCut && <p aria-live="polite" className="text-preset-4 text-ink-muted">{periodLabel}: <CalendarDate value={start}/> – <CalendarDate value={end}/></p>}
     <QueryMessage query={settings} fallback={<FieldSkeleton/>}/><QueryMessage query={summary} fallback={awaitingCut ? null : <AmountsSkeleton/>}/>
     {awaitingCut && <LoadingRegion><AmountsSkeleton/></LoadingRegion>}
     {wrongPeriod && <div role="alert">

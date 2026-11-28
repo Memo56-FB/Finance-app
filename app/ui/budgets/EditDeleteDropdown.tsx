@@ -14,11 +14,11 @@ export const EditDeleteDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger aria-label={t("Budget actions")}>
-        <DotsThreeOutline className="text-grey-300" size={16} weight="fill" />
+        <DotsThreeOutline className="text-ink-muted" size={16} weight="fill" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className='bg-white rounded-md px-250 py-150 grid gap-150'>
+      <DropdownMenuContent className='bg-card rounded-none px-250 py-150 grid gap-150'>
         <EditBudget />
-        <Separator className='bg-grey-100' />
+        <Separator className='bg-line' />
         <DeleteBudget />
       </DropdownMenuContent>
     </DropdownMenu>

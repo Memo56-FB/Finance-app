@@ -41,17 +41,17 @@ export const AddMoneyPot = ({
       <DialogTrigger asChild>
         <Button variant="secondary"><Text id="+Add Money" /></Button>
       </DialogTrigger>
-      <DialogContent className="w-[calc(100%-40px)] max-w-[560px] px-250 py-250 rounded-xl md:px-400 md:py-400 grid gap-250">
+      <DialogContent className="w-[calc(100%-40px)] max-w-[560px] px-250 py-250 px-inset md:px-400 md:py-400 grid gap-250">
         <DialogHeader className="grid justify-start gap-250">
-          <DialogTitle className="text-start text-preset-2 text-grey-900"><Text id="Add to" /> &apos;{title}&apos;</DialogTitle>
-          <DialogDescription className="text-start text-preset-4 text-grey-500"><Text id="Preview your savings after adding money. Changes are not saved in this demo." /></DialogDescription>
+          <DialogTitle className="text-start text-preset-2 text-ink"><Text id="Add to" /> &apos;{title}&apos;</DialogTitle>
+          <DialogDescription className="text-start text-preset-4 text-ink-muted"><Text id="Preview your savings after adding money. Changes are not saved in this demo." /></DialogDescription>
         </DialogHeader>
 
         <form onSubmit={(event) => event.preventDefault()} className="grid gap-250">
           <section className="grid gap-150" aria-label={`${title} ${t('savings preview')}`}>
             <div className="flex items-center justify-between gap-200">
-              <p className="text-preset-5 text-grey-500"><Text id="New Amount" /></p>
-              <p className="text-preset-1 text-grey-900"><Money value={newAmount} /></p>
+              <p className="text-preset-5 text-ink-muted"><Text id="New Amount" /></p>
+              <p className="text-preset-1 text-ink"><Money value={newAmount} /></p>
             </div>
             <div className="grid grid-cols-2 gap-150">
               <ProgressDiff
@@ -63,15 +63,15 @@ export const AddMoneyPot = ({
                 className="col-span-2"
               />
               <p className="text-preset-5-bold text-green"><Percentage value={progressPercentage / 100} /></p>
-              <p className="text-right text-preset-5 text-grey-500">{' '}<Text id="Target of" />{' '}<Money value={targetOf} />
+              <p className="text-right text-preset-5 text-ink-muted">{' '}<Text id="Target of" />{' '}<Money value={targetOf} />
               </p>
             </div>
           </section>
 
           <div className="grid gap-50">
-            <label htmlFor={amountInputId} className="text-preset-5-bold text-grey-500"><Text id="Amount to Add" /></label>
+            <label htmlFor={amountInputId} className="text-preset-5-bold text-ink-muted"><Text id="Amount to Add" /></label>
             <div className="relative">
-              <p className="absolute left-250 top-[10px] text-preset-4 text-beige-500">
+              <p className="absolute left-250 top-[10px] text-preset-4 text-ink-muted">
                 <CurrencySymbol />
               </p>
               <Input
@@ -88,7 +88,7 @@ export const AddMoneyPot = ({
           </div>
 
           {/* shortcut: Preview only, enable confirmation when changes can be saved. */}
-          <Button type="submit" disabled className="text-preset-4-bold text-white"><Text id="Confirm Addition" /></Button>
+          <Button type="submit" disabled className="text-preset-4-bold text-ink"><Text id="Confirm Addition" /></Button>
         </form>
       </DialogContent>
     </Dialog>
